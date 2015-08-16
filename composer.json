@@ -1,0 +1,21 @@
+{
+  "name": "ILab/Stem",
+  "description": "Theme building plug-in for Wordpress",
+  "license": "LGPL",
+  "keywords": ["stem"],
+  "authors": [
+    {
+      "name": "Jon Gilkison",
+      "email": "jon@interfacelab.com"
+    }
+  ],
+  "require": {
+    "symfony/http-foundation": "^2.7"
+  },
+  "require-dev": {},
+  "autoload": {
+    "psr-4": {
+      "ILab\\Stem\\": "Classes"
+    }
+  }
+}
