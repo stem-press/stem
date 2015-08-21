@@ -1,6 +1,9 @@
 <?php
 
 namespace ILab\Stem\Core;
+use ILab\Stem\Controllers\PageController;
+use ILab\Stem\Controllers\PostController;
+use ILab\Stem\Controllers\PostsController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -14,23 +17,35 @@ use Symfony\Component\HttpFoundation\Response;
 class Dispatcher {
     private $context;
 
+    /**
+     * Constructor
+     * @param Context $context
+     */
     public function __construct(Context $context) {
         $this->context=$context;
     }
 
-    private function dispatchTemplate($type) {
-        if (is_array($type))
+    /**
+     * @param $templateName string|array
+     * @param $pageType string
+     * @return bool
+     * @throws \Exception
+     */
+    private function dispatchTemplate($templateName, $pageType) {
+        if (is_array($templateName))
         {
-            foreach ($type as $name)
+            foreach ($templateName as $name)
             {
-                if ($this->dispatchTemplate($name))
+                if ($this->dispatchTemplate($name,$pageType))
                     return true;
             }
         }
         else
         {
+            error_log("Looking for ... $templateName");
+
             // normalize the name, eg front_page becomes front-page
-            $name=preg_replace('|[^a-z0-9_]+|', '-',$type);
+            $name=preg_replace('|[^a-z0-9_]+|', '-',$templateName);
 
             // camel case the the controller class name, eg front_page becomes FrontPage
             $nameparts=explode('-',$name);
@@ -39,21 +54,59 @@ class Dispatcher {
             });
             $classname=implode('',$nameparts);
 
-            // Try running a controller first
+            // Interpolate the class name
             $class = $this->context->namespace.'\\Controllers\\'.$classname.'Controller';
 
-            if (class_exists($class)) {
-                $controller=new $class($this->context);
+            // Create the request object
+            $request=Request::createFromGlobals();
 
-                $request=Request::createFromGlobals();
+            // Determine the action and controller method
+            $action = ($request->query->has('_action')) ? ucfirst($request->query->get('_action')) : 'Index';
+            $method = strtolower($request->getMethod()) . $action;
 
-                $action=($request->query->has('_action')) ? ucfirst($request->query->get('_action')) : 'Index';
-                $method=strtolower($request->getMethod()).$action;
+            $controller=null;
 
+            // If the controller exists, create it ...
+            if (class_exists($class))
+            {
+                $controller = new $class($this->context);
+            }
+            else
+            {
+                // Otherwise, we check to see if the template exists.
+                if (file_exists($this->context->viewPath.'templates/'.$name.'.php'))
+                {
+                    if ($pageType=='none')
+                    {
+                        // Template exists but page type doesn't map to a built-in
+                        // controller, so we just render the template as is.
+                        echo $this->context->render('templates/' . $name, [$this->context]);
+                        return true;
+                    }
+
+                    // Create the appropriate built-in controller
+                    if ($pageType=='posts')
+                        $controller=new PostsController($this->context,'templates/' . $name);
+                    else if ($pageType=='post')
+                        $controller=new PostController($this->context,'templates/' . $name);
+                    else if ($pageType=='page')
+                        $controller=new PageController($this->context,'templates/' . $name);
+                }
+            }
+
+            // if we found a controller, then invoke the method and return it's output
+            if ($controller) {
                 if (method_exists($controller,$method))
                     $response=call_user_func([$controller,$method],$request);
                 else
-                    throw new \Exception("Missing method '$method' on class '$class'.");
+                {
+                    // Try GET if method was something other ...
+                    $method = 'get' . $action;
+                    if (method_exists($controller,$method))
+                        $response=call_user_func([$controller,$method],$request);
+                    else
+                        throw new \Exception("Missing method '$method' on class '$class'.");
+                }
 
                 if (is_object($response) && ($response instanceof Response))
                 {
@@ -67,12 +120,7 @@ class Dispatcher {
                 return true;
             }
 
-            //if we got here, then no class was loaded
-            if (file_exists($this->context->viewPath.'templates/'.$name.'.php'))
-            {
-                echo $this->context->render('templates/'.$name,[$this->context]);
-                return true;
-            }
+            return false;
         }
 
         return false;
@@ -97,7 +145,7 @@ class Dispatcher {
 
         $templates[] = 'archive';
 
-        return $this->dispatchTemplate($templates);
+        return $this->dispatchTemplate($templates,'posts');
     }
 
     private function dispatchAttachmentTemplate() {
@@ -117,7 +165,7 @@ class Dispatcher {
         }
 
         $templates[]='attachment';
-        return $this->dispatchTemplate($templates);
+        return $this->dispatchTemplate($templates,'post');
     }
 
     private function dispatchSingleTemplate(){
@@ -130,7 +178,7 @@ class Dispatcher {
 
         $templates[] = "single";
 
-        return $this->dispatchTemplate($templates);
+        return $this->dispatchTemplate($templates,'post');
     }
 
     private function dispatchPageTemplate() {
@@ -154,7 +202,7 @@ class Dispatcher {
             $templates[] = "page-$id";
         $templates[] = 'page';
 
-        return $this->dispatchTemplate($templates);
+        return $this->dispatchTemplate($templates,'page');
     }
 
     private function dispatchTaxonomyTemplate() {
@@ -170,7 +218,7 @@ class Dispatcher {
 
         $templates[] = 'taxonomy';
 
-        return $this->dispatchTemplate($templates);
+        return $this->dispatchTemplate($templates,'posts');
     }
 
     private function dispatchTermTemplate($termType) {
@@ -184,7 +232,7 @@ class Dispatcher {
         }
         $templates[] = $termType;
 
-        return $this->dispatchTemplate($templates);
+        return $this->dispatchTemplate($templates,'posts');
     }
 
     private function dispatchAuthorTemplate() {
@@ -198,7 +246,7 @@ class Dispatcher {
         }
         $templates[] = 'author';
 
-        return $this->dispatchTemplate($templates);
+        return $this->dispatchTemplate($templates,'posts');
     }
 
     private function dispatchArchiveTemplate() {
@@ -213,9 +261,13 @@ class Dispatcher {
 
         $templates[] = 'archive';
 
-        return $this->dispatchTemplate($templates);
+        return $this->dispatchTemplate($templates,'posts');
     }
 
+    /**
+     * Dispatches the current exception
+     * @throws \Exception
+     */
     public function dispatch() {
         global $wp_query;
 
@@ -224,10 +276,10 @@ class Dispatcher {
             return;
         }
 
-        if     ($wp_query->is_404() && $this->dispatchTemplate('404')):
-        elseif ($wp_query->is_search() && $this->dispatchTemplate('search')):
-        elseif ($wp_query->is_front_page() && $this->dispatchTemplate('front-page')):
-        elseif ($wp_query->is_home() && $this->dispatchTemplate(['home','index'])):
+        if     ($wp_query->is_404() && $this->dispatchTemplate('404','none')):
+        elseif ($wp_query->is_search() && $this->dispatchTemplate('search','posts')):
+        elseif ($wp_query->is_front_page() && $this->dispatchTemplate('front-page','posts')):
+        elseif ($wp_query->is_home() && $this->dispatchTemplate(['home','index'],'posts')):
         elseif ($wp_query->is_post_type_archive() && $this->dispatchPostTypeArchiveTemplate()):
         elseif ($wp_query->is_tax() && $this->dispatchTaxonomyTemplate()):
         elseif ($wp_query->is_attachment() && $this->dispatchAttachmentTemplate()):
@@ -236,12 +288,12 @@ class Dispatcher {
         elseif ($wp_query->is_category() && $this->dispatchTermTemplate('category')):
         elseif ($wp_query->is_tag()  && $this->dispatchTermTemplate('tag')):
         elseif ($wp_query->is_author() && $this->dispatchAuthorTemplate()):
-        elseif ($wp_query->is_date() && $this->dispatchTemplate('date')):
+        elseif ($wp_query->is_date() && $this->dispatchTemplate('date','posts')):
         elseif ($wp_query->is_archive() && $this->dispatchArchiveTemplate()):
-        elseif ($wp_query->is_comments_popup() && $this->dispatchTemplate('comments_popup')):
-        elseif ($wp_query->is_paged() && $this->dispatchTemplate('paged')):
+        elseif ($wp_query->is_comments_popup() && $this->dispatchTemplate('comments_popup','none')):
+        elseif ($wp_query->is_paged() && $this->dispatchTemplate('paged','posts')):
         else :
-            $this->dispatchTemplate('index');
+            $this->dispatchTemplate('index','posts');
 
         endif;
     }

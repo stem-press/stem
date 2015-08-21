@@ -60,17 +60,20 @@ class View {
     protected $blocks;
     protected $parent;
     protected $parsed;
+    protected $subviews;
 
-    public function __construct($context, $view) {
+    protected $data;
+
+    public function __construct(Context $context, $view) {
         $this->context=$context;
         $this->currentBlocks=[];
         $this->currentData=[];
         $this->blocks=[];
         $this->parent=null;
-        $this->parse($view);
+        $this->parse($context->viewPath.$view.'.php');
     }
 
-    public function parse($view) {
+    protected function parse($view) {
         $contents=file_get_contents($view);
 
         $includeMatches=[];
@@ -89,13 +92,51 @@ class View {
         {
             $template=$extendMatches[1];
 
-            $this->parent=new View(ILAB_VIEW_DIR.'/'.$template);
+            $this->parent=new View($this->context,$template);
 
             $contents=preg_replace('#{%\s*extends\s+([/aA-zZ0-9-_.]+)\s*%}#','',$contents);
         }
 
         // parse content targets
         $contents=preg_replace('#{%\s*content\s+([/aA-zZ0-9-_.]+)\s*%}#','<?php echo $view->getBlock("$1"); ?>',$contents);
+
+        // parse subview without args
+        $contents=preg_replace('#{%\s*render\s+([/aA-zZ0-9-_.]+)\s*%}#','<?php echo $view->renderSubview("$1"); ?>',$contents);
+
+        // parse subviews with args
+        $subviewMatches=[];
+        if (preg_match_all('#{%\s*render\s+([/aA-zZ0-9-_.]+)\s+(\$[^%]+)+\s*%}#',$contents,$subviewMatches,PREG_PATTERN_ORDER | PREG_OFFSET_CAPTURE))
+        {
+            for($i=count($subviewMatches[0])-1; $i>=0; $i--)
+            {
+                $argList=[];
+                $rawArgs=explode(',',$subviewMatches[2][$i][0]);
+                foreach ($rawArgs as $rawArg) {
+                    $rawArg=trim($rawArg,' ');
+
+                    if (strpos($rawArg,'=>')>0) {
+                        $rawArgParts=explode('=>',$rawArg);
+                        $varName=trim($rawArgParts[0],'$ ');
+                        $argName=trim($rawArgParts[1]);
+                        $argList[]="'$varName' => $argName";
+                    }
+                    else if (strpos($rawArg,' as ')>0) {
+                        $rawArgParts=explode(' as ',$rawArg);
+                        $varName=trim($rawArgParts[1],'$ ');
+                        $argName=trim($rawArgParts[0]);
+                        $argList[]="'$varName' => $argName";
+                    }
+                    else {
+                        $varName=trim($rawArg,'$');
+                        $argList[]="'$varName' => $rawArg";
+                    }
+                }
+
+                $args='['.implode(', ',$argList).']';
+                $replace='<?php echo $view->renderSubview(\''.$subviewMatches[1][$i][0].'\','.$args.'); ?>';
+                $contents=substr_replace($contents,$replace,$subviewMatches[0][$i][1],strlen($subviewMatches[0][$i][0]));
+            }
+        }
 
         // parse blocks
         $blockMatches=[];
@@ -110,10 +151,13 @@ class View {
             $contents=preg_replace('#{%\s*block\s*([aA-zZ0-9-_]*)\s*%}(.*?){%\s*end\s*block\s*%}#s','',$contents);
         }
 
+        // parse subviews
+
+
         $this->parsed=$this->parseFragment($contents);
     }
 
-    private function parseFragment($fragment) {
+    protected function parseFragment($fragment) {
         $fragment=preg_replace('#{%\s*for\s*each\s*\(\s*(.*)\s*\)\s*%}#','<?php foreach($1):?>',$fragment);
         $fragment=preg_replace('#{%\s*end\s*for\s*each\s*%}#','<?php endforeach; ?>',$fragment);
         $fragment=preg_replace('#{%\s*if\s*\((.*)\)\s*%}#','<?php if ($1): ?>',$fragment);
@@ -126,7 +170,7 @@ class View {
         return $fragment;
     }
 
-    private function renderFragment($fragment) {
+    protected function renderFragment($fragment) {
         $data=($this->currentData!=null) ? $this->currentData : [];
 
         $data['view']=$this;
@@ -169,8 +213,13 @@ class View {
         return $this->renderFragment($this->parsed);
     }
 
+    public function renderSubview($subview, $additionalData=null) {
+        $data=($additionalData) ? array_merge($this->currentData, $additionalData) : $this->currentData;
+        return View::render_view($this->context, $subview, $data);
+    }
+
     public static function render_view(Context $context, $view, $data) {
-        $view=new View($context, $context->viewPath.$view.'.php');
+        $view=new View($context, $view);
         return $view->render($data);
     }
 }

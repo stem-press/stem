@@ -17,13 +17,15 @@ use Symfony\Component\HttpFoundation\Request;
  * @package ILab\Stem\Core
  */
 abstract class Controller {
-    private $context;
+    protected $context;
+    protected $template=null;
 
     /**
      * @param $context
      */
-    public function __construct(Context $context) {
+    public function __construct(Context $context, $template=null) {
         $this->context=$context;
+        $this->template=$template;
     }
 
     /**
