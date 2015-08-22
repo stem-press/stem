@@ -318,6 +318,7 @@ class Context {
         ob_start();
         wp_head();
         $header=ob_get_clean();
+        $header=preg_replace("/<!--\\s*(?:.*)Yoast(?:.*)-->/", "", $header);
         // TODO: Relative URL filtering
         return $header;
     }
