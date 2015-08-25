@@ -1,6 +1,10 @@
 <?php
 
 namespace ILab\Stem\Core;
+use ILab\Stem\Controllers\SearchController;
+use ILab\Stem\Controllers\PostController;
+use ILab\Stem\Controllers\PostsController;
+use ILab\Stem\Controllers\PageController;
 use ILab\Stem\Models\Attachment;
 use ILab\Stem\Models\Page;
 use ILab\Stem\Models\Post;
@@ -13,8 +17,22 @@ use ILab\Stem\Models\Post;
  * @package ILab\Stem\Core
  */
 class Context {
+    /**
+     * Controller Map
+     * @var array
+     */
+    private $controllerMap=[];
+
+    /**
+     * Model cache
+     * @var array
+     */
     private $modelCache=[];
 
+    /**
+     * Context cache
+     * @var array
+     */
     private static $contexts=[];
 
     /**
@@ -75,7 +93,13 @@ class Context {
      * Factory functions for creating models for a given post type
      * @var array
      */
-    protected $factories=[];
+    protected $modelFactories=[];
+
+    /**
+     * Factory functions for creating controllers
+     * @var array
+     */
+    protected $controllerFactories=[];
 
     /**
      * The text domain for internationalization
@@ -111,6 +135,9 @@ class Context {
 
         // Create the controller/template dispatcher
         $this->dispatcher=new Dispatcher($this);
+
+        if (isset($this->config['controller-map']))
+            $this->controllerMap=$this->config['controller-map'];
 
         // Autoload function for theme classes
         spl_autoload_register(function($class) {
@@ -219,6 +246,16 @@ class Context {
     }
 
     /**
+     * Registers a shortcode
+     * @param $shortcode string
+     * @param $callable callable
+     */
+    public function registerShortcode($shortcode, $callable) {
+        add_shortcode($shortcode, $callable);
+    }
+
+
+    /**
      * Creates the context for this theme.  Should be called in functions.php of the theme
      *
      * @param $domain string Name of the theme's domain, eg the name of the theme
@@ -242,24 +279,13 @@ class Context {
     }
 
     /**
-     * Renders a view
-     *
-     * @param $view string The name of the view
-     * @param $data array The data to display in the view
-     * @return string The rendered view
-     */
-    public function render($view,$data) {
-        return View::render_view($this,$view,$data);
-    }
-
-    /**
      * Set the factory function for creating this model for this post type.
      *
      * @param $post_type string
      * @param $callable callable
      */
     public function setCustomPostTypeModelFactory($post_type, $callable) {
-        $this->factories[$post_type]=$callable;
+        $this->modelFactories[$post_type]=$callable;
     }
 
     /**
@@ -296,8 +322,8 @@ class Context {
         if (isset($this->modelCache["m-$post->ID"]))
             return $this->modelCache["m-$post->ID"];
 
-        if (isset($this->factories[$post->post_type])) {
-            $result=call_user_func_array($this->factories[$post->post_type],[$this,$post]);
+        if (isset($this->modelFactories[$post->post_type])) {
+            $result=call_user_func_array($this->modelFactories[$post->post_type],[$this,$post]);
         }
         else {
             if ($post->post_type=='attachment')
@@ -314,6 +340,93 @@ class Context {
         return $result;
     }
 
+    /**
+     * Set the factory for creating a controller for a given post type
+     * @param $type
+     * @param $callable
+     */
+    public function setControllerFactory($type,$callable) {
+        $this->controllerFactories[$type]=$callable;
+    }
+
+    /**
+     * Creates a controller for the given page type
+     * @param $pageType string
+     * @param $template string
+     * @return PageController|PostController|PostsController|null
+     */
+    public function createController($pageType, $template) {
+        $controller=null;
+
+        // Use factories first
+        if (isset($this->controllerFactories[$pageType])) {
+            $callable=$this->controllerFactories[$pageType];
+            $controller=$callable($this,'templates/' . $template);
+
+            if ($controller)
+                return $controller;
+        }
+
+        // See if a default controller exists in the theme namespace
+        $class=null;
+        if ($pageType=='posts')
+            $class = $this->namespace.'\\Controllers\\PostsController';
+        else if ($pageType=='post')
+            $class = $this->namespace.'\\Controllers\\PostController';
+        else if ($pageType=='page')
+            $class = $this->namespace.'\\Controllers\\PageController';
+
+        if (class_exists($class)) {
+            $controller=new $class($this,'templates/' . $template);
+            return $controller;
+        }
+
+        // Create a default controller from the stem namespace
+        if ($pageType=='posts')
+            $controller=new PostsController($this,'templates/' . $template);
+        else if ($pageType=='post')
+            $controller=new PostController($this,'templates/' . $template);
+        else if ($pageType=='page')
+            $controller=new PageController($this,'templates/' . $template);
+        else if ($pageType=='search')
+            $controller=new SearchController($this,'templates/' . $template);
+
+        return $controller;
+    }
+
+    /**
+     * Maps a wordpress template to a controller
+     * @param $wpTemplateName
+     * @return null
+     */
+    public function mapController($wpTemplateName) {
+        if (isset($this->controllerMap[$wpTemplateName])) {
+            $class=$this->controllerMap[$wpTemplateName];
+            if (class_exists($class)) {
+                $controller=new $class($this,$wpTemplateName);
+                return $controller;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Renders a view
+     *
+     * @param $view string The name of the view
+     * @param $data array The data to display in the view
+     * @return string The rendered view
+     */
+    public function render($view,$data) {
+        return View::render_view($this,$view,$data);
+    }
+
+    /**
+     * Outputs the Wordpress generated header html
+     *
+     * @return mixed|string
+     */
     public function header() {
         ob_start();
         wp_head();
@@ -324,6 +437,11 @@ class Context {
     }
 
 
+    /**
+     * Outputs the Wordpress generated footer html
+     *
+     * @return string
+     */
     public function footer() {
         ob_start();
         wp_footer();
@@ -332,10 +450,24 @@ class Context {
         return $footer;
     }
 
+    /**
+     * Returns the image src to an image included in the theme
+     *
+     * @param $src
+     * @return string
+     */
     public function image($src) {
         return $this->imgPath.$src;
     }
 
+    /**
+     * Renders a Wordpress generated menu
+     *
+     * @param $name string
+     * @param bool|false $stripUL
+     * @param bool|false $removeText
+     * @return false|mixed|object|string|void
+     */
     public function menu($name, $stripUL=false, $removeText=false) {
         if (!$stripUL)
             $menu=wp_nav_menu(['theme_location'=>$name,'echo'=>false, 'container'=>false]);
@@ -371,6 +503,12 @@ class Context {
         return $menu;
     }
 
+    /**
+     * Performs a query for posts
+     *
+     * @param $args
+     * @return array
+     */
     public function findPosts($args){
         $query=new \WP_Query($args);
 

@@ -84,13 +84,11 @@ class Dispatcher {
                         return true;
                     }
 
-                    // Create the appropriate built-in controller
-                    if ($pageType=='posts')
-                        $controller=new PostsController($this->context,'templates/' . $name);
-                    else if ($pageType=='post')
-                        $controller=new PostController($this->context,'templates/' . $name);
-                    else if ($pageType=='page')
-                        $controller=new PageController($this->context,'templates/' . $name);
+                    $controller=$this->context->createController($pageType,$name);
+                }
+                else
+                {
+                    $controller=$this->context->mapController($name);
                 }
             }
 
@@ -277,7 +275,7 @@ class Dispatcher {
         }
 
         if     ($wp_query->is_404() && $this->dispatchTemplate('404','none')):
-        elseif ($wp_query->is_search() && $this->dispatchTemplate('search','posts')):
+        elseif ($wp_query->is_search() && $this->dispatchTemplate('search','search')):
         elseif ($wp_query->is_front_page() && $this->dispatchTemplate('front-page','posts')):
         elseif ($wp_query->is_home() && $this->dispatchTemplate(['home','index'],'posts')):
         elseif ($wp_query->is_post_type_archive() && $this->dispatchPostTypeArchiveTemplate()):
@@ -294,6 +292,7 @@ class Dispatcher {
         elseif ($wp_query->is_paged() && $this->dispatchTemplate('paged','posts')):
         else :
             $this->dispatchTemplate('index','posts');
+            // TODO: 500 error
 
         endif;
     }

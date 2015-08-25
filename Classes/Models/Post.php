@@ -7,6 +7,8 @@ use ILab\Stem\Core\Context;
 use ILab\Stem\Utilities\Text;
 
 class Post {
+    public $id;
+
     protected $post;
     protected $context;
 
@@ -18,7 +20,9 @@ class Post {
     private $permalink=null;
     private $thumbnail=null;
 
+
     public function __construct(Context $context, \WP_Post $post) {
+        $this->id=$post->ID;
         $this->context=$context;
         $this->post=$post;
     }
@@ -80,7 +84,18 @@ class Post {
     }
 
     public function tags() {
+        if ($this->tags)
+            return $this->tags;
 
+        $tags=wp_get_post_tags($this->post->ID);
+        if ($tags && (count($tags)>0)) {
+            $this->tags=[];
+            foreach($tags as $tag) {
+                $this->tags[]=Term::termFromTermData($this->context,$tag);
+            }
+        }
+
+        return $this->tags;
     }
 
     public function title() {
@@ -91,8 +106,12 @@ class Post {
         return $this->post->post_type;
     }
 
-    public function content() {
-        return apply_filters('the_content',$this->post->post_content);
+    public function content($dropcap=false) {
+        $content=apply_filters('the_content',$this->post->post_content);
+        if ($dropcap)
+            $content=preg_replace("/<p>([aA-zZ0-9]{1})/", "<p><span class='dropcap'>$1</span>", $content,1);
+
+        return $content;
     }
 
     public function date($format='d/M/Y') {

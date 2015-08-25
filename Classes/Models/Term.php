@@ -17,8 +17,12 @@ class Term {
     public $parent;
     public $count;
 
-    public function __construct(Context $context, $termId, $taxonomy) {
-        $termData=get_term($termId,$taxonomy);
+    public function __construct(Context $context, $termId, $taxonomy, $termData=null) {
+        if (!$termData)
+            $termData=get_term($termId,$taxonomy);
+
+        if (!$termData)
+            throw new \Exception('Invalid term and taxonomy');
 
         $this->context=$context;
         $this->id=$termData->term_id;
@@ -33,6 +37,10 @@ class Term {
         {
             $this->parent=self::term($context, $termData->parent, $taxonomy);
         }
+    }
+
+    public static function termFromTermData($context, $termData) {
+        return new Term($context, null, null, $termData);
     }
 
     public static function term($context, $termId, $taxonomy) {

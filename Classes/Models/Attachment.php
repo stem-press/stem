@@ -19,7 +19,8 @@ class Attachment extends Post {
     }
 
     public function src($size='thumbnail') {
-        return wp_get_attachment_image_src($this->post->ID,$size);
+        $result=wp_get_attachment_image_src($this->post->ID,$size);
+        return $result[0];
     }
 
 }
