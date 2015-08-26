@@ -319,6 +319,9 @@ class Context {
      * @return Attachment|Page|Post
      */
     public function modelForPost(\WP_Post $post) {
+        if (!$post)
+            return null;
+
         if (isset($this->modelCache["m-$post->ID"]))
             return $this->modelCache["m-$post->ID"];
 

@@ -10,7 +10,7 @@ class Post {
     public $id;
 
     protected $post;
-    protected $context;
+    public $context;
 
     private $author=null;
     private $topCategory=null;
