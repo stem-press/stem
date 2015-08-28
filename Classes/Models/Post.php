@@ -9,6 +9,7 @@ use ILab\Stem\Utilities\Text;
 class Post
 {
     public $id;
+    public $post_name;
 
     protected $post;
     public $context;
@@ -25,6 +26,7 @@ class Post
     public function __construct(Context $context, \WP_Post $post)
     {
         $this->id = $post->ID;
+        $this->post_name=$post->post_name;
         $this->context = $context;
         $this->post = $post;
     }
