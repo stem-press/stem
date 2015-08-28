@@ -185,6 +185,8 @@ class Context {
         // configure image sizes
         if (isset($this->config['sizes']))
         {
+            $customSizes=[];
+
             foreach($this->config['sizes'] as $key => $info){
                 if ($key=='post-thumbnail') {
                     set_post_thumbnail_size( $info['width'],$info['height'],$info['crop']);
@@ -192,9 +194,22 @@ class Context {
                 else {
                     add_image_size($key,$info['width'],$info['height'],$info['crop']);
                 }
+
+                if (isset($info['display']) && $info['display'])
+                    $customSizes[]=$key;
+            }
+
+            if (count($customSizes)>0) {
+                add_filter('image_size_names_choose',function($sizes) use ($customSizes) {
+                    foreach($customSizes as $size) {
+                        $sizes[$size]=ucwords(str_replace('_', ' ', str_replace('-', ' ', $size)));
+                    }
+
+                    return $sizes;
+                });
             }
         }
-
+        
         if (isset($this->config['menu']))
         {
             $menus=[];
