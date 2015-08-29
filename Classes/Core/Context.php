@@ -5,6 +5,7 @@ use ILab\Stem\Controllers\SearchController;
 use ILab\Stem\Controllers\PostController;
 use ILab\Stem\Controllers\PostsController;
 use ILab\Stem\Controllers\PageController;
+use ILab\Stem\Controllers\TermController;
 use ILab\Stem\Models\Attachment;
 use ILab\Stem\Models\Page;
 use ILab\Stem\Models\Post;
@@ -393,6 +394,8 @@ class Context {
             $class = $this->namespace.'\\Controllers\\PostController';
         else if ($pageType=='page')
             $class = $this->namespace.'\\Controllers\\PageController';
+        else if ($pageType=='term')
+            $class = $this->namespace.'\\Controllers\\TermController';
 
         if (class_exists($class)) {
             $controller=new $class($this,'templates/' . $template);
@@ -408,6 +411,8 @@ class Context {
             $controller=new PageController($this,'templates/' . $template);
         else if ($pageType=='search')
             $controller=new SearchController($this,'templates/' . $template);
+        else if ($pageType=='term')
+            $controller=new TermController($this,'templates/' . $template);
 
         return $controller;
     }

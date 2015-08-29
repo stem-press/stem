@@ -229,8 +229,9 @@ class Dispatcher {
             $templates[] = "$termType-{$object->term_id}";
         }
         $templates[] = $termType;
+        $templates[] = 'term';
 
-        return $this->dispatchTemplate($templates,'posts');
+        return $this->dispatchTemplate($templates,'term');
     }
 
     private function dispatchAuthorTemplate() {
