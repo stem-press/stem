@@ -10,11 +10,14 @@ use Symfony\Component\HttpFoundation\Request;
 class PostsController extends Controller
 {
     public $posts=[];
+    public $totalPosts=0;
 
     public function __construct(Context $context, $template=null) {
         parent::__construct($context,$template);
 
         global $wp_query;
+
+        $this->totalPosts=$wp_query->found_posts;
 
         foreach($wp_query->posts as $post) {
             $this->posts[]=$this->context->modelForPost($post);
