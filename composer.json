@@ -10,7 +10,11 @@
     }
   ],
   "require": {
-    "symfony/http-foundation": "^2.7"
+    "symfony/http-foundation": "^2.7",
+    "masterminds/html5": "^2.1",
+    "symfony/dom-crawler": "^2.7",
+    "symfony/css-selector": "^2.7",
+    "querypath/QueryPath": "^3.0"
   },
   "require-dev": {},
   "autoload": {

@@ -175,6 +175,7 @@ class Dispatcher {
             $templates[] = "single-{$object->post_type}";
 
         $templates[] = "single";
+        $templates[] = "{$object->post_type}";
 
         return $this->dispatchTemplate($templates,'post');
     }

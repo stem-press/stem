@@ -6,4 +6,5 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
+    'QueryPath' => array($vendorDir . '/querypath/querypath/src'),
 );
