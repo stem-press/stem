@@ -102,10 +102,10 @@ class Post
         if ($this->tags)
             return $this->tags;
 
+        $this->tags = [];
         $tags = wp_get_post_tags($this->post->ID);
         if ($tags && (count($tags) > 0))
         {
-            $this->tags = [];
             foreach ($tags as $tag)
             {
                 $this->tags[] = Term::termFromTermData($this->context, $tag);
