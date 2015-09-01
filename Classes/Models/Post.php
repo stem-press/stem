@@ -129,7 +129,7 @@ class Post
     {
         $content = apply_filters('the_content', $this->post->post_content);
         if ($dropcap)
-            $content = preg_replace("/<p>([aA-zZ0-9]{1})/", "<p><span class='dropcap'>$1</span>", $content, 1);
+            $content = preg_replace("/^<p>([aA-zZ0-9]{1})/", "<p><span class='dropcap'>$1</span>", $content, 1);
 
         return $content;
     }
