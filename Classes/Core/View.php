@@ -105,7 +105,7 @@ class View {
 
         // parse subviews with args
         $subviewMatches=[];
-        if (preg_match_all('#{%\s*render\s+([/aA-zZ0-9-_.]+)\s+(\$[^%]+)+\s*%}#',$contents,$subviewMatches,PREG_PATTERN_ORDER | PREG_OFFSET_CAPTURE))
+        if (preg_match_all('#{%\s*render\s+([/aA-zZ0-9-_.]+)\s+([^%]+)+\s*%}#',$contents,$subviewMatches,PREG_PATTERN_ORDER | PREG_OFFSET_CAPTURE))
         {
             for($i=count($subviewMatches[0])-1; $i>=0; $i--)
             {

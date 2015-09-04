@@ -23,4 +23,7 @@ class Attachment extends Post {
         return $result[0];
     }
 
+    public function attachmentUrl() {
+        return wp_get_attachment_url($this->id);
+    }
 }
