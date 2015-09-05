@@ -3,6 +3,7 @@ namespace ILab\Stem\Models;
 
 
 class Attachment extends Post {
+    private $parentPost=null;
 
     public function img($size='thumbnail',$attr=false, $stripDimensions=false) {
         if (!$attr)
@@ -25,5 +26,16 @@ class Attachment extends Post {
 
     public function attachmentUrl() {
         return wp_get_attachment_url($this->id);
+    }
+
+    public function parentPost() {
+        if ($this->parentPost)
+            return $this->parentPost;
+
+        $parent_id=get_post_field('post_parent',$this->id);
+        if ($parent_id && !empty($parent_id))
+            $this->parentPost=$this->context->modelForPost(\WP_Post::get_instance($parent_id));
+
+        return $this->parentPost;
     }
 }
