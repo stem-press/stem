@@ -1,9 +1,11 @@
 <?php
 namespace ILab\Stem\Models;
 
+use ILab\Stem\Core\Context;
 
 class Attachment extends Post {
     private $parentPost=null;
+    private $attachmentInfo=null;
 
     public function img($size='thumbnail',$attr=false, $stripDimensions=false) {
         if (!$attr)
@@ -37,5 +39,22 @@ class Attachment extends Post {
             $this->parentPost=$this->context->modelForPost(\WP_Post::get_instance($parent_id));
 
         return $this->parentPost;
+    }
+
+    protected function loadAttachmentInfo() {
+        if (!$this->attachmentInfo)
+            $this->attachmentInfo=wp_prepare_attachment_for_js($this->post);
+    }
+
+    public function caption(){
+        $this->loadAttachmentInfo();
+
+        return $this->attachmentInfo['caption'];
+    }
+
+    public function description(){
+        $this->loadAttachmentInfo();
+
+        return $this->attachmentInfo['description'];
     }
 }
