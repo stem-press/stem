@@ -49,6 +49,12 @@ class Context {
     public $viewPath;
 
     /**
+     * Path to cache directory for caching views
+     * @var string
+     */
+    public $cachePath;
+
+    /**
      * Path to javascript
      * @var string
      */
@@ -135,6 +141,11 @@ class Context {
         $this->rootPath=$rootPath;
         $this->classPath=$rootPath.'/classes/';
         $this->viewPath=$rootPath.'/views/';
+        $this->cachePath=$rootPath.'/cache/';
+        if (!file_exists($this->cachePath)) {
+            mkdir($this->cachePath);
+        }
+
         $this->jsPath=get_template_directory_uri().'/js/';
         $this->cssPath=get_template_directory_uri().'/css/';
         $this->imgPath=get_template_directory_uri().'/img/';
@@ -586,7 +597,19 @@ class Context {
      * @return string The rendered view
      */
     public function render($view,$data) {
-        return View::render_view($this,$view,$data);
+        try {
+            ob_start();
+            $result=View::render_view($this,$view,$data);
+            ob_end_clean();
+            return $result;
+        }
+        catch (ViewException $ex) {
+            while (ob_get_level()>0)
+                ob_end_clean();
+
+            echo View::render_error_view($ex);
+            die;
+        }
     }
 
     /**
@@ -687,4 +710,15 @@ class Context {
         return $posts;
     }
 
+    public function __debugInfo() {
+        return [
+            'rootPath'=>$this->rootPath,
+            'viewPath'=>$this->viewPath,
+            'cachePath'=>$this->cachePath,
+            'jsPath'=>$this->jsPath,
+            'cssPath'=>$this->cssPath,
+            'classPath'=>$this->classPath,
+            'namespace'=>$this->namespace
+       ];
+    }
 }

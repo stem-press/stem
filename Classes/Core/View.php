@@ -56,25 +56,52 @@ class View {
     protected $currentBlocks;
     protected $currentData;
 
+    protected $original;
+
     protected $context;
     protected $blocks;
     protected $parent;
     protected $parsed;
     protected $subviews;
 
+    protected $viewId;
+    protected $viewHash;
+
+    protected $cacheFile;
+
     protected $data;
 
-    public function __construct(Context $context, $view) {
+    private $viewPath;
+
+    private $view;
+
+    public function __construct(Context $context=null, $view=null) {
         $this->context=$context;
         $this->currentBlocks=[];
         $this->currentData=[];
         $this->blocks=[];
         $this->parent=null;
-        $this->parse($context->viewPath.$view.'.php');
+
+        $this->view=$view;
+
+        if ($context) {
+            $mtime=filemtime($context->viewPath.$view.'.php');
+            $this->viewHash=md5($view.'-'.$mtime);
+            $this->viewId=str_replace('/','-',$view);
+
+
+            $this->cacheFile=$context->cachePath."{$this->viewId}-{$this->viewHash}.php";
+
+            $this->parse($context->viewPath.$view.'.php');
+        }
+        else {
+            $this->parse(ILAB_STEM_VIEW_DIR.'/'.$view.'.php');
+        }
     }
 
     protected function parse($view) {
         $contents=file_get_contents($view);
+        $this->original=$contents;
 
         $includeMatches=[];
         if (preg_match_all('#{%\s*include\s+([/aA-zZ0-9-_.]+)\s*%}#',$contents,$includeMatches,PREG_PATTERN_ORDER | PREG_OFFSET_CAPTURE))
@@ -140,12 +167,25 @@ class View {
 
         // parse blocks
         $blockMatches=[];
-        if (preg_match_all('#{%\s*block\s*([aA-zZ0-9-_]*)\s*%}(.*?){%\s*end\s*block\s*%}#s',$contents,$blockMatches))
+        if ($this->context && preg_match_all('#{%\s*block\s*([aA-zZ0-9-_]*)\s*%}(.*?){%\s*end\s*block\s*%}#s',$contents,$blockMatches,PREG_PATTERN_ORDER | PREG_OFFSET_CAPTURE))
         {
             for($i=0; $i<count($blockMatches[1]); $i++)
             {
-                $blockName=$blockMatches[1][$i];
-                $this->blocks[$blockName]=$this->parseFragment($blockMatches[2][$i]);
+                list($before) = str_split($contents, $blockMatches[2][$i][1]);
+                $lineNumber=strlen($before) - strlen(str_replace("\n", "", $before)) + 1;
+
+                $blockName=$blockMatches[1][$i][0];
+                $block=(object)[
+                    'parsed'=>$this->parseFragment($blockMatches[2][$i][0]),
+                    'original'=>$this->original,
+                    'line'=>$lineNumber,
+                    'view'=>$this->view,
+                    'file'=>$this->context->cachePath."{$this->viewId}-block-{$blockName}-{$this->viewHash}.php"
+                ];
+                $this->blocks[$blockName]=$block;
+
+                if (!file_exists($block->file))
+                    file_put_contents($block->file,$block->parsed);
             }
 
             $contents=preg_replace('#{%\s*block\s*([aA-zZ0-9-_]*)\s*%}(.*?){%\s*end\s*block\s*%}#s','',$contents);
@@ -155,6 +195,12 @@ class View {
 
 
         $this->parsed=$this->parseFragment($contents);
+
+        if ($this->cacheFile)
+        {
+            if (!file_exists($this->cacheFile))
+                file_put_contents($this->cacheFile,$this->parsed);
+        }
     }
 
     protected function parseFragment($fragment) {
@@ -184,11 +230,59 @@ class View {
         return $result;
     }
 
+    protected function renderInclude($original,$include, $block=null) {
+        $data=($this->currentData!=null) ? $this->currentData : [];
+
+        $data['view']=$this;
+        extract($data);
+
+        ob_start();
+
+        if ($this->context)
+        {
+            $oldReporting=error_reporting();
+            $oldDisplayErrors=ini_get('display_errors');
+            $oldXDebugDisplayErrors=ini_get('xdebug.force_display_errors');
+            error_reporting(E_ALL);
+            ini_set('display_errors',0);
+            ini_set('xdebug.force_display_errors',0);
+            set_error_handler(function($errNo, $errStr, $errFile, $errLine, array $errContext) use($data,$block,$oldReporting,$oldDisplayErrors,$oldXDebugDisplayErrors,$original) {
+                restore_error_handler();
+                error_reporting($oldReporting);
+                ini_set('display_errors',$oldDisplayErrors);
+                ini_set('xdebug.force_display_errors',$oldXDebugDisplayErrors);
+
+                $view=($block) ? $block->view : $this->view;
+                $errLine=($block) ? $errLine+$block->line-1 : $errLine;
+
+                throw new ViewException($data,$original,$errStr,$errNo,1,$view,$errLine);
+            });
+        }
+
+        include "$include";
+
+        if ($this->context) {
+            restore_error_handler();
+            error_reporting($oldReporting);
+            ini_set('display_errors',$oldDisplayErrors);
+            ini_set('xdebug.force_display_errors',$oldXDebugDisplayErrors);
+        }
+
+        $result=ob_get_contents();
+        ob_end_clean();
+
+        return $result;
+
+    }
+
     public function getBlock($blockId) {
         if (!isset($this->currentBlocks[$blockId]))
             return '';
 
-        return $this->renderFragment($this->currentBlocks[$blockId]);
+        $block=$this->currentBlocks[$blockId];
+
+        return $this->renderInclude($block->original, $block->file, $block);
+//        return $this->renderFragment($this->currentBlocks[$blockId]);
     }
 
     public function render($data,$blocks=null) {
@@ -210,7 +304,10 @@ class View {
         $this->currentBlocks=$allBlocks;
         $this->currentData=$data;
 
-        return $this->renderFragment($this->parsed);
+        if ($this->context)
+            return $this->renderInclude($this->original, $this->cacheFile);
+        else
+            return $this->renderFragment($this->parsed);
     }
 
     public function renderSubview($subview, $additionalData=null) {
@@ -221,5 +318,15 @@ class View {
     public static function render_view(Context $context, $view, $data) {
         $view=new View($context, $view);
         return $view->render($data);
+    }
+
+    public static function render_error_view(ViewException $ex) {
+        $view=new View(null,'error');
+        return $view->render(['message'=>$ex->getMessage(),
+                              'line'=>$ex->getLine(),
+                              'original'=>$ex->getOriginal(),
+                              'file'=>$ex->getFile(),
+                              'odata'=>$ex->getData()
+                             ]);
     }
 }

@@ -53,4 +53,14 @@ class Term {
 
         return $term;
     }
+
+    public function __debugInfo() {
+        return [
+            'id'=>$this->id,
+            'name'=>$this->name,
+            'name'=>$this->slug,
+            'name'=>$this->group,
+            'name'=>$this->taxonomy
+        ];
+    }
 }

@@ -279,4 +279,15 @@ QUERY;
 
         return $related;
     }
+
+    public function __debugInfo() {
+        return [
+            'id'=>$this->id,
+            'post_name'=>$this->post_name,
+            'title'=>$this->post->post_title,
+            'categories'=>$this->categories(),
+            'tags'=>$this->tags()
+        ];
+    }
+
 }
