@@ -85,6 +85,12 @@ class Context {
     protected $setupCallback;
 
     /**
+     * Callback for pre_get_posts hook
+     * @var callable
+     */
+    protected $preGetPostsCallback;
+
+    /**
      * Dispatcher for requests
      * @var Dispatcher
      */
@@ -240,9 +246,139 @@ class Context {
             }
         });
 
+        if (isset($this->config['clean']['wp_head']))
+        {
+            foreach($this->config['clean']['wp_head'] as $what)
+                remove_action('wp_head', $what);
+        }
+
+        if (isset($this->config['clean']['headers']))
+        {
+            // Unset some junky ass wordpress headers
+            add_filter( 'wp_headers', function($headers){
+                foreach($this->config['clean']['headers'] as $header)
+                    if (isset($headers[$header]))
+                        unset($headers[$header]);
+
+                return $headers;
+            });
+        }
+
         // call the user supplied callback
         if ($this->setupCallback)
             call_user_func($this->setupCallback);
+
+        if (isset($this->config['clean']['wp_head']))
+        {
+            if (in_array('adjacent_posts_rel_link_wp_head',$this->config['clean']['wp_head']))
+            {
+                // Fix Yoast link rel=next
+                if (!function_exists('genesis'))
+                    eval("function genesis(){}");
+                add_filter('wpseo_genesis_force_adjacent_rel_home', function ($value)
+                {
+                    return false;
+                });
+            }
+        }
+
+        $this->setupPostFilter();
+    }
+
+    /**
+     * Sets a callable for pre_get_posts filter.
+     * @param $callable callable
+     */
+    public function onPreGetPosts($callable) {
+        $this->preGetPostsCallback=$callable;
+    }
+
+    /**
+     * Sets up post filtering, enabling options for searching by tag and including custom post types in
+     * query results automatically.
+     */
+    private function setupPostFilter() {
+        add_action( 'pre_get_posts', function($query){
+
+            if (($query->is_home() && $query->is_main_query()) || ($query->is_search()) || ($query->is_tag())) {
+                if ($query->is_search())
+                {
+                    if (isset($this->config['search_options']['post_types']))
+                        $query->set('post_type', $this->config['search_options']['post_types']);
+                }
+                else
+                {
+                    if (isset($this->config['post_types']))
+                        $query->set('post_type', $this->config['post_types']);
+                }
+            }
+
+            if ($this->preGetPostsCallback)
+                call_user_func($this->preGetPostsCallback,$query);
+        });
+
+        $search_tags=(isset($this->config['search_options']['search_tags']) && $this->config['search_options']['search_tags']);
+
+        // Below alter the way wordpress searches
+        if ($search_tags)
+        {
+            add_filter('posts_join', function ($join, $query)
+            {
+                global $wpdb;
+                if (is_main_query() && is_search())
+                {
+                    $join .= "
+                LEFT JOIN
+                (
+                    {$wpdb->term_relationships}
+                    INNER JOIN
+                        {$wpdb->term_taxonomy} ON {$wpdb->term_taxonomy}.term_taxonomy_id = {$wpdb->term_relationships}.term_taxonomy_id
+                    INNER JOIN
+                        {$wpdb->terms} ON {$wpdb->terms}.term_id = {$wpdb->term_taxonomy}.term_id
+                )
+                ON {$wpdb->posts}.ID = {$wpdb->term_relationships}.object_id ";
+                }
+                return $join;
+            }, 10, 2);
+
+            // change the wordpress search
+            add_filter('posts_where', function ($where, $query)
+            {
+                global $wpdb;
+                if (is_main_query() && is_search())
+                {
+                    $user = wp_get_current_user();
+                    $user_where = '';
+                    $status = array("'publish'");
+                    if (!empty($user->ID))
+                    {
+                        $status[] = "'private'";
+
+                        $user_where .= " AND {$wpdb->posts}.post_author = " . esc_sql($user->ID);
+                    }
+                    $user_where .= " AND {$wpdb->posts}.post_status IN( " . implode(',', $status) . " )";
+
+                    $where .= " OR (
+                            {$wpdb->term_taxonomy}.taxonomy IN( 'category', 'post_tag' )
+                            AND
+                            {$wpdb->terms}.name LIKE '%" . esc_sql(get_query_var('s')) . "%'
+                            {$user_where}
+                        )";
+                }
+                return $where;
+            }, 10, 2);
+
+            // change the wordpress search
+            add_filter('posts_groupby', function ($groupby, $query)
+            {
+                global $wpdb;
+                if (is_main_query() && is_search())
+                {
+                    $groupby = "{$wpdb->posts}.ID";
+                }
+                return $groupby;
+            }, 10, 2);
+        }
     }
 
     /**
@@ -338,13 +474,21 @@ class Context {
         if (!$post)
             return null;
 
+        $result=null;
+
         if (isset($this->modelCache["m-$post->ID"]))
             return $this->modelCache["m-$post->ID"];
 
         if (isset($this->modelFactories[$post->post_type])) {
             $result=call_user_func_array($this->modelFactories[$post->post_type],[$this,$post]);
         }
-        else {
+        else if (isset($this->config['model-map'][$post->post_type])) {
+            $className=$this->config['model-map'][$post->post_type];
+            if (class_exists($className))
+                $result=new $className($this,$post);
+        }
+
+        if (!$result) {
             if ($post->post_type=='attachment')
                 $result=new Attachment($this,$post);
             else if ($post->post_type=='page')
