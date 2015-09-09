@@ -14,7 +14,9 @@
     "masterminds/html5": "^2.1",
     "symfony/dom-crawler": "^2.7",
     "symfony/css-selector": "^2.7",
-    "querypath/QueryPath": "^3.0"
+    "querypath/QueryPath": "^3.0",
+    "symfony/routing": "^2.7",
+    "PHP-DI/invoker": "^1.0"
   },
   "require-dev": {},
   "autoload": {

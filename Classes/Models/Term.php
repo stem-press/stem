@@ -5,7 +5,7 @@ namespace ILab\Stem\Models;
 
 use ILab\Stem\Core\Context;
 
-class Term {
+class Term extends WordPressModel {
     private static $termCache=[];
 
     public $id;
@@ -29,7 +29,7 @@ class Term {
         $this->name=$termData->name;
         $this->slug=$termData->slug;
         $this->group=$termData->term_group;
-        $this->taxonomy=$taxonomy;
+        $this->taxonomy=$taxonomy ?: $termData->taxonomy;
         $this->description=$termData->description;
         $this->count=$termData->count;
 
@@ -58,9 +58,17 @@ class Term {
         return [
             'id'=>$this->id,
             'name'=>$this->name,
-            'name'=>$this->slug,
-            'name'=>$this->group,
-            'name'=>$this->taxonomy
+            'slug'=>$this->slug,
+            'group'=>$this->group,
+            'taxonomy'=>$this->taxonomy
+        ];
+    }
+
+    public function jsonSerialize() {
+        return [
+            'name'=>$this->name,
+            'slug'=>$this->slug,
+            'taxonomy'=>($this->taxonomy=='post_tag') ? 'tag' : $this->taxonomy
         ];
     }
 }

@@ -6,7 +6,7 @@ namespace ILab\Stem\Models;
 use ILab\Stem\Core\Context;
 use ILab\Stem\Utilities\Text;
 
-class Post
+class Post extends WordPressModel
 {
     public $id;
     public $post_name;
@@ -285,6 +285,22 @@ QUERY;
             'id'=>$this->id,
             'post_name'=>$this->post_name,
             'title'=>$this->post->post_title,
+            'categories'=>$this->categories(),
+            'tags'=>$this->tags()
+        ];
+    }
+
+    public function jsonSerialize() {
+        return [
+            'type'=>$this->post->post_type,
+            'title'=>$this->title(),
+	        'author'=>$this->author()->display_name,
+            'date'=>$this->date('d/M/Y g:i a'),
+            'content'=>$this->content(false),
+            'excerpt'=>$this->excerpt(),
+            'url'=>$this->permalink(),
+            'mime_type'=>$this->post->post_mime_type,
+            'thumbnail'=>$this->thumbnail(),
             'categories'=>$this->categories(),
             'tags'=>$this->tags()
         ];

@@ -1,6 +1,7 @@
 <?php
 
 namespace ILab\Stem\Core;
+
 use ILab\Stem\Controllers\SearchController;
 use ILab\Stem\Controllers\PostController;
 use ILab\Stem\Controllers\PostsController;
@@ -31,10 +32,10 @@ class Context {
     private $modelCache=[];
 
     /**
-     * Context cache
-     * @var array
+     * Current context
+     * @var Context
      */
-    private static $contexts=[];
+    private static $currentContext;
 
     /**
      * Root path to the theme
@@ -121,10 +122,10 @@ class Context {
     public $debug;
 
     /**
-     * PHP's internal error reporting is supressed
-     * @var bool
+     * Collection of routes
+     * @var Router
      */
-    private $phpErrorReportingSuppressed=false;
+    private $router;
 
 
     /**
@@ -147,6 +148,8 @@ class Context {
         $this->rootPath=$rootPath;
         $this->classPath=$rootPath.'/classes/';
         $this->viewPath=$rootPath.'/views/';
+
+        $this->router=new Router($this);
 
         $this->jsPath=get_template_directory_uri().'/js/';
         $this->cssPath=get_template_directory_uri().'/css/';
@@ -186,6 +189,7 @@ class Context {
             $this->dispatch();
         });
     }
+
 
     /**
      * Does theme setup
@@ -425,13 +429,12 @@ class Context {
     /**
      * Creates the context for this theme.  Should be called in functions.php of the theme
      *
-     * @param $domain string Name of the theme's domain, eg the name of the theme
      * @param $rootPath string The root path to the theme
      * @return Context The new context
      */
-    public static function create($domain,$rootPath) {
+    public static function initialize($rootPath) {
         $context=new Context($rootPath);
-        self::$contexts[$domain]=$context;
+        self::$currentContext=$context;
         return $context;
     }
 
@@ -441,8 +444,8 @@ class Context {
      * @param $domain string The name of the theme's domain, eg the name of the theme
      * @return Context The theme's context
      */
-    public static function get($domain) {
-        return self::$contexts[$domain];
+    public static function current() {
+        return self::$currentContext;
     }
 
     /**
@@ -719,11 +722,20 @@ class Context {
         return $posts;
     }
 
+    /**
+     * Adds a route
+     * @param $name string
+     * @param $routeStr string
+     * @param $destination callable|string
+     */
+    public function addRoute($name,$routeStr,$destination) {
+        $this->router->addRoute($name, $routeStr, $destination);
+    }
+
     public function __debugInfo() {
         return [
             'rootPath'=>$this->rootPath,
             'viewPath'=>$this->viewPath,
-            'cachePath'=>$this->cachePath,
             'jsPath'=>$this->jsPath,
             'cssPath'=>$this->cssPath,
             'classPath'=>$this->classPath,

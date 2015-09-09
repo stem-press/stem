@@ -57,4 +57,22 @@ class Attachment extends Post {
 
         return $this->attachmentInfo['description'];
     }
+
+    public function jsonSerialize() {
+        $json=parent::jsonSerialize();
+        unset($json['author']);
+        unset($json['content']);
+        unset($json['excerpt']);
+        unset($json['categories']);
+        unset($json['thumbnail']);
+        $this->loadAttachmentInfo();
+        $json['sizes']=$this->attachmentInfo['sizes'];
+        $json['width']=$this->attachmentInfo['width'];
+        $json['height']=$this->attachmentInfo['height'];
+        $json['orientation']=$this->attachmentInfo['orientation'];
+        $json['caption']=$this->caption();
+        $json['description']=$this->description();
+        return $json;
+    }
+
 }
