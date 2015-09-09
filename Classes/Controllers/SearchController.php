@@ -4,6 +4,7 @@ namespace ILab\Stem\Controllers;
 use ILab\Stem\Core\Context;
 use ILab\Stem\Core\Controller;
 use ILab\Stem\Models\Post;
+use ILab\Stem\Core\Response;
 use Symfony\Component\HttpFoundation\Request;
 
 class SearchController extends PostsController
@@ -22,7 +23,7 @@ class SearchController extends PostsController
 
     public function getIndex(Request $request) {
         if ($this->template)
-            return $this->context->render($this->template,[
+            return new Response($this->template,[
                 'posts'=>$this->posts,
                 'terms'=>$this->search_terms,
                 'result_count'=>$this->result_count

@@ -4,6 +4,7 @@ namespace ILab\Stem\Controllers;
 
 use ILab\Stem\Core\Context;
 use ILab\Stem\Core\Controller;
+use ILab\Stem\Core\Response;
 use ILab\Stem\Models\Post;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -28,6 +29,6 @@ class PostsController extends Controller
 
     public function getIndex(Request $request) {
         if ($this->template)
-            return $this->context->render($this->template,['posts'=>$this->posts]);
+            return new Response($this->template,['posts'=>$this->posts]);
     }
 }

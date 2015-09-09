@@ -10,6 +10,7 @@ namespace ILab\Stem\Controllers;
 
 use ILab\Stem\Core\Context;
 use ILab\Stem\Core\Controller;
+use ILab\Stem\Core\Response;
 use Symfony\Component\HttpFoundation\Request;
 
 class PageController extends Controller
@@ -26,6 +27,6 @@ class PageController extends Controller
 
     public function getIndex(Request $request) {
         if ($this->template)
-            return $this->context->render($this->template,['page'=>$this->page]);
+            return new Response($this->template,['page'=>$this->page]);
     }
 }

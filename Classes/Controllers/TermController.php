@@ -2,6 +2,7 @@
 namespace ILab\Stem\Controllers;
 
 use ILab\Stem\Core\Context;
+use ILab\Stem\Core\Response;
 use ILab\Stem\Core\Controller;
 use ILab\Stem\Models\Post;
 use ILab\Stem\Models\Term;
@@ -23,7 +24,7 @@ class TermController extends PostsController
 
     public function getIndex(Request $request) {
         if ($this->template)
-            return $this->context->render($this->template,[
+            return new Response($this->template,[
                 'posts'=>$this->posts,
                 'term'=>$this->term,
                 'result_count'=>$this->result_count
