@@ -49,12 +49,6 @@ class Context {
     public $viewPath;
 
     /**
-     * Path to cache directory for caching views
-     * @var string
-     */
-    public $cachePath;
-
-    /**
      * Path to javascript
      * @var string
      */
@@ -120,6 +114,18 @@ class Context {
      */
     public $textdomain;
 
+    /**
+     * Determines if the context is running in debug mode
+     * @var bool
+     */
+    public $debug;
+
+    /**
+     * PHP's internal error reporting is supressed
+     * @var bool
+     */
+    private $phpErrorReportingSuppressed=false;
+
 
     /**
      * Constructor
@@ -141,15 +147,13 @@ class Context {
         $this->rootPath=$rootPath;
         $this->classPath=$rootPath.'/classes/';
         $this->viewPath=$rootPath.'/views/';
-        $this->cachePath=$rootPath.'/cache/';
-        if (!file_exists($this->cachePath)) {
-            mkdir($this->cachePath);
-        }
 
         $this->jsPath=get_template_directory_uri().'/js/';
         $this->cssPath=get_template_directory_uri().'/css/';
         $this->imgPath=get_template_directory_uri().'/img/';
         $this->namespace=$this->config['namespace'];
+
+        $this->debug=(defined(WP_DEBUG) || (getenv('WP_ENV')=='development'));
 
         // Create the controller/template dispatcher
         $this->dispatcher=new Dispatcher($this);
@@ -618,11 +622,14 @@ class Context {
      * @return mixed|string
      */
     public function header() {
+
         ob_start();
         wp_head();
         $header=ob_get_clean();
         $header=preg_replace("/<!--\\s*(?:.*)Yoast(?:.*)-->/", "", $header);
         // TODO: Relative URL filtering
+
+
         return $header;
     }
 
@@ -633,10 +640,12 @@ class Context {
      * @return string
      */
     public function footer() {
+
         ob_start();
         wp_footer();
         $footer=ob_get_clean();
         // TODO: Relative URL filtering
+
         return $footer;
     }
 
