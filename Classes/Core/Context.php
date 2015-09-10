@@ -330,10 +330,10 @@ class Context {
                     if (isset($this->config['post_types']))
                         $query->set('post_type', $this->config['post_types']);
                 }
-            }
 
-            if ($this->preGetPostsCallback)
-                call_user_func($this->preGetPostsCallback,$query);
+                if ($this->preGetPostsCallback)
+                    call_user_func($this->preGetPostsCallback,$query);
+            }
         });
 
         $search_tags=(isset($this->config['search_options']['search_tags']) && $this->config['search_options']['search_tags']);
