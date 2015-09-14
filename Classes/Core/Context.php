@@ -670,7 +670,7 @@ class Context {
             {
                 $parsed=parse_url($permalink);
                 $plink=$parsed['path'];
-                if ($parsed['query'] && !empty($parsed['query']))
+                if (isset($parsed['query']) && !empty($parsed['query']))
                     $plink.='?'.$parsed['query'];
 
                 return $plink;
