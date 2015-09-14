@@ -229,7 +229,7 @@ class Post extends WordPressModel
         if ($this->permalink)
             return $this->permalink;
 
-        $this->permalink = get_permalink($this->post->ID);
+        $this->permalink=$this->context->permalink($this->id);
 
         return $this->permalink;
     }

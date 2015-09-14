@@ -662,6 +662,24 @@ class Context {
         return $this->imgPath.$src;
     }
 
+    public function permalink($post_id) {
+        $permalink=get_permalink($post_id);
+
+        if (isset($this->config['permalinks']['relative']) && $this->config['permalinks']['relative']) {
+            if ($permalink && !empty($permalink))
+            {
+                $parsed=parse_url($permalink);
+                $plink=$parsed['path'];
+                if ($parsed['query'] && !empty($parsed['query']))
+                    $plink.='?'.$parsed['query'];
+
+                return $plink;
+            }
+        }
+
+        return $permalink;
+    }
+
     /**
      * Renders a Wordpress generated menu
      *
