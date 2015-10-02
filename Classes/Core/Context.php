@@ -127,6 +127,12 @@ class Context {
      */
     private $router;
 
+    /**
+     * Site host
+     * @var string
+     */
+    public $siteHost='';
+
 
     /**
      * Constructor
@@ -137,6 +143,7 @@ class Context {
      * @throws \Exception
      */
     public function __construct($rootPath) {
+        $this->siteHost=parse_url(site_url(),PHP_URL_HOST);
         if (!file_exists($rootPath.'/config.json'))
             throw new \Exception('Missing config.json for theme.');
 
@@ -299,6 +306,11 @@ class Context {
                     return false;
                 });
             }
+        }
+
+
+        if (isset($this->config['permalinks']['relative']) && $this->config['permalinks']['relative']) {
+            add_filter('wp_nav_menu',[$this,'make_relative_url']);
         }
 
         $this->setupPostFilter();
@@ -647,6 +659,11 @@ class Context {
         ob_start();
         wp_footer();
         $footer=ob_get_clean();
+
+        // Fix better analytics plug
+        $footer=preg_replace("/<!-- This site uses the Better Analytics plugin.  (.*)? -->/", "", $footer);
+        $footer=preg_replace("/http:\\/\\/$this->siteHost\\/app\\/plugins\\//", "/app/plugins/", $footer);
+
         // TODO: Relative URL filtering
 
         return $footer;
@@ -678,6 +695,14 @@ class Context {
         }
 
         return $permalink;
+    }
+
+    public function make_relative_url($input) {
+        if ($input && !empty($input)) {
+            return preg_replace("/href=\"((http|https):\\/\\/$this->siteHost)(.*)\"/", "href=\"$3\"", $input);
+        }
+
+        return $input;
     }
 
     /**
