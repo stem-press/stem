@@ -43,6 +43,11 @@ class Term extends WordPressModel {
         return new Term($context, null, null, $termData);
     }
 
+    public static function findTerm($termToFind) {
+        $terms=get_terms(['post_tag'],['slug'=>sanitize_title($termToFind)]);
+        return $terms;
+    }
+
     public static function term($context, $termId, $taxonomy) {
         $key="$taxonomy-$termId";
         if (isset(self::$termCache[$key]))

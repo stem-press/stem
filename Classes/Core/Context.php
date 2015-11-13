@@ -253,23 +253,23 @@ class Context {
         }
 
         add_action( 'wp_enqueue_scripts', function(){
-            if (isset($this->config['manifest']))
-            {
-                if (file_exists($this->rootPath.'/'.$this->config['manifest']))
-                {
-                    $manifest=json_decode(file_get_contents($this->rootPath.'/'.$this->config['manifest']),true);
-                    if (isset($manifest['dependencies']))
-                    {
-                        foreach($manifest['dependencies'] as $key=>$info) {
-                            $ext=pathinfo($key,PATHINFO_EXTENSION);
-                            if ($ext=='js')
-                                wp_enqueue_script($key,$this->jsPath.$key,['jquery'],false,true);
-                            else if ($ext=='css')
-                                wp_enqueue_style($key,$this->cssPath.$key);
-                        }
-                    }
+            if (isset($this->config['enqueue'])) {
+                $enqueueConfig=$this->config['enqueue'];
+                if (isset($enqueueConfig['useManifest']) && $enqueueConfig['useManifest'])
+                    $this->enqueueManifest();
+
+                if (isset($enqueueConfig['js'])) {
+                    foreach($enqueueConfig['js'] as $js)
+                        wp_enqueue_script($js,$this->jsPath.$js,['jquery'],false,true);
+                }
+
+                if (isset($enqueueConfig['css'])) {
+                    foreach($enqueueConfig['css'] as $css)
+                        wp_enqueue_style($css,$this->cssPath.$css);
                 }
             }
+            else
+                $this->enqueueManifest();
         });
 
         if (isset($this->config['clean']['wp_head']))
@@ -316,6 +316,26 @@ class Context {
         $this->setupPostFilter();
     }
 
+    private function enqueueManifest() {
+        if (isset($this->config['manifest']))
+        {
+            if (file_exists($this->rootPath.'/'.$this->config['manifest']))
+            {
+                $manifest=json_decode(file_get_contents($this->rootPath.'/'.$this->config['manifest']),true);
+                if (isset($manifest['dependencies']))
+                {
+                    foreach($manifest['dependencies'] as $key=>$info) {
+                        $ext=pathinfo($key,PATHINFO_EXTENSION);
+                        if ($ext=='js')
+                            wp_enqueue_script($key,$this->jsPath.$key,['jquery'],false,true);
+                        else if ($ext=='css')
+                            wp_enqueue_style($key,$this->cssPath.$key);
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * Sets a callable for pre_get_posts filter.
      * @param $callable callable
@@ -356,7 +376,7 @@ class Context {
             add_filter('posts_join', function ($join, $query)
             {
                 global $wpdb;
-                if (is_main_query() && is_search())
+                if ($query->is_main_query() && $query->is_search())
                 {
                     $join .= "
                 LEFT JOIN
@@ -376,7 +396,7 @@ class Context {
             add_filter('posts_where', function ($where, $query)
             {
                 global $wpdb;
-                if (is_main_query() && is_search())
+                if ($query->is_main_query() && $query->is_search())
                 {
                     $user = wp_get_current_user();
                     $user_where = '';
@@ -403,7 +423,7 @@ class Context {
             add_filter('posts_groupby', function ($groupby, $query)
             {
                 global $wpdb;
-                if (is_main_query() && is_search())
+                if ($query->is_main_query() && $query->is_search())
                 {
                     $groupby = "{$wpdb->posts}.ID";
                 }
