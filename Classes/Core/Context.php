@@ -695,6 +695,19 @@ class Context {
             }
         }
 
+        if (isset($this->config['clean']['remove'])) {
+            foreach($this->config['clean']['remove'] as $toremove) {
+                $header=str_replace($toremove,"",$header);
+            }
+        }
+
+
+        if (isset($this->config['clean']['replace'])) {
+            foreach($this->config['clean']['replace'] as $toreplace => $withwhat) {
+                $header=str_replace($toreplace,$withwhat,$header);
+            }
+        }
+
         return $header;
     }
 
