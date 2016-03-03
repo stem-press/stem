@@ -44,6 +44,8 @@ class Dispatcher {
         {
             error_log("Looking for ... $templateName");
 
+            $templateName = strtolower($templateName);
+
             // normalize the name, eg front_page becomes front-page
             $name=preg_replace('|[^a-z0-9_]+|', '-',$templateName);
 
