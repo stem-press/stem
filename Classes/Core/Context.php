@@ -774,16 +774,41 @@ class Context {
      * @param $name string
      * @param bool|false $stripUL
      * @param bool|false $removeText
+     * @param string $insertGap
+     * @param bool|false $array
      * @return false|mixed|object|string|void
      */
-    public function menu($name, $stripUL=false, $removeText=false) {
-        if (!$stripUL)
-            $menu=wp_nav_menu(['theme_location'=>$name,'echo'=>false, 'container'=>false]);
+    public function menu($name, $stripUL=false, $removeText=false, $insertGap='', $array=false) {
+        if ((!$stripUL) && ($insertGap == '')) {
+            $menu = wp_nav_menu(['theme_location' => $name, 'echo' => false, 'container' => false]);
+        }
+        else if ((!$stripUL) && ($insertGap != '')) {
+            $menu = wp_nav_menu(['theme_location' => $name, 'echo' => false, 'container' => false]);
+            $matches=[];
+            preg_match_all("/(<li\\s+class=\"[^\"]+\">.*<\\/li>)+/", $menu, $matches);
+            $links = $matches[0];
+            $gappedLinks = [];
+            for($i = 0; $i < count($links)-1; $i++) {
+                $gappedLinks[] = $links[$i];
+                $gappedLinks[] = "<li class=\"{$insertGap}\" />";
+            }
+
+            $gappedLinks[] = $links[count($links)-1];
+
+            $links = $gappedLinks;
+
+            return "<ul>".implode("\n",$links)."</ul>";
+        }
         else
         {
             $menu=wp_nav_menu(['theme_location'=>$name,'echo'=>false, 'container'=>false, 'items_wrap'=>'%3$s']);
             $matches=[];
             preg_match_all('#(<li\s+id=\"[aA-zZ0-9-]+\"\s+class=\"([^"]+)\"\s*>(.*)<\/li>)#',$menu,$matches);
+            if (isset($matches[2]) && isset($matches[3]) && (count($matches[2])==0)) {
+                $matches=[];
+                preg_match_all('#(<li\s+class=\"([^"]+)\"\s*>(.*)<\/li>)#',$menu,$matches);
+            }
+
             if (isset($matches[2]) && isset($matches[3]))
             {
                 $links=[];
@@ -798,6 +823,23 @@ class Context {
                     }
 
                     $links[]=substr_replace($link,'class="'.implode(' ',$classes).'" ',3,0);
+                }
+
+
+                if ($insertGap != '') {
+                    $gappedLinks = [];
+                    for($i = 0; $i < count($links)-1; $i++) {
+                        $gappedLinks[] = $links[$i];
+                        $gappedLinks[] = "<ul class='{$insertGap}' />";
+                    }
+
+                    $gappedLinks[] = $links[count($links)-1];
+
+                    $links = $gappedLinks;
+                }
+
+                if ($array) {
+                        return $links;
                 }
 
                 $menu=implode("\n",$links);
