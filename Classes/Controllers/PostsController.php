@@ -8,8 +8,8 @@ use ILab\Stem\Core\Response;
 use ILab\Stem\Models\Post;
 use Symfony\Component\HttpFoundation\Request;
 
-class PostsController extends Controller
-{
+class PostsController extends Controller {
+    public $page=null;
     public $posts=[];
     public $totalPosts=0;
 
@@ -17,6 +17,9 @@ class PostsController extends Controller
         parent::__construct($context,$template);
 
         global $wp_query;
+
+        if ($wp_query->post)
+            $this->page = $context->modelForPost($wp_query->post);
 
         $this->totalPosts=$wp_query->found_posts;
 
