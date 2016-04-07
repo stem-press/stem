@@ -80,6 +80,7 @@ class Dispatcher {
                 {
                     if ($pageType=='none')
                     {
+                        error_log("Found for ... $templateName");
                         // Template exists but page type doesn't map to a built-in
                         // controller, so we just render the template as is.
                         echo $this->context->render('templates/' . $name, [$this->context]);
