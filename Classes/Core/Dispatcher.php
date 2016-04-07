@@ -96,6 +96,7 @@ class Dispatcher {
 
             // if we found a controller, then invoke the method and return it's output
             if ($controller) {
+                error_log("Found for ... $templateName");
                 if (method_exists($controller,$method))
                     $response=call_user_func([$controller,$method],$request);
                 else
