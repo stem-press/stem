@@ -58,6 +58,7 @@ class Dispatcher {
 
             // Interpolate the class name
             $class = $this->context->namespace.'\\Controllers\\'.$classname.'Controller';
+            error_log("Looking for class ... $class");
 
             // Create the request object
             $request=Request::createFromGlobals();
