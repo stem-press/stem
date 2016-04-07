@@ -741,6 +741,12 @@ class Context {
     public function image($src) {
         return $this->imgPath.$src;
     }
+    public function script($src) {
+        return $this->jsPath.$src;
+    }
+    public function css($src) {
+        return $this->cssPath.$src;
+    }
 
     public function permalink($post_id) {
         $permalink=get_permalink($post_id);
