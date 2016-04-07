@@ -92,6 +92,7 @@ class Dispatcher {
                 }
                 else
                 {
+                    error_log("Mapping controller for class ... $name");
                     $controller=$this->context->mapController($name);
                 }
             }
