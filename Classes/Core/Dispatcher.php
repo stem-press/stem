@@ -60,12 +60,9 @@ class Dispatcher {
             $class = $this->context->namespace.'\\Controllers\\'.$classname.'Controller';
             error_log("Looking for class ... $class");
 
-            // Create the request object
-            $request=Request::createFromGlobals();
-
             // Determine the action and controller method
-            $action = ($request->query->has('_action')) ? ucfirst($request->query->get('_action')) : 'Index';
-            $method = strtolower($request->getMethod()) . $action;
+            $action = ($this->context->request->query->has('_action')) ? ucfirst($this->context->request->query->get('_action')) : 'Index';
+            $method = strtolower($this->context->request->getMethod()) . $action;
 
             $controller=null;
 
@@ -101,13 +98,13 @@ class Dispatcher {
             if ($controller) {
                 error_log("Found for ... $templateName");
                 if (method_exists($controller,$method))
-                    $response=call_user_func([$controller,$method],$request);
+                    $response=call_user_func([$controller,$method],$this->context->request);
                 else
                 {
                     // Try GET if method was something other ...
                     $method = 'get' . $action;
                     if (method_exists($controller,$method))
-                        $response=call_user_func([$controller,$method],$request);
+                        $response=call_user_func([$controller,$method],$this->context->request);
                     else
                         throw new \Exception("Missing method '$method' on class '$class'.");
                 }

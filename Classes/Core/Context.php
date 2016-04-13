@@ -10,6 +10,7 @@ use ILab\Stem\Controllers\TermController;
 use ILab\Stem\Models\Attachment;
 use ILab\Stem\Models\Page;
 use ILab\Stem\Models\Post;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class Context
@@ -133,6 +134,12 @@ class Context {
      */
     public $siteHost='';
 
+    /**
+     * Current request
+     * @var null|Request
+     */
+    public $request=null;
+
 
     /**
      * Constructor
@@ -146,6 +153,9 @@ class Context {
         $this->siteHost=parse_url(site_url(),PHP_URL_HOST);
         if (!file_exists($rootPath.'/config.json'))
             throw new \Exception('Missing config.json for theme.');
+
+        // Create the request object
+        $this->request=Request::createFromGlobals();
 
         $this->config=json_decode(file_get_contents($rootPath.'/config.json'),true);
 
