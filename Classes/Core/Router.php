@@ -69,8 +69,8 @@ class Router {
 
             if (isset($match['controller']))
             {
-                $controller = $match['callable'];
-                $method = $match['callable'];
+                $controller = $match['controller'];
+                $method = $match['method'];
             }
 
             unset($match['callable']);
@@ -85,6 +85,18 @@ class Router {
                 $invoker=new Invoker();
 
                 $response=$invoker->call($callable,$match);
+            }
+
+            if ($controller) {
+                if (!class_exists($controller)) {
+                    $error = new Response('Invalid method',501);
+                    $error->send();
+                    die;
+                }
+
+                $controllerInst = new $controller($this->context);
+
+                $response = call_user_func_array([$controllerInst, $method],array_values($match));
             }
 
             if (is_object($response) && ($response instanceof Response))
