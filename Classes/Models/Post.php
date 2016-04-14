@@ -21,6 +21,7 @@ class Post extends WordPressModel
     private $tags = null;
     private $permalink = null;
     private $thumbnail = null;
+    private $slug = null;
 
 
     public function __construct(Context $context, \WP_Post $post)
@@ -29,6 +30,7 @@ class Post extends WordPressModel
         $this->post_name=$post->post_name;
         $this->context = $context;
         $this->post = $post;
+        $this->slug = $post->post_name;
     }
 
     public function author()
@@ -59,6 +61,13 @@ class Post extends WordPressModel
         }
 
         return $this->categories;
+    }
+
+    public function slug() {
+        if ($this->slug)
+            return $this->slug;
+
+
     }
 
     public function topCategory()
