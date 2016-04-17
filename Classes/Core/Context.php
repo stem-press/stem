@@ -157,7 +157,7 @@ class Context {
         // Create the request object
         $this->request=Request::createFromGlobals();
 
-        $this->config=json_decode(file_get_contents($rootPath.'/config.json'),true);
+        $this->config = JSONParser::parse(file_get_contents($rootPath.'/config.json'));
 
         $this->textdomain=$this->config['textdomain'];
 
@@ -222,6 +222,16 @@ class Context {
                     add_theme_support($feature, $params);
                 else
                     add_theme_support($feature);
+            }
+        }
+
+        // configure routes
+        if (isset($this->config['routes'])) {
+            foreach($this->config['routes'] as $routeName => $routeInfo) {
+                $defaults = (isset($routeInfo['defaults']) && is_array($routeInfo['defaults'])) ? $routeInfo['defaults'] : [];
+                $requirements = (isset($routeInfo['requirements']) && is_array($routeInfo['requirements'])) ? $routeInfo['requirements'] : [];
+                $methods = (isset($routeInfo['methods']) && is_array($routeInfo['methods'])) ? $routeInfo['methods'] : [];
+                $this->router->addRoute($routeName, $routeInfo['endPoint'], $routeInfo['controller'], $defaults, $requirements, $methods);
             }
         }
 
@@ -327,11 +337,11 @@ class Context {
     }
 
     private function enqueueManifest() {
-        if (isset($this->config['manifest']))
+        if (isset($this->config['enqueue']['manifest']))
         {
-            if (file_exists($this->rootPath.'/'.$this->config['manifest']))
+            if (file_exists($this->rootPath.'/'.$this->config['enqueue']['manifest']))
             {
-                $manifest=json_decode(file_get_contents($this->rootPath.'/'.$this->config['manifest']),true);
+                $manifest=JSONParser::parse(file_get_contents($this->rootPath.'/'.$this->config['enqueue']['manifest']),true);
                 if (isset($manifest['dependencies']))
                 {
                     foreach($manifest['dependencies'] as $key=>$info) {

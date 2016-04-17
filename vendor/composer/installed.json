@@ -5,12 +5,12 @@
         "version_normalized": "2.7.3.0",
         "source": {
             "type": "git",
-            "url": "https://github.com/symfony/HttpFoundation.git",
+            "url": "https://github.com/symfony/http-foundation.git",
             "reference": "863af6898081b34c65d42100c370b9f3c51b70ca"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/symfony/HttpFoundation/zipball/863af6898081b34c65d42100c370b9f3c51b70ca",
+            "url": "https://api.github.com/repos/symfony/http-foundation/zipball/863af6898081b34c65d42100c370b9f3c51b70ca",
             "reference": "863af6898081b34c65d42100c370b9f3c51b70ca",
             "shasum": ""
         },
@@ -127,12 +127,12 @@
         "version_normalized": "2.7.3.0",
         "source": {
             "type": "git",
-            "url": "https://github.com/symfony/DomCrawler.git",
+            "url": "https://github.com/symfony/dom-crawler.git",
             "reference": "9dabece63182e95c42b06967a0d929a5df78bc35"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/symfony/DomCrawler/zipball/9dabece63182e95c42b06967a0d929a5df78bc35",
+            "url": "https://api.github.com/repos/symfony/dom-crawler/zipball/9dabece63182e95c42b06967a0d929a5df78bc35",
             "reference": "9dabece63182e95c42b06967a0d929a5df78bc35",
             "shasum": ""
         },
@@ -182,12 +182,12 @@
         "version_normalized": "2.7.3.0",
         "source": {
             "type": "git",
-            "url": "https://github.com/symfony/CssSelector.git",
+            "url": "https://github.com/symfony/css-selector.git",
             "reference": "0b5c07b516226b7dd32afbbc82fe547a469c5092"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/symfony/CssSelector/zipball/0b5c07b516226b7dd32afbbc82fe547a469c5092",
+            "url": "https://api.github.com/repos/symfony/css-selector/zipball/0b5c07b516226b7dd32afbbc82fe547a469c5092",
             "reference": "0b5c07b516226b7dd32afbbc82fe547a469c5092",
             "shasum": ""
         },
@@ -280,12 +280,12 @@
         "version_normalized": "2.7.4.0",
         "source": {
             "type": "git",
-            "url": "https://github.com/symfony/Routing.git",
+            "url": "https://github.com/symfony/routing.git",
             "reference": "20b1378cb6efffb77ea0608232f18c8f0dd25109"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/symfony/Routing/zipball/20b1378cb6efffb77ea0608232f18c8f0dd25109",
+            "url": "https://api.github.com/repos/symfony/routing/zipball/20b1378cb6efffb77ea0608232f18c8f0dd25109",
             "reference": "20b1378cb6efffb77ea0608232f18c8f0dd25109",
             "shasum": ""
         },

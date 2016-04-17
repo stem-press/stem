@@ -5,6 +5,7 @@ namespace ILab\Stem\Core;
 use Invoker\Invoker;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Exception\MethodNotAllowedException;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 use Symfony\Component\Routing\Matcher\UrlMatcher;
 use Symfony\Component\Routing\RequestContext;
@@ -30,19 +31,22 @@ class Router {
             if ($this->routes->count()>0) {
                 $this->dispatch();
             }
-        });
+        },1000000);
     }
 
-    public function addRoute($name, $routeStr, $destination) {
+    public function addRoute($name, $routeStr, $destination, $defaults=[], $requirements=[], $methods=[]) {
         if (is_callable($destination))
         {
-            $route=new Route($routeStr,['callable'=>$destination]);
+            $defaults['callable']=$destination;
+            $route=new Route($routeStr,$defaults,$requirements,[],'',[],$methods);
             $this->routes->add($name,$route);
         }
         else if (is_string($destination))
         {
             $destination=explode('@',$destination);
-            $route=new Route($routeStr,['controller'=>$destination[0],'method'=>$destination[1]]);
+            $defaults['controller']=$destination[0];
+            $defaults['method']=$destination[1];
+            $route=new Route($routeStr,$defaults,$requirements,[],'',[],$methods);
             $this->routes->add($name,$route);
         }
     }
@@ -109,6 +113,11 @@ class Router {
             }
 
             die;
+        }
+        catch(MethodNotAllowedException $mex) {
+            // let wordpress continue doing what it does.
+            $response = new Response('Method not allowed', 405);
+            $response->send();
         }
         catch(ResourceNotFoundException $ex) {
             // let wordpress continue doing what it does.
