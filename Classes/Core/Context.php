@@ -177,9 +177,9 @@ class Context {
 
         // Create the controller/template dispatcher
         $this->dispatcher=new Dispatcher($this);
-
-        if (isset($this->config['controller-map']))
-            $this->controllerMap=$this->config['controller-map'];
+//
+//        if (isset($this->config['controller-map']))
+//            $this->controllerMap=$this->config['controller-map'];
 
         // Autoload function for theme classes
         spl_autoload_register(function($class) {
@@ -205,6 +205,19 @@ class Context {
         add_filter('template_include',function($template){
             $this->dispatch();
         });
+
+        if (isset($this->config['page-controllers'])) {
+            $this->templates=$this->config['page-controllers'];
+            foreach($this->config['page-controllers'] as $key => $controller)
+                $this->controllerMap[strtolower(preg_replace("/\\s+/","-",$key))]=$controller;
+
+            add_filter('theme_page_templates',function($page_templates, $theme, $post){
+                foreach($this->config['page-controllers'] as $key => $controller)
+                    $page_templates[preg_replace("/\\s+/","-",$key).'.php']=$key;
+
+                return $page_templates;
+            }, 10, 3);
+        }
     }
 
 
@@ -213,6 +226,7 @@ class Context {
      */
     protected function setup()
     {
+
         // configures theme support
         if (isset($this->config['support']))
         {
