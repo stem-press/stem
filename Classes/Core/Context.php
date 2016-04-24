@@ -230,6 +230,23 @@ class Context {
             $paths[] = get_stylesheet_directory() . '/config/fields';
             return $paths;
         });
+
+        if (file_exists($rootPath.'/config/types.json')) {
+            add_action( 'init', [$this, 'installCustomPostTypes'], 10000);
+        }
+    }
+
+    /**
+     * Install custom post types
+     */
+    public function installCustomPostTypes() {
+        if (!file_exists($this->rootPath.'/config/types.json'))
+            return;
+
+        $types = JSONParser::parse(file_get_contents($this->rootPath . '/config/types.json'));
+
+        foreach($types as $cpt => $details)
+            register_post_type($cpt, $details);
     }
 
 
