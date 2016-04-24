@@ -204,6 +204,8 @@ class View {
         $data['view']=$this;
         extract($data);
 
+        $fragment = "<?php use ILab\\Stem\\Utilities\\Form; ?>".$fragment;
+
         ob_start();
         eval("?>".trim($fragment));
         $result=ob_get_contents();
@@ -214,6 +216,8 @@ class View {
 
     protected function renderDebugFragment($original, $fragment, $block=null) {
         $data=($this->currentData!=null) ? $this->currentData : [];
+        
+        $fragment = "<?php use ILab\\Stem\\Utilities\\Form; ?>".$fragment;
 
         $data['view']=$this;
         extract($data);
