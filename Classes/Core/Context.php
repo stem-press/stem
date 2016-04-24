@@ -144,20 +144,20 @@ class Context {
     /**
      * Constructor
      *
-     * Throws an exception if config.json file is missing.
+     * Throws an exception if config/app.json file is missing.
      *
      * @param $rootPath string The root path to the theme
      * @throws \Exception
      */
     public function __construct($rootPath) {
         $this->siteHost=parse_url(site_url(),PHP_URL_HOST);
-        if (!file_exists($rootPath.'/config.json'))
-            throw new \Exception('Missing config.json for theme.');
+        if (!file_exists($rootPath.'/config/app.json'))
+            throw new \Exception('Missing app.json for theme.');
 
         // Create the request object
         $this->request=Request::createFromGlobals();
 
-        $this->config = JSONParser::parse(file_get_contents($rootPath.'/config.json'));
+        $this->config = JSONParser::parse(file_get_contents($rootPath.'/config/app.json'));
 
         $this->textdomain=$this->config['textdomain'];
 
@@ -218,6 +218,18 @@ class Context {
                 return $page_templates;
             }, 10, 3);
         }
+
+        // Load/save ACF Pro JSON fields to our config directory
+        add_filter('acf/settings/save_json', function ( $path ) {
+            $path = get_stylesheet_directory() . '/config/fields';
+            return $path;
+        });
+
+        add_filter('acf/settings/load_json', function ( $paths ) {
+            unset($paths[0]);
+            $paths[] = get_stylesheet_directory() . '/config/fields';
+            return $paths;
+        });
     }
 
 
