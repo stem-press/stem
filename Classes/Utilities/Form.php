@@ -362,4 +362,15 @@ final class Form
 
         return self::buildSelect($id, $name, $class, $years, $selectedVal);
     }
+
+    public static function creditCardTypeSelect($defaultValue, $id = null, $name = null, $class = null, $selectedVal=null) {
+        $types = [
+            '-' => $defaultValue,
+            'visa' => 'Visa',
+            'mastercard' => 'Mastercard',
+            'discover' => 'Discover',
+            'amex' => 'American Express'
+        ];
+        return self::buildSelect($id, $name, $class, $types, $selectedVal);
+    }
 }

@@ -99,7 +99,6 @@ class Router {
                 }
 
                 $controllerInst = new $controller($this->context);
-
                 $response = call_user_func_array([$controllerInst, $method],array_values($match));
             }
 

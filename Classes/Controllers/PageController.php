@@ -22,7 +22,8 @@ class PageController extends Controller
 
         global $wp_query;
 
-        $this->page=$context->modelForPost($wp_query->post);
+        if ($wp_query->post)
+            $this->page=$context->modelForPost($wp_query->post);
     }
 
     public function getIndex(Request $request) {
