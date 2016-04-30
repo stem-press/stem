@@ -18,7 +18,7 @@ class PostsController extends Controller {
 
         global $wp_query;
 
-        if ($wp_query->post)
+        if ($wp_query->post && ($wp_query->post->post_type == 'page'))
             $this->page = $context->modelForPost($wp_query->post);
 
         $this->totalPosts=$wp_query->found_posts;

@@ -293,7 +293,6 @@ class Dispatcher {
         elseif ($wp_query->is_author() && $this->dispatchAuthorTemplate()):
         elseif ($wp_query->is_date() && $this->dispatchTemplate('date','posts')):
         elseif ($wp_query->is_archive() && $this->dispatchArchiveTemplate()):
-        elseif ($wp_query->is_comments_popup() && $this->dispatchTemplate('comments_popup','none')):
         elseif ($wp_query->is_paged() && $this->dispatchTemplate('paged','posts')):
         else :
             $this->dispatchTemplate('index','posts');

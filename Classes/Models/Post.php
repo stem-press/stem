@@ -140,6 +140,34 @@ class Post extends WordPressModel
 
         return $content;
     }
+    
+    public function videoEmbeds() {
+        $embedRegexes=[
+            "#(http|https):\\/\\/(www.)*youtube.com\\/embed\\/([^'\"]+)#i",
+            '#(http|https)://(www\.)?youtube\.com/watch.*#i',
+            '#(http|https)://(www\.)?youtube\.com/playlist.*#i',
+            '#(http|https)://youtu\.be/.*#i',
+            '#(http|https)?://(.+\.)?vimeo\.com/.*#i'
+        ];
+
+        $embeds=[];
+
+        foreach ($embedRegexes as $regex) {
+            $matches=[];
+            if (preg_match_all($regex, $this->post->post_content, $matches)) {
+                $match=$matches[0][0];
+
+                if (strpos($match,'embed')>0) {
+                    $parts=explode("/",$match);
+                    $embeds[] = "https://www.youtube.com/watch?v=".array_pop($parts);
+                } else {
+                    $embeds[] = $match;
+                }
+            }
+        }
+
+        return $embeds;
+    }
 
     public function date($format = 'd/M/Y')
     {
