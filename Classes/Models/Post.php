@@ -33,6 +33,10 @@ class Post extends WordPressModel
         $this->slug = $post->post_name;
     }
 
+    public function wpPost() {
+        return $this->post;
+    }
+
     public function author()
     {
         if ($this->author)
