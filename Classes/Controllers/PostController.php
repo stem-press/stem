@@ -22,7 +22,8 @@ class PostController extends Controller
 
         global $wp_query;
 
-        $this->post=$context->modelForPost($wp_query->post);
+        if ($wp_query->post)
+            $this->post=$context->modelForPost($wp_query->post);
     }
 
     public function getIndex(Request $request) {

@@ -269,8 +269,9 @@ class Context {
         }
 
         // configure routes
-        if (isset($this->config['routes'])) {
-            foreach($this->config['routes'] as $routeName => $routeInfo) {
+        if (file_exists($this->rootPath.'/config/routes.json')) {
+            $routesConfig = JSONParser::parse(file_get_contents($this->rootPath . '/config/routes.json'));
+            foreach($routesConfig as $routeName => $routeInfo) {
                 $defaults = (isset($routeInfo['defaults']) && is_array($routeInfo['defaults'])) ? $routeInfo['defaults'] : [];
                 $requirements = (isset($routeInfo['requirements']) && is_array($routeInfo['requirements'])) ? $routeInfo['requirements'] : [];
                 $methods = (isset($routeInfo['methods']) && is_array($routeInfo['methods'])) ? $routeInfo['methods'] : [];
@@ -279,11 +280,11 @@ class Context {
         }
 
         // configure image sizes
-        if (isset($this->config['sizes']))
-        {
+        if (file_exists($this->rootPath.'/config/sizes.json')) {
+            $sizesConfig = JSONParser::parse(file_get_contents($this->rootPath.'/config/sizes.json'));
             $customSizes=[];
 
-            foreach($this->config['sizes'] as $key => $info){
+            foreach($sizesConfig as $key => $info){
                 if ($key=='post-thumbnail') {
                     set_post_thumbnail_size( $info['width'],$info['height'],$info['crop']);
                 }
@@ -305,7 +306,7 @@ class Context {
                 });
             }
         }
-        
+
         if (isset($this->config['menu']))
         {
             $menus=[];
