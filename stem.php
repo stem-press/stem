@@ -1,8 +1,8 @@
 <?php
 /*
-Plugin Name: ILAB Stem
+Plugin Name: ILAB Stem App Framework
 Plugin URI: http://interfacelab.com/stem
-Description: Complete theme building tools
+Description: Framework for building applications using Wordpress and Symfony
 Author: Jon Gilkison
 Version: 0.1
 Author URI: http://interfacelab.com
