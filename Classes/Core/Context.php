@@ -188,6 +188,7 @@ class Context {
             }
 
             $class=strtr($class, '\\', DIRECTORY_SEPARATOR);
+            error_log("Autoload looking for class $class");
             if (file_exists($this->classPath.$class.'.php'))
             {
                 require_once($this->classPath . $class . '.php');
