@@ -608,6 +608,8 @@ class Context {
         if (!$post)
             return null;
 
+        error_log("Looking for {$post->post_type}");
+
         $result=null;
 
         if (isset($this->modelCache["m-$post->ID"]))
@@ -615,11 +617,15 @@ class Context {
 
         if (isset($this->modelFactories[$post->post_type])) {
             $result=call_user_func_array($this->modelFactories[$post->post_type],[$this,$post]);
+            error_log("Found model factory for {$post->post_type}");
         }
         else if (isset($this->config['model-map'][$post->post_type])) {
             $className=$this->config['model-map'][$post->post_type];
+            error_log("Found class name $className mapped for {$post->post_type}");
             if (class_exists($className))
                 $result=new $className($this,$post);
+            else
+                error_log("$className does not exist.");
         }
 
         if (!$result) {
