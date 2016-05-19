@@ -237,16 +237,36 @@ class Context {
     }
 
     /**
+     * Installs multiple custom post types from individual json files.
+     */
+    private function installMultipleCustomPostTypes() {
+        if (!file_exists($this->rootPath.'/config/types/'))
+            return;
+
+        $files = glob($this->rootPath.'/config/types/*.json');
+
+        foreach($files as $file) {
+            $type = JSONParser::parse(file_get_contents($file));
+            $name = (isset($type['name'])) ? $type['name'] : null;
+            register_post_type($name, $type);
+        }
+    }
+
+    /**
      * Install custom post types
      */
     public function installCustomPostTypes() {
-        if (!file_exists($this->rootPath.'/config/types.json'))
+        if (!file_exists($this->rootPath.'/config/types.json')) {
+            $this->installMultipleCustomPostTypes();
             return;
+        }
 
         $types = JSONParser::parse(file_get_contents($this->rootPath . '/config/types.json'));
 
         foreach($types as $cpt => $details)
             register_post_type($cpt, $details);
+
+        $this->installMultipleCustomPostTypes();
     }
 
 
