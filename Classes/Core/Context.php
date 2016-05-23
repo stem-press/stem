@@ -21,6 +21,18 @@ use Symfony\Component\HttpFoundation\Request;
  */
 class Context {
     /**
+     * Determin if relative links should be used anywhere applicable.
+     * @var bool
+     */
+    private $useRelative = true;
+
+    /**
+     * The forced domain
+     * @var string
+     */
+    private $forcedDomain = null;
+
+    /**
      * Controller Map
      * @var array
      */
@@ -135,6 +147,12 @@ class Context {
     public $siteHost='';
 
     /**
+     * Http host
+     * @var string
+     */
+    public $httpHost='';
+
+    /**
      * Current request
      * @var null|Request
      */
@@ -151,6 +169,8 @@ class Context {
      */
     public function __construct($rootPath) {
         $this->siteHost=parse_url(site_url(),PHP_URL_HOST);
+        $this->httpHost=$_SERVER['HTTP_HOST'];
+
         if (!file_exists($rootPath.'/config/app.json'))
             throw new \Exception('Missing app.json for theme.');
 
@@ -159,7 +179,7 @@ class Context {
 
         $this->config = JSONParser::parse(file_get_contents($rootPath.'/config/app.json'));
 
-        $this->textdomain=$this->config['textdomain'];
+        $this->textdomain=$this->config['text-domain'];
 
         // Setup our paths
         $this->rootPath=$rootPath;
@@ -171,15 +191,25 @@ class Context {
         $this->jsPath=get_template_directory_uri().'/js/';
         $this->cssPath=get_template_directory_uri().'/css/';
         $this->imgPath=get_template_directory_uri().'/img/';
+
         $this->namespace=$this->config['namespace'];
+
+        if (isset($this->config['options'])) {
+            if (isset($this->config['options']['relative-links']))
+                $this->useRelative = $this->config['options']['relative-links'];
+
+            if (isset($this->config['options']['force-domain']))
+                $this->forcedDomain = $this->config['options']['force-domain'];
+
+            if ($this->forcedDomain)
+                $this->forcedDomain=trim($this->forcedDomain, '/').'/';
+        }
+
 
         $this->debug=(defined(WP_DEBUG) || (getenv('WP_ENV')=='development'));
 
         // Create the controller/template dispatcher
         $this->dispatcher=new Dispatcher($this);
-//
-//        if (isset($this->config['controller-map']))
-//            $this->controllerMap=$this->config['controller-map'];
 
         // Autoload function for theme classes
         spl_autoload_register(function($class) {
@@ -339,7 +369,7 @@ class Context {
         add_action( 'wp_enqueue_scripts', function(){
             if (isset($this->config['enqueue'])) {
                 $enqueueConfig=$this->config['enqueue'];
-                if (isset($enqueueConfig['useManifest']) && $enqueueConfig['useManifest'])
+                if (isset($enqueueConfig['use-manifest']) && $enqueueConfig['use-manifest'])
                     $this->enqueueManifest();
 
                 if (isset($enqueueConfig['js'])) {
@@ -393,7 +423,7 @@ class Context {
         }
 
 
-        if (isset($this->config['permalinks']['relative']) && $this->config['permalinks']['relative']) {
+        if ($this->useRelative) {
             add_filter('wp_nav_menu',[$this,'make_relative_url']);
         }
 
@@ -438,13 +468,13 @@ class Context {
             if (($query->is_home() && $query->is_main_query()) || ($query->is_search()) || ($query->is_tag())) {
                 if ($query->is_search())
                 {
-                    if (isset($this->config['search_options']['post_types']))
-                        $query->set('post_type', $this->config['search_options']['post_types']);
+                    if (isset($this->config['search-options']['post-types']))
+                        $query->set('post_type', $this->config['search-options']['post-types']);
                 }
                 else
                 {
-                    if (isset($this->config['post_types']))
-                        $query->set('post_type', $this->config['post_types']);
+                    if (isset($this->config['post-types']))
+                        $query->set('post_type', $this->config['post-types']);
                 }
 
                 if ($this->preGetPostsCallback)
@@ -452,7 +482,7 @@ class Context {
             }
         });
 
-        $search_tags=(isset($this->config['search_options']['search_tags']) && $this->config['search_options']['search_tags']);
+        $search_tags=(isset($this->config['search-options']['search-tags']) && $this->config['search-options']['search-tags']);
 
         // Below alter the way wordpress searches
         if ($search_tags)
@@ -724,6 +754,7 @@ class Context {
             ob_start();
             $result=View::render_view($this,$view,$data);
             ob_end_clean();
+            $result = $this->forceRelativeURLs($result);
             return $result;
         }
         catch (ViewException $ex) {
@@ -735,6 +766,23 @@ class Context {
         }
     }
 
+
+    private function forceRelativeURLs($output) {
+        if ($this->useRelative) {
+            $output=preg_replace('/(?:http|https):\/\/'.$this->siteHost.'\/app\//', "/app/", $output);
+            $output=preg_replace('/(?:http|https):\/\/'.$this->httpHost.'\/app\//', "/app/", $output);
+            $output=preg_replace('/(?:http|https):\/\/'.$this->siteHost.'\/wp\//', "/wp/", $output);
+            $output=preg_replace('/(?:http|https):\/\/'.$this->httpHost.'\/wp\//', "/wp/", $output);
+        }
+
+        if ($this->forcedDomain) {
+            $output=preg_replace('/(?:http|https):\/\/'.$this->siteHost.'\//', $this->forcedDomain, $output);
+            $output=preg_replace('/(?:http|https):\/\/'.$this->httpHost.'\//', $this->forcedDomain, $output);
+        }
+
+        return $output;
+    }
+    
     /**
      * Outputs the Wordpress generated header html
      *
@@ -809,9 +857,7 @@ class Context {
 
         // Fix better analytics plug
         $footer=preg_replace("/<!-- This site uses the Better Analytics plugin.  (.*)? -->/", "", $footer);
-        $footer=preg_replace("/http:\\/\\/$this->siteHost\\/app\\/plugins\\//", "/app/plugins/", $footer);
 
-        // TODO: Relative URL filtering
 
         return $footer;
     }
@@ -823,19 +869,26 @@ class Context {
      * @return string
      */
     public function image($src) {
-        return $this->imgPath.$src;
+        $output = $this->imgPath.$src;
+
+        return $output;
     }
+
     public function script($src) {
-        return $this->jsPath.$src;
+        $output = $this->jsPath.$src;
+
+        return $output;
     }
     public function css($src) {
-        return $this->cssPath.$src;
+        $output = $this->cssPath.$src;
+
+        return $output;
     }
 
     public function permalink($post_id) {
         $permalink=get_permalink($post_id);
 
-        if (isset($this->config['permalinks']['relative']) && $this->config['permalinks']['relative']) {
+        if ($this->useRelative) {
             if ($permalink && !empty($permalink))
             {
                 $parsed=parse_url($permalink);
@@ -852,7 +905,8 @@ class Context {
 
     public function make_relative_url($input) {
         if ($input && !empty($input)) {
-            return preg_replace("/href=\"((http|https):\\/\\/$this->siteHost)(.*)\"/", "href=\"$3\"", $input);
+            $input=preg_replace("/href=\"((http|https):\\/\\/$this->siteHost)(.*)\"/", "href=\"$3\"", $input);
+            return preg_replace("/href=\"((http|https):\\/\\/$this->httpHost)(.*)\"/", "href=\"$3\"", $input);
         }
 
         return $input;
