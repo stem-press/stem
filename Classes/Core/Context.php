@@ -158,6 +158,12 @@ class Context {
      */
     public $request=null;
 
+    /**
+     * View class
+     * @var string
+     */
+    private $viewClass = 'ILab\Stem\Core\StemView';
+
 
     /**
      * Constructor
@@ -194,18 +200,17 @@ class Context {
 
         $this->namespace=$this->config['namespace'];
 
-        if (isset($this->config['options'])) {
-            if (isset($this->config['options']['relative-links']))
-                $this->useRelative = $this->config['options']['relative-links'];
+        $this->useRelative = $this->setting('options/relative-links', true);
 
-            if (isset($this->config['options']['force-domain']))
-                $this->forcedDomain = $this->config['options']['force-domain'];
+        $this->forcedDomain = $this->setting('options/force-domain', null);
+        if ($this->forcedDomain)
+            $this->forcedDomain=trim($this->forcedDomain, '/').'/';
 
-            if ($this->forcedDomain)
-                $this->forcedDomain=trim($this->forcedDomain, '/').'/';
+        $viewEngine = $this->setting('options/views/engine');
+        if ($viewEngine == 'twig') {
+            $this->viewClass = '\ILab\Stem\External\Twig\TwigView';
         }
-
-
+        
         $this->debug=(defined(WP_DEBUG) || (getenv('WP_ENV')=='development'));
 
         // Create the controller/template dispatcher
@@ -264,6 +269,27 @@ class Context {
         if (file_exists($rootPath.'/config/types.json')) {
             add_action( 'init', [$this, 'installCustomPostTypes'], 10000);
         }
+    }
+
+    public function setting($settingPath, $default = false) {
+        $path = explode('/',$settingPath);
+
+        $config = $this->config;
+
+        for ($i = 0; $i < count($path); $i++) {
+            $part = $path[$i];
+
+            if (!isset($config[$part]))
+                return $default;
+
+            if ($i == count($path)-1) {
+                return $config[$part];
+            }
+
+            $config=$config[$part];
+        }
+
+        return $default;
     }
 
     /**
@@ -741,6 +767,11 @@ class Context {
 
         return null;
     }
+    
+    public function viewExists($view) {
+        $vc = $this->viewClass;
+        return $vc::viewExists($this, $view);
+    }
 
     /**
      * Renders a view
@@ -750,20 +781,8 @@ class Context {
      * @return string The rendered view
      */
     public function render($view,$data) {
-        try {
-            ob_start();
-            $result=View::render_view($this,$view,$data);
-            ob_end_clean();
-            $result = $this->forceRelativeURLs($result);
-            return $result;
-        }
-        catch (ViewException $ex) {
-            while (ob_get_level()>0)
-                ob_end_clean();
-
-            echo View::render_error_view($ex);
-            die;
-        }
+        $vc = $this->viewClass;
+        return $vc::renderView($this, $view, $data);
     }
 
 

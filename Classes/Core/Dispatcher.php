@@ -74,7 +74,7 @@ class Dispatcher {
             else
             {
                 // Otherwise, we check to see if the template exists.
-                if (file_exists($this->context->viewPath.'templates/'.$name.'.php'))
+                if ($this->context->viewExists('templates/'.$name))
                 {
                     if ($pageType=='none')
                     {
