@@ -261,6 +261,8 @@ class Context {
 		$viewEngine = $this->setting('options/views/engine');
 		if ($viewEngine == 'twig') {
 			$this->viewClass = '\ILab\Stem\External\Twig\TwigView';
+		} else if ($viewEngine == 'blade') {
+			$this->viewClass = '\ILab\Stem\External\Blade\BladeView';
 		}
 
 		// Create the controller/template dispatcher

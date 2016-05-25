@@ -9,4 +9,5 @@ return array(
     'Twig_' => array($vendorDir . '/twig/twig/lib'),
     'QueryPath' => array($vendorDir . '/querypath/querypath/src'),
     'Psr\\Log\\' => array($vendorDir . '/psr/log'),
+    'Doctrine\\Common\\Inflector\\' => array($vendorDir . '/doctrine/inflector/lib'),
 );

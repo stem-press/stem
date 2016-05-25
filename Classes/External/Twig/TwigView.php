@@ -9,7 +9,7 @@ use ILab\Stem\Core\View;
  *
  * Class for rendering twig views
  *
- * @package ILab\Stem\Core
+ * @package ILab\Stem\External\Twig
  */
 class TwigView extends View {
 
