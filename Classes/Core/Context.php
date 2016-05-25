@@ -10,7 +10,6 @@ use ILab\Stem\Controllers\TermController;
 use ILab\Stem\Models\Attachment;
 use ILab\Stem\Models\Page;
 use ILab\Stem\Models\Post;
-use Monolog\Logger;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -21,6 +20,12 @@ use Symfony\Component\HttpFoundation\Request;
  * @package ILab\Stem\Core
  */
 class Context {
+	/**
+	 * Current context
+	 * @var Context
+	 */
+	private static $currentContext;
+
 	/**
 	 * Array of text to remove from final output
 	 * @var array
@@ -46,12 +51,6 @@ class Context {
 	private $replaceRegexes = [];
 
 	/**
-	 * Determine if relative links should be used anywhere applicable.
-	 * @var bool
-	 */
-	private $useRelative = true;
-
-	/**
 	 * The forced domain
 	 * @var string
 	 */
@@ -70,10 +69,16 @@ class Context {
 	private $modelCache = [];
 
 	/**
-	 * Current context
-	 * @var Context
+	 * View class
+	 * @var string
 	 */
-	private static $currentContext;
+	private $viewClass = 'ILab\Stem\Core\StemView';
+
+	/**
+	 * Collection of routes
+	 * @var Router
+	 */
+	private $router;
 
 	/**
 	 * Root path to the theme
@@ -160,12 +165,6 @@ class Context {
 	public $debug;
 
 	/**
-	 * Collection of routes
-	 * @var Router
-	 */
-	private $router;
-
-	/**
 	 * Site host
 	 * @var string
 	 */
@@ -184,16 +183,16 @@ class Context {
 	public $request = null;
 
 	/**
-	 * View class
-	 * @var string
-	 */
-	private $viewClass = 'ILab\Stem\Core\StemView';
-
-	/**
 	 * The current environment
 	 * @var string
 	 */
 	public $environment = 'development';
+
+	/**
+	 * Determine if relative links should be used anywhere applicable.
+	 * @var bool
+	 */
+	public $useRelative = true;
 
 
 	/**
@@ -215,8 +214,10 @@ class Context {
 		// Create the request object
 		$this->request     = Request::createFromGlobals();
 		$this->environment = getenv('WP_ENV') ?: 'development';
+		$this->debug = (defined(WP_DEBUG) || ($this->environment == 'development'));
 		$this->config      = JSONParser::parse(file_get_contents($rootPath . '/config/app.json'));
 
+		// Initialize logging
 		$loggingConfig = null;
 		if (isset($this->config['logging'])) {
 			if (isset($this->config['logging'][$this->environment])) {
@@ -229,9 +230,9 @@ class Context {
 				$loggingConfig = $this->config['logging']['other'];
 			}
 		}
-
 		Log::initialize($loggingConfig);
 
+		// Set our text domain, not really used though.
 		$this->textdomain = $this->config['text-domain'];
 
 		// Setup our paths
@@ -239,13 +240,17 @@ class Context {
 		$this->classPath = $rootPath . '/classes/';
 		$this->viewPath  = $rootPath . '/views/';
 
+		// Create the router for extra routes
 		$this->router = new Router($this);
 
+		// Paths
 		$this->jsPath  = get_template_directory_uri() . '/js/';
 		$this->cssPath = get_template_directory_uri() . '/css/';
 		$this->imgPath = get_template_directory_uri() . '/img/';
 
 		$this->namespace = $this->config['namespace'];
+
+		// Options
 
 		$this->useRelative = $this->setting('options/relative-links', true);
 
@@ -257,8 +262,6 @@ class Context {
 		if ($viewEngine == 'twig') {
 			$this->viewClass = '\ILab\Stem\External\Twig\TwigView';
 		}
-
-		$this->debug = (defined(WP_DEBUG) || ($this->environment == 'development'));
 
 		// Create the controller/template dispatcher
 		$this->dispatcher = new Dispatcher($this);
@@ -338,11 +341,38 @@ class Context {
 			add_action('init', [$this, 'installCustomPostTypes'], 10000);
 		}
 
+		// Load our clean up options
 		$this->removeText = $this->setting('clean/remove/text',[]);
 		$this->removeRegexes = $this->setting('clean/remove/regex',[]);
 		$this->replaceText = $this->setting('clean/replace/text',[]);
 		$this->replaceRegexes = $this->setting('clean/replace/regex',[]);
 	}
+
+	/**
+	 * Creates the context for this theme.  Should be called in functions.php of the theme
+	 *
+	 * @param $rootPath string The root path to the theme
+	 *
+	 * @return Context The new context
+	 */
+	public static function initialize($rootPath) {
+		$context              = new Context($rootPath);
+		self::$currentContext = $context;
+
+		return $context;
+	}
+
+	/**
+	 * Returns the context for the theme's domain
+	 *
+	 * @param $domain string The name of the theme's domain, eg the name of the theme
+	 *
+	 * @return Context The theme's context
+	 */
+	public static function current() {
+		return self::$currentContext;
+	}
+
 
 	/**
 	 * Returns a setting using a path string, eg 'options/views/engine'.  Consider this
@@ -532,12 +562,23 @@ class Context {
 		}
 
 		if ($this->useRelative) {
-			add_filter('wp_nav_menu', [$this, 'make_relative_url']);
+			add_filter('wp_nav_menu', function($input) {
+				if ($input && !empty($input)) {
+					$input = preg_replace("/href=\"((http|https):\\/\\/$this->siteHost)(.*)\"/", "href=\"$3\"", $input);
+
+					return preg_replace("/href=\"((http|https):\\/\\/$this->httpHost)(.*)\"/", "href=\"$3\"", $input);
+				}
+
+				return $input;
+			});
 		}
 
 		$this->setupPostFilter();
 	}
 
+	/**
+	 * Enqueues the css and js defined in whatever manifest file
+	 */
 	private function enqueueManifest() {
 		if (isset($this->config['enqueue']['manifest'])) {
 			if (file_exists($this->rootPath . '/' . $this->config['enqueue']['manifest'])) {
@@ -570,7 +611,6 @@ class Context {
 	 */
 	private function setupPostFilter() {
 		add_action('pre_get_posts', function($query) {
-
 			if (($query->is_home() && $query->is_main_query()) || ($query->is_search()) || ($query->is_tag())) {
 				if ($query->is_search()) {
 					if (isset($this->config['search-options']['post-types']))
@@ -586,9 +626,8 @@ class Context {
 			}
 		});
 
-		$search_tags = (isset($this->config['search-options']['search-tags']) && $this->config['search-options']['search-tags']);
-
 		// Below alter the way wordpress searches
+		$search_tags = $this->setting('search-options/search-tags');
 		if ($search_tags) {
 			add_filter('posts_join', function($join, $query) {
 				global $wpdb;
@@ -669,32 +708,6 @@ class Context {
 	 */
 	public function registerShortcode($shortcode, $callable) {
 		add_shortcode($shortcode, $callable);
-	}
-
-
-	/**
-	 * Creates the context for this theme.  Should be called in functions.php of the theme
-	 *
-	 * @param $rootPath string The root path to the theme
-	 *
-	 * @return Context The new context
-	 */
-	public static function initialize($rootPath) {
-		$context              = new Context($rootPath);
-		self::$currentContext = $context;
-
-		return $context;
-	}
-
-	/**
-	 * Returns the context for the theme's domain
-	 *
-	 * @param $domain string The name of the theme's domain, eg the name of the theme
-	 *
-	 * @return Context The theme's context
-	 */
-	public static function current() {
-		return self::$currentContext;
 	}
 
 	/**
@@ -856,6 +869,13 @@ class Context {
 		return null;
 	}
 
+	/**
+	 * Determines if a view exists in the file system
+	 *
+	 * @param $view
+	 *
+	 * @return bool
+	 */
 	public function viewExists($view) {
 		$vc = $this->viewClass;
 
@@ -878,7 +898,13 @@ class Context {
 		return $result;
 	}
 
-
+	/**
+	 * Cleans up the output
+	 *
+	 * @param $output
+	 *
+	 * @return mixed
+	 */
 	private function cleanupOutput($output) {
 		if ($this->useRelative) {
 			$output = preg_replace('/(?:http|https):\/\/' . $this->siteHost . '\/app\//', "/app/", $output);
@@ -921,7 +947,6 @@ class Context {
 		return $header;
 	}
 
-
 	/**
 	 * Outputs the Wordpress generated footer html
 	 *
@@ -929,7 +954,7 @@ class Context {
 	 */
 	public function footer() {
 		ob_start();
-		
+
 		wp_footer();
 		$footer = ob_get_clean();
 
@@ -949,43 +974,30 @@ class Context {
 		return $output;
 	}
 
+	/**
+	 * Returns the script src to an image included in the theme
+	 *
+	 * @param $src
+	 *
+	 * @return string
+	 */
 	public function script($src) {
 		$output = $this->jsPath . $src;
 
 		return $output;
 	}
 
+	/**
+	 * Returns the css src to an image included in the theme
+	 *
+	 * @param $src
+	 *
+	 * @return string
+	 */
 	public function css($src) {
 		$output = $this->cssPath . $src;
 
 		return $output;
-	}
-
-	public function permalink($post_id) {
-		$permalink = get_permalink($post_id);
-
-		if ($this->useRelative) {
-			if ($permalink && !empty($permalink)) {
-				$parsed = parse_url($permalink);
-				$plink  = $parsed['path'];
-				if (isset($parsed['query']) && !empty($parsed['query']))
-					$plink .= '?' . $parsed['query'];
-
-				return $plink;
-			}
-		}
-
-		return $permalink;
-	}
-
-	public function make_relative_url($input) {
-		if ($input && !empty($input)) {
-			$input = preg_replace("/href=\"((http|https):\\/\\/$this->siteHost)(.*)\"/", "href=\"$3\"", $input);
-
-			return preg_replace("/href=\"((http|https):\\/\\/$this->httpHost)(.*)\"/", "href=\"$3\"", $input);
-		}
-
-		return $input;
 	}
 
 	/**
@@ -1074,34 +1086,5 @@ class Context {
 		}
 
 		return $menu;
-	}
-
-	/**
-	 * Performs a query for posts
-	 *
-	 * @param $args
-	 *
-	 * @return array
-	 */
-	public function findPosts($args) {
-		$query = new \WP_Query($args);
-
-		$posts = [];
-		foreach ($query->posts as $post) {
-			$posts[] = $this->modelForPost($post);
-		}
-
-		return $posts;
-	}
-
-	/**
-	 * Adds a route
-	 *
-	 * @param $name string
-	 * @param $routeStr string
-	 * @param $destination callable|string
-	 */
-	public function addRoute($name, $routeStr, $destination) {
-		$this->router->addRoute($name, $routeStr, $destination);
 	}
 }

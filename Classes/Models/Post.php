@@ -268,7 +268,20 @@ class Post extends WordPressModel
         if ($this->permalink)
             return $this->permalink;
 
-        $this->permalink=$this->context->permalink($this->id);
+        $permalink = get_permalink($this->id);
+
+        if ($this->context->useRelative) {
+            if ($permalink && !empty($permalink)) {
+                $parsed = parse_url($permalink);
+                $plink  = $parsed['path'];
+                if (isset($parsed['query']) && !empty($parsed['query']))
+                    $plink .= '?' . $parsed['query'];
+
+                $permalink = $plink;
+            }
+        }
+
+        $this->permalink=$permalink;
 
         return $this->permalink;
     }
