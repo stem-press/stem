@@ -10,6 +10,7 @@ use ILab\Stem\Controllers\TermController;
 use ILab\Stem\Models\Attachment;
 use ILab\Stem\Models\Page;
 use ILab\Stem\Models\Post;
+use Monolog\Logger;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -184,6 +185,21 @@ class Context {
         $this->request=Request::createFromGlobals();
 
         $this->config = JSONParser::parse(file_get_contents($rootPath.'/config/app.json'));
+
+        $loggingConfig = null;
+        if (isset($this->config['logging'])) {
+            $env = getenv('WP_ENV');
+            if ($env && isset($this->config['logging'][$env])) {
+                $loggingConfig = $this->config['logging'][$env];
+            } else if (defined(WP_DEBUG) && isset($this->config['logging']['development'])) {
+                $loggingConfig = $this->config['logging']['development'];
+            }
+            else if (isset($this->config['logging']['other'])) {
+                $loggingConfig = $this->config['logging']['other'];
+            }
+        }
+
+        Log::initialize($loggingConfig);
 
         $this->textdomain=$this->config['text-domain'];
 

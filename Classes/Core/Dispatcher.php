@@ -42,7 +42,7 @@ class Dispatcher {
         }
         else
         {
-            error_log("Looking for ... $templateName");
+            Log::debug("Looking for template.",['templateName'=> $templateName, 'pageType' => $pageType]);
 
             $templateName = strtolower($templateName);
 
@@ -58,7 +58,8 @@ class Dispatcher {
 
             // Interpolate the class name
             $class = $this->context->namespace.'\\Controllers\\'.$classname.'Controller';
-            error_log("Looking for class ... $class");
+
+            Log::debug("Looking for class.",['class' => $class]);
 
             // Determine the action and controller method
             $action = ($this->context->request->query->has('_action')) ? ucfirst($this->context->request->query->get('_action')) : 'Index';
@@ -78,7 +79,8 @@ class Dispatcher {
                 {
                     if ($pageType=='none')
                     {
-                        error_log("Found for ... $templateName");
+                        Log::debug("Found template.",['templateName' => $templateName]);
+
                         // Template exists but page type doesn't map to a built-in
                         // controller, so we just render the template as is.
                         echo $this->context->render('templates/' . $name, [$this->context]);
@@ -89,14 +91,15 @@ class Dispatcher {
                 }
                 else
                 {
-                    error_log("Mapping controller for class ... $name");
+                    Log::debug("Trying to mapping controller for class.",['name' => $name]);
                     $controller=$this->context->mapController($name);
                 }
             }
 
             // if we found a controller, then invoke the method and return it's output
             if ($controller) {
-                error_log("Found for ... $templateName");
+                Log::debug("Found controller.",['templateName' => $templateName, 'controller' => $controller]);
+
                 if (method_exists($controller,$method))
                     $response=call_user_func([$controller,$method],$this->context->request);
                 else
@@ -119,6 +122,8 @@ class Dispatcher {
                 }
 
                 return true;
+            } else {
+                Log::debug("Controller not found.",['templateName' => $templateName]);
             }
 
             return false;

@@ -17,7 +17,8 @@
     "querypath/QueryPath": "^3.0",
     "symfony/routing": "^2.7",
     "PHP-DI/invoker": "^1.0",
-    "twig/twig": "^1.24"
+    "twig/twig": "^1.24",
+    "monolog/monolog": "^1.19"
   },
   "require-dev": {},
   "autoload": {

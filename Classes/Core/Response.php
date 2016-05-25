@@ -21,4 +21,19 @@ class Response extends \Symfony\Component\HttpFoundation\Response {
 
         parent::__construct($content,$status,$headers);
     }
+
+    public function send()
+    {
+        $this->sendHeaders();
+        $this->sendContent();
+
+        if (function_exists('fastcgi_finish_request')) {
+            Log::shutdown();
+            fastcgi_finish_request();
+        } elseif ('cli' !== PHP_SAPI) {
+            static::closeOutputBuffers(0, true);
+        }
+
+        return $this;
+    }
 }
