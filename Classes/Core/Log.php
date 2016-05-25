@@ -207,7 +207,7 @@ final class Log {
             self::$logger->addRecord($level, $message, $context);
     }
 
-    public static function shutdown() {
+    public static function flush() {
         if (self::$logger) {
             foreach(self::$logger->getHandlers() as $handler) {
                 if ($handler instanceof BrowserConsoleHandler)

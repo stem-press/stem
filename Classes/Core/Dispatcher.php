@@ -42,7 +42,7 @@ class Dispatcher {
         }
         else
         {
-            Log::debug("Looking for template.",['templateName'=> $templateName, 'pageType' => $pageType]);
+            Log::debug("Looking for template '$templateName' for page type '$pageType'.",['templateName'=> $templateName, 'pageType' => $pageType]);
 
             $templateName = strtolower($templateName);
 
