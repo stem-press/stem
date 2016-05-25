@@ -913,43 +913,10 @@ class Context {
 	 * @return mixed|string
 	 */
 	public function header() {
-
 		ob_start();
+
 		wp_head();
 		$header = ob_get_clean();
-		$header = preg_replace("/<!--\\s*(?:.*)Yoast(?:.*)-->/", "", $header);
-
-		//fix yoast canonical URLs
-		if (isset($this->config['clean']['fix']['yoast']['force-ssl-canonical']) && $this->config['clean']['fix']['yoast']['force-ssl-canonical']) {
-			$header = str_replace('<link rel="canonical" href="http://', '<link rel="canonical" href="https://', $header);
-		}
-
-		// strip hash tags from ngfb descriptions
-		if (isset($this->config['clean']['fix']['ngfb']['strip-hash-tags']) && $this->config['clean']['fix']['ngfb']['strip-hash-tags']) {
-			$matches = [];
-			if (preg_match_all("/<meta property=\"og:description\" content=\"(.*)?\"\\/>/", $header, $matches, PREG_OFFSET_CAPTURE)) {
-				$matchCount = count($matches[1]);
-				for ($i = $matchCount; $i --; $i > - 1) {
-					$capture = $matches[1][$i];
-					$origStr = $capture[0];
-					$newStr  = preg_replace("/(#[aA-zZ0-9-_]+)/", "", $origStr);
-					$newStr  = trim($newStr);
-					$header  = substr_replace($header, $newStr, $capture[1], strlen($origStr));
-				}
-			}
-
-			$matches = [];
-			if (preg_match_all("/<meta itemprop=\"description\" content=\"(.*)?\"\\/>/", $header, $matches, PREG_OFFSET_CAPTURE)) {
-				$matchCount = count($matches[1]);
-				for ($i = $matchCount; $i --; $i > - 1) {
-					$capture = $matches[1][$i];
-					$origStr = $capture[0];
-					$newStr  = preg_replace("/(#[aA-zZ0-9-_]+)/", "", $origStr);
-					$newStr  = trim($newStr);
-					$header  = substr_replace($header, $newStr, $capture[1], strlen($origStr));
-				}
-			}
-		}
 
 		return $header;
 	}
@@ -962,6 +929,7 @@ class Context {
 	 */
 	public function footer() {
 		ob_start();
+		
 		wp_footer();
 		$footer = ob_get_clean();
 
