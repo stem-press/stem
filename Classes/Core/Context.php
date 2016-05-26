@@ -612,21 +612,29 @@ class Context {
 	 * query results automatically.
 	 */
 	private function setupPostFilter() {
-		add_action('pre_get_posts', function($query) {
-			if (($query->is_home() && $query->is_main_query()) || ($query->is_search()) || ($query->is_tag())) {
-				if ($query->is_search()) {
-					if (isset($this->config['search-options']['post-types']))
-						$query->set('post_type', $this->config['search-options']['post-types']);
-				}
-				else {
-					if (isset($this->config['post-types']))
-						$query->set('post_type', $this->config['post-types']);
-				}
+		if (!is_admin()) {
+			$post_types = $this->setting('search-options/post-types');
+			if (!$post_types)
+				$post_types = $this->setting('post-types');
 
-				if ($this->preGetPostsCallback)
-					call_user_func($this->preGetPostsCallback, $query);
+			if ($post_types && (count($post_types)>1)) {
+				add_action('pre_get_posts', function($query) {
+					if (($query->is_home() && $query->is_main_query()) || ($query->is_search()) || ($query->is_tag())) {
+						if ($query->is_search()) {
+							if (isset($this->config['search-options']['post-types']))
+								$query->set('post_type', $this->config['search-options']['post-types']);
+						}
+						else {
+							if (isset($this->config['post-types']))
+								$query->set('post_type', $this->config['post-types']);
+						}
+
+						if ($this->preGetPostsCallback)
+							call_user_func($this->preGetPostsCallback, $query);
+					}
+				});
 			}
-		});
+		}
 
 		// Below alter the way wordpress searches
 		$search_tags = $this->setting('search-options/search-tags');
