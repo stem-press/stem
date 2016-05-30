@@ -169,7 +169,7 @@ class StemView extends View {
                     'parsed'=>$this->parseFragment($blockMatches[2][$i][0]),
                     'original'=>$this->original,
                     'line'=>$lineNumber,
-                    'view'=>$this->view
+                    'view'=>$this->viewName
                 ];
                 $this->blocks[$blockName]=$block;
             }
