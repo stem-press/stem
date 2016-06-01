@@ -9,13 +9,15 @@ class Term extends WordPressModel {
     private static $termCache=[];
 
     public $id;
-    public $name;
-    public $slug;
-    public $group;
-    public $taxonomy;
-    public $description;
-    public $parent;
-    public $count;
+
+    protected $name = null;
+    protected $slug = null;
+    protected $group = null;
+    protected $taxonomy = null;
+    protected $description = null;
+    protected $parent = null;
+    protected $count = 0;
+    protected $permalink = null;
 
     public function __construct(Context $context, $termId, $taxonomy, $termData=null) {
         if (!$termData)
@@ -57,6 +59,43 @@ class Term extends WordPressModel {
         self::$termCache[$key]=$term;
 
         return $term;
+    }
+
+    public function permalink() {
+        if ($this->permalink)
+            return $this->permalink;
+
+        $this->permalink = get_term_link($this->id);
+
+        return $this->permalink;
+    }
+
+    public function name() {
+        return $this->name;
+    }
+
+    public function slug() {
+        return $this->name;
+    }
+
+    public function group() {
+        return $this->name;
+    }
+
+    public function taxonomy() {
+        return $this->name;
+    }
+
+    public function description() {
+        return $this->name;
+    }
+
+    public function parent() {
+        return $this->name;
+    }
+
+    public function count() {
+        return $this->name;
     }
 
     public function __debugInfo() {

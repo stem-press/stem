@@ -505,6 +505,17 @@ class Context {
 			register_nav_menus($menus);
 		}
 
+		// configure sidebars
+
+		add_action( 'widgets_init', function(){
+			if (isset($this->config['sidebars'])) {
+				foreach ($this->config['sidebars'] as $key => $settings) {
+					$settings['id'] = $key;
+					register_sidebar($settings);
+				}
+			}
+		});
+
 		// Enqueue scripts and css
 		add_action('wp_enqueue_scripts', function() {
 			if (isset($this->config['enqueue'])) {
@@ -1027,6 +1038,9 @@ class Context {
 				$gappedLinks[] = $links[$i];
 				$gappedLinks[] = "<li class=\"{$insertGap}\" />";
 			}
+
+			if (count($links)==0)
+				return $menu;
 
 			$gappedLinks[] = $links[count($links) - 1];
 

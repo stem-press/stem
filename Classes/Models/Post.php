@@ -3,16 +3,23 @@
 namespace ILab\Stem\Models;
 
 
+use Carbon\Carbon;
 use ILab\Stem\Core\Context;
 use ILab\Stem\Utilities\Text;
 
+/**
+ * Class Post
+ *
+ * Represents a WordPress post
+ *
+ * @package ILab\Stem\Models
+ */
 class Post extends WordPressModel
 {
     public $id;
-    public $post_name;
+    public $context;
 
     protected $post;
-    public $context;
 
     private $author = null;
     private $topCategory = null;
@@ -21,20 +28,25 @@ class Post extends WordPressModel
     private $tags = null;
     private $permalink = null;
     private $thumbnail = null;
-    private $slug = null;
+    private $date = null;
+    private $updated = null;
+    private $content = null;
 
 
     public function __construct(Context $context, \WP_Post $post)
     {
         $this->id = $post->ID;
-        $this->post_name=$post->post_name;
         $this->context = $context;
         $this->post = $post;
-        $this->slug = $post->post_name;
     }
 
     public function wpPost() {
         return $this->post;
+    }
+
+    public function cssClass($class = '') {
+        $result = get_post_class($class, $this->id);
+        return implode(' ', $result);
     }
 
     public function author()
@@ -43,8 +55,7 @@ class Post extends WordPressModel
             return $this->author;
 
         if ($this->post->post_author)
-            ;
-        $this->author = new \WP_User($this->post->post_author);
+            $this->author = new User($this->context, new \WP_User($this->post->post_author));
 
         return $this->author;
     }
@@ -68,10 +79,7 @@ class Post extends WordPressModel
     }
 
     public function slug() {
-        if ($this->slug)
-            return $this->slug;
-
-
+        return $this->post->post_name;
     }
 
     public function topCategory()
@@ -138,11 +146,13 @@ class Post extends WordPressModel
         return $this->post->post_type;
     }
 
-    public function content($dropcap = false)
+    public function content()
     {
-        $content = apply_filters('the_content', $this->post->post_content);
+        if ($this->content)
+            return $this->content;
 
-        return $content;
+        $this->content = apply_filters('the_content', $this->post->post_content);
+        return $this->content;
     }
     
     public function videoEmbeds() {
@@ -173,9 +183,25 @@ class Post extends WordPressModel
         return $embeds;
     }
 
-    public function date($format = 'd/M/Y')
+    public function date()
     {
-        return mysql2date($format, $this->post->post_date);
+        if ($this->date)
+            return $this->date;
+
+        $this->date = new Carbon($this->post->post_date_gmt);
+
+        return $this->date;
+
+        //return mysql2date($format, $this->post->post_date);
+    }
+
+    public function updated() {
+        if ($this->updated)
+            return $this->updated;
+
+        $this->updated = new Carbon($this->post->post_modified_gmt);
+
+        return $this->updated;
     }
 
     public function thumbnail()
@@ -218,7 +244,7 @@ class Post extends WordPressModel
         }
         if (!strlen($text))
         {
-            $text = Text::trim($this->content(), $len, false);
+            $text = Text::trim($this->content(), $len, false, null);
             $trimmed = true;
         }
         if (!strlen(trim($text)))
@@ -331,6 +357,11 @@ QUERY;
 
         return $related;
     }
+
+    public function editLink() {
+        return get_edit_post_link($this->id);
+    }
+
 //
 //    public function __debugInfo() {
 //        return [
@@ -346,9 +377,11 @@ QUERY;
         return [
             'type'=>$this->post->post_type,
             'title'=>$this->title(),
-	        'author'=>$this->author()->display_name,
-            'date'=>$this->date('d/M/Y g:i a'),
-            'content'=>$this->content(false),
+            'slug'=>$this->slug(),
+	        'author'=>$this->author()->displayName(),
+            'date'=>$this->date()->toIso8601String(),
+            'updated'=>$this->updated()->toIso8601String(),
+            'content'=>$this->content(),
             'excerpt'=>$this->excerpt(),
             'url'=>$this->permalink(),
             'mime_type'=>$this->post->post_mime_type,

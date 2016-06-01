@@ -12,6 +12,7 @@ class PostsController extends Controller {
     public $page=null;
     public $posts=[];
     public $totalPosts=0;
+    public $currentPage=0;
 
     public function __construct(Context $context, $template=null) {
         parent::__construct($context,$template);
@@ -22,6 +23,7 @@ class PostsController extends Controller {
             $this->page = $context->modelForPost($wp_query->post);
 
         $this->totalPosts=$wp_query->found_posts;
+        $this->currentPage=$wp_query->query_vars['paged'] ?: 1;
 
         foreach($wp_query->posts as $post) {
             $this->posts[]=$this->context->modelForPost($post);
@@ -32,6 +34,11 @@ class PostsController extends Controller {
 
     public function getIndex(Request $request) {
         if ($this->template)
-            return new Response($this->template,['posts'=>$this->posts]);
+            return new Response($this->template,[
+                'page' => $this->page,
+                'totalPosts' => $this->totalPosts,
+                'currentPage' => $this->currentPage,
+                'posts'=>$this->posts
+            ]);
     }
 }

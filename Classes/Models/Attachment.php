@@ -1,12 +1,26 @@
 <?php
 namespace ILab\Stem\Models;
 
-use ILab\Stem\Core\Context;
-
+/**
+ * Class Attachment
+ *
+ * Represents a media attachment
+ *
+ * @package ILab\Stem\Models
+ */
 class Attachment extends Post {
-    private $parentPost=null;
-    private $attachmentInfo=null;
+    protected $parentPost=null;
+    protected $attachmentInfo=null;
 
+    /**
+     * Returns an img tag using the requested size template.
+     *
+     * @param string $size The size template to use
+     * @param bool $attr Any additional attributes to add to the tag
+     * @param bool $stripDimensions Strip dimensions from the tag
+     *
+     * @return string
+     */
     public function img($size='thumbnail',$attr=false, $stripDimensions=false) {
         if (!$attr)
             $img=wp_get_attachment_image($this->post->ID,$size);
@@ -21,15 +35,33 @@ class Attachment extends Post {
         return $img;
     }
 
+    /**
+     * Returns the url for an image using the requested size template.
+     *
+     * @param string $size The size template to use.
+     *
+     * @return string|null
+     */
     public function src($size='thumbnail') {
         $result=wp_get_attachment_image_src($this->post->ID,$size);
-        return $result[0];
+        if ($result && is_array($result) && (count($result)>0))
+            return $result[0];
+
+        return null;
     }
 
+    /**
+     * Gets the attachment URL for this attachment
+     * @return false|string
+     */
     public function attachmentUrl() {
         return wp_get_attachment_url($this->id);
     }
 
+    /**
+     * Returns the parent post this attachment is attached to, if any.
+     * @return Attachment|Page|Post|null
+     */
     public function parentPost() {
         if ($this->parentPost)
             return $this->parentPost;
@@ -41,21 +73,32 @@ class Attachment extends Post {
         return $this->parentPost;
     }
 
+    /**
+     * Loads attachment info.
+     */
     protected function loadAttachmentInfo() {
         if (!$this->attachmentInfo)
             $this->attachmentInfo=wp_prepare_attachment_for_js($this->post);
     }
 
+    /**
+     * Returns the caption for the attachment, if any.
+     * @return mixed
+     */
     public function caption(){
         $this->loadAttachmentInfo();
 
-        return $this->attachmentInfo['caption'];
+        return (isset($this->attachmentInfo['caption'])) ? $this->attachmentInfo['caption'] : null;
     }
 
+    /**
+     * Returns the description of the attachment, if any.
+     * @return mixed
+     */
     public function description(){
         $this->loadAttachmentInfo();
 
-        return $this->attachmentInfo['description'];
+        return (isset($this->attachmentInfo['description'])) ? $this->attachmentInfo['description'] : null;
     }
 
     public function jsonSerialize() {

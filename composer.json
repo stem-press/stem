@@ -19,7 +19,8 @@
     "PHP-DI/invoker": "^1.0",
     "twig/twig": "^1.24",
     "monolog/monolog": "^1.19",
-    "duncan3dc/blade": "^3.0"
+    "duncan3dc/blade": "^3.0",
+    "nesbot/carbon": "^1.21"
   },
   "require-dev": {},
   "autoload": {
