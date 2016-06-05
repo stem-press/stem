@@ -10,6 +10,8 @@ Author URI: http://interfacelab.com
 
 require_once('vendor/autoload.php');
 
+include 'Classes/Core/System.php';
+
 define('ILAB_STEM_DIR',dirname(__FILE__));
 define('ILAB_STEM_VIEW_DIR',ILAB_STEM_DIR.'/views');
 
