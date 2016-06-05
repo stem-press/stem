@@ -26,7 +26,7 @@ class Response extends \Symfony\Component\HttpFoundation\Response {
 
 		if (function_exists('fastcgi_finish_request')) {
 			Log::flush();
-			fastcgi_finish_request();
+			//fastcgi_finish_request();
 		}
 		elseif ('cli' !== PHP_SAPI) {
 			static::closeOutputBuffers(0, true);

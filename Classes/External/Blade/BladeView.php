@@ -4,6 +4,7 @@ namespace ILab\Stem\External\Blade;
 use duncan3dc\Laravel\BladeInstance;
 use ILab\Stem\Core\Context;
 use ILab\Stem\Core\View;
+use ILab\Stem\Models\Theme;
 
 /**
  * Class BladeView
@@ -26,12 +27,6 @@ class BladeView extends View {
 	}
 
 	public function render($data) {
-		if ($data==null)
-			$data=[];
-
-		if (!isset($data['context']))
-			$data['context']=$this->context;
-
 		return $this->blade->render($this->viewName, $data);
 	}
 

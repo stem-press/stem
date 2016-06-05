@@ -5,7 +5,6 @@ use Monolog\Handler\BrowserConsoleHandler;
 use Monolog\Handler\ErrorLogHandler;
 use Monolog\Handler\NativeMailerHandler;
 use Monolog\Handler\SlackHandler;
-use Monolog\Handler\SwiftMailerHandler;
 use Monolog\Handler\SyslogHandler;
 use Monolog\Handler\SyslogUdpHandler;
 use Monolog\Logger;

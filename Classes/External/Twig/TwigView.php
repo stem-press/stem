@@ -38,12 +38,6 @@ class TwigView extends View {
     }
     
     public function render($data) {
-        if ($data==null)
-            $data=[];
-
-        if (!isset($data['context']))
-            $data['context']=$this->context;
-
         return $this->twig->render($this->viewName.'.twig', $data);
     }
     

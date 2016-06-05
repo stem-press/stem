@@ -1,5 +1,4 @@
 <?php
-
 namespace ILab\Stem\Core;
 
 use ILab\Stem\Controllers\SearchController;
@@ -10,6 +9,7 @@ use ILab\Stem\Controllers\TermController;
 use ILab\Stem\Models\Attachment;
 use ILab\Stem\Models\Page;
 use ILab\Stem\Models\Post;
+use ILab\Stem\Models\Theme;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -117,10 +117,16 @@ class Context {
 	public $namespace;
 
 	/**
-	 * Theme configuration
+	 * App configuration
 	 * @var array
 	 */
 	public $config;
+
+	/**
+	 * Theme configuration
+	 * @var array
+	 */
+	public $theme = [];
 
 	/**
 	 * Callback for theme setup
@@ -216,6 +222,11 @@ class Context {
 		$this->environment = getenv('WP_ENV') ?: 'development';
 		$this->debug = (defined(WP_DEBUG) || ($this->environment == 'development'));
 		$this->config      = JSONParser::parse(file_get_contents($rootPath . '/config/app.json'));
+
+		if (file_exists($rootPath . '/config/theme.json')) {
+			$this->theme = JSONParser::parse(file_get_contents($rootPath . '/config/theme.json'));
+		}
+
 
 		// Initialize logging
 		$loggingConfig = null;
@@ -375,7 +386,6 @@ class Context {
 		return self::$currentContext;
 	}
 
-
 	/**
 	 * Returns a setting using a path string, eg 'options/views/engine'.  Consider this
 	 * a poor man's xpath.
@@ -386,24 +396,20 @@ class Context {
 	 * @return bool|mixed The result
 	 */
 	public function setting($settingPath, $default = false) {
-		$path = explode('/', $settingPath);
+		return arrayPath($this->config, $settingPath, $default);
+	}
 
-		$config = $this->config;
-
-		for ($i = 0; $i < count($path); $i ++) {
-			$part = $path[$i];
-
-			if (!isset($config[$part]))
-				return $default;
-
-			if ($i == count($path) - 1) {
-				return $config[$part];
-			}
-
-			$config = $config[$part];
-		}
-
-		return $default;
+	/**
+	 * Returns a setting using a path string, eg 'options/views/engine'.  Consider this
+	 * a poor man's xpath.
+	 *
+	 * @param $settingPath The "path" in the config settings to look up.
+	 * @param bool|mixed $default The default value to return if the settings doesn't exist.
+	 *
+	 * @return bool|mixed The result
+	 */
+	public function themeSetting($settingPath, $default = false) {
+		return arrayPath($this->theme, $settingPath, $default);
 	}
 
 	/**
@@ -495,27 +501,6 @@ class Context {
 			}
 		}
 
-		// configure menus
-		if (isset($this->config['menu'])) {
-			$menus = [];
-			foreach ($this->config['menu'] as $key => $title) {
-				$menus[$key] = __($title, $this->textdomain);
-			}
-
-			register_nav_menus($menus);
-		}
-
-		// configure sidebars
-
-		add_action( 'widgets_init', function(){
-			if (isset($this->config['sidebars'])) {
-				foreach ($this->config['sidebars'] as $key => $settings) {
-					$settings['id'] = $key;
-					register_sidebar($settings);
-				}
-			}
-		});
-
 		// Enqueue scripts and css
 		add_action('wp_enqueue_scripts', function() {
 			if (isset($this->config['enqueue'])) {
@@ -587,7 +572,130 @@ class Context {
 		}
 
 		$this->setupPostFilter();
+		$this->setupTheme();
 	}
+
+	/**
+	 * Sets up the theme settings/widgets/menus
+	 */
+	private function setupTheme() {
+		// configure menus
+		if (isset($this->theme['menu'])) {
+			$menus = [];
+			foreach ($this->theme['menu'] as $key => $title) {
+				$menus[$key] = __($title, $this->textdomain);
+			}
+
+			register_nav_menus($menus);
+		}
+
+		// configure sidebars
+		add_action( 'widgets_init', function() {
+			if (isset($this->theme['sidebars'])) {
+				foreach ($this->theme['sidebars'] as $key => $settings) {
+					$settings['id'] = $key;
+					register_sidebar($settings);
+				}
+			}
+		});
+
+		// Configure customizer
+		$useKirki = $this->themeSetting('useKirki', true);
+		if ($useKirki)
+			$useKirki = class_exists('\Kirki');
+		
+		if ($useKirki)
+			add_action( 'customize_register', [$this, 'setupKirkiCustomizer'], 11 );
+		else
+			add_action( 'customize_register', [$this, 'setupWPCustomizer'], 11 );
+	}
+
+	public function setupWPCustomizer(\WP_Customize_Manager $wp_customize) {
+		if (isset($this->theme['panels'])) {
+			foreach($this->theme['panels'] as $key => $data) {
+				$wp_customize->add_panel($key, $data);
+			}
+		}
+
+		if (isset($this->theme['sections'])) {
+			foreach($this->theme['sections'] as $key => $data) {
+				$wp_customize->add_section($key, $data);
+			}
+		}
+
+		if (isset($this->theme['settings'])) {
+			foreach($this->theme['settings'] as $setting => $data) {
+				$control = null;
+				if (isset($data['control'])) {
+					$control = $data['control'];
+					unset($data['control']);
+				}
+
+				$wp_customize->add_setting($setting, $data);
+
+				if ($control) {
+					if ($control['type'] == 'color') {
+						unset($control['type']);
+						$wp_customize->add_control(new \WP_Customize_Color_Control($wp_customize, $setting, $control));
+					} else if ($control['type'] == 'image') {
+						unset($control['type']);
+						$wp_customize->add_control(new \WP_Customize_Image_Control($wp_customize, $setting, $control));
+					}  else if ($control['type'] == 'cropped') {
+						unset($control['type']);
+						$wp_customize->add_control(new \WP_Customize_Cropped_Image_Control($wp_customize, $setting, $control));
+					}  else if ($control['type'] == 'media') {
+						unset($control['type']);
+						$wp_customize->add_control(new \WP_Customize_Media_Control($wp_customize, $setting, $control));
+					} else {
+						$wp_customize->add_control($setting, $control);
+					}
+				}
+			}
+		}
+	}
+
+	public function setupKirkiCustomizer(\WP_Customize_Manager $wp_customize) {
+		add_filter( 'kirki/control_types', function( $controls ) {
+			$controls['media'] = '\WP_Customize_Media_Control';
+			$controls['cropped_image'] = '\WP_Customize_Cropped_Image_Control';
+			return $controls;
+		} );
+
+		\Kirki::add_config($this->textdomain, array(
+			'capability'    => 'edit_theme_options',
+			'option_type'   => 'option',
+		) );
+
+		if (isset($this->theme['panels'])) {
+			foreach($this->theme['panels'] as $key => $data) {
+				\Kirki::add_panel($key, $data);
+			}
+		}
+		if (isset($this->theme['sections'])) {
+			foreach($this->theme['sections'] as $key => $data) {
+				\Kirki::add_section($key, $data);
+			}
+		}
+
+		if (isset($this->theme['settings'])) {
+			foreach($this->theme['settings'] as $setting => $data) {
+				$control = null;
+				if (isset($data['control'])) {
+					$control = $data['control'];
+					unset($data['control']);
+				}
+
+				if ($control)
+					$data = array_merge($data, $control);
+
+				$data['settings'] = $setting;
+
+				\Kirki::add_field($this->textdomain, $data);
+			}
+		}
+	}
+
+
 
 	/**
 	 * Enqueues the css and js defined in whatever manifest file
@@ -912,6 +1020,15 @@ class Context {
 	 * @return string The rendered view
 	 */
 	public function render($view, $data) {
+		if ($data==null)
+			$data=[];
+
+		if (!isset($data['context']))
+			$data['context']=$this;
+
+		if (!isset($data['theme']))
+			$data['theme']=new Theme($this);
+
 		$vc     = $this->viewClass;
 		$result = $vc::renderView($this, $view, $data);
 		$result = $this->cleanupOutput($result);
