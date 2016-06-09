@@ -284,6 +284,8 @@ class Dispatcher {
             return;
         }
 
+        Log::info("Dispatch",['query'=>$wp_query]);
+
         if     ($wp_query->is_404() && $this->dispatchTemplate('404','none')):
         elseif ($wp_query->is_search() && $this->dispatchTemplate('search','search')):
         elseif ($wp_query->is_front_page() && $this->dispatchTemplate('front-page','posts')):
