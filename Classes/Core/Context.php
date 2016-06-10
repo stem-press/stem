@@ -310,14 +310,14 @@ class Context {
 		// wordpress is trying to "include" to Controller classes
 		// in the stem app/theme.  Additionally, we surface these
 		// as "page templates" in the wordpress admin UI.
-		if (isset($this->config['controllers'])) {
-			$this->templates = $this->config['controllers'];
-			foreach ($this->config['controllers'] as $key => $controller) {
+		if (isset($this->config['page-controllers'])) {
+			$this->templates = $this->config['page-controllers'];
+			foreach ($this->config['page-controllers'] as $key => $controller) {
 				$this->controllerMap[strtolower(preg_replace("/\\s+/", "-", $key))] = $controller;
 			}
 
 			add_filter('theme_page_templates', function($page_templates, $theme, $post) {
-				foreach ($this->config['controllers'] as $key => $controller) {
+				foreach ($this->config['page-controllers'] as $key => $controller) {
 					$page_templates[preg_replace("/\\s+/", "-", $key) . '.php'] = $key;
 				}
 
@@ -350,9 +350,7 @@ class Context {
 		});
 
 		// Load our custom post types
-		if (file_exists($rootPath . '/config/types.json')) {
-			add_action('init', [$this, 'installCustomPostTypes'], 10000);
-		}
+		add_action('init', [$this, 'installCustomPostTypes'], 10000);
 
 		// Load our clean up options
 		$this->removeText = $this->setting('clean/remove/text',[]);
