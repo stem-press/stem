@@ -56,6 +56,9 @@ class Dispatcher {
             });
             $classname=implode('',$nameparts);
 
+            if (is_numeric($classname))
+                $classname = 'Error'.$classname;
+
             // Interpolate the class name
             $class = $this->context->namespace.'\\Controllers\\'.$classname.'Controller';
 
