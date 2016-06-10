@@ -151,7 +151,13 @@ class Post extends WordPressModel
         if ($this->content)
             return $this->content;
 
+        global $post;
+
+        $previousPost = $post;
+        $post = $this->post;
         $this->content = apply_filters('the_content', $this->post->post_content);
+        $post = $previousPost;
+
         return $this->content;
     }
     
@@ -216,7 +222,7 @@ class Post extends WordPressModel
         return $this->thumbnail;
     }
 
-    public function excerpt($len = 50, $force = false, $readmore = 'Read More', $strip = true)
+    public function excerpt($len = 50, $force = false, $readmore = 'Read More', $strip = true, $allowed_tags = 'p a span b i br h1 h2 h3 h4 h5 ul li img blockquote')
     {
         $text = '';
         $trimmed = false;
@@ -224,7 +230,7 @@ class Post extends WordPressModel
         {
             if ($force)
             {
-                $text = Text::trim($this->post->post_excerpt, $len, false);
+                $text = Text::trim($this->post->post_excerpt, $len, true, $allowed_tags);
                 $trimmed = true;
             }
             else
@@ -238,13 +244,13 @@ class Post extends WordPressModel
             $text = $pieces[0];
             if ($force)
             {
-                $text = Text::trim($text, $len, false);
+                $text = Text::trim($text, $len, true, $allowed_tags);
                 $trimmed = true;
             }
         }
         if (!strlen($text))
         {
-            $text = Text::trim($this->content(), $len, false, null);
+            $text = Text::trim($this->content(), $len, true, $allowed_tags);
             $trimmed = true;
         }
         if (!strlen(trim($text)))
