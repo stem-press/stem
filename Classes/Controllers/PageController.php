@@ -11,6 +11,7 @@ namespace ILab\Stem\Controllers;
 use ILab\Stem\Core\Context;
 use ILab\Stem\Core\Controller;
 use ILab\Stem\Core\Response;
+use ILab\Stem\Models\Page;
 use Symfony\Component\HttpFoundation\Request;
 
 class PageController extends Controller
@@ -22,8 +23,11 @@ class PageController extends Controller
 
         global $wp_query;
 
-        if ($wp_query->post)
-            $this->page=$context->modelForPost($wp_query->post);
+        if ($wp_query->post) {
+            $post = $context->modelForPost($wp_query->post);
+            if ($post instanceof Page)
+                $this->page = $post;
+         }
     }
 
     public function getIndex(Request $request) {
