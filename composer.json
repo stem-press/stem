@@ -20,7 +20,8 @@
     "twig/twig": "^1.24",
     "monolog/monolog": "^1.19",
     "duncan3dc/blade": "^3.0",
-    "nesbot/carbon": "^1.21"
+    "nesbot/carbon": "^1.21",
+    "tgmpa/tgm-plugin-activation": "^2.6"
   },
   "require-dev": {},
   "autoload": {

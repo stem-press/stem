@@ -8,7 +8,6 @@ Version: 0.1
 Author URI: http://interfacelab.com
 */
 
-require_once('tgm/tgm-plugin-check.php');
 
 require_once('vendor/autoload.php');
 

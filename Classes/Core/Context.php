@@ -357,6 +357,9 @@ class Context {
 		$this->removeRegexes = $this->setting('clean/remove/regex',[]);
 		$this->replaceText = $this->setting('clean/replace/text',[]);
 		$this->replaceRegexes = $this->setting('clean/replace/regex',[]);
+
+		// Require our plugins
+		$this->setupRequiredPlugins();
 	}
 
 	/**
@@ -424,6 +427,55 @@ class Context {
 			$name = (isset($type['name'])) ? $type['name'] : null;
 			register_post_type($name, $type);
 		}
+	}
+
+	private function setupRequiredPlugins() {
+		add_action( 'tgmpa_register', function(){
+			$plugins = [
+				[
+					'name'      => 'Kirki',
+					'slug'      => 'kirki',
+					'required'  => false,
+				],
+				[
+					'name'      => 'Advanced Custom Fields',
+					'slug'      => 'advanced-custom-fields',
+					'required'  => false,
+				]
+			];
+
+			$otherPlugins = $this->themeSetting('plugins');
+			if ($otherPlugins)
+				$plugins = array_merge($plugins, $otherPlugins);
+
+			$config = array(
+				'id'           => 'stem',                 // Unique ID for hashing notices for multiple instances of TGMPA.
+				'default_path' => '',                      // Default absolute path to bundled plugins.
+				'menu'         => 'tgmpa-install-plugins', // Menu slug.
+				'parent_slug'  => 'plugins.php',            // Parent menu slug.
+				'capability'   => 'manage_options',    // Capability needed to view plugin install page, should be a capability associated with the parent menu used.
+				'has_notices'  => true,                    // Show admin notices or not.
+				'dismissable'  => true,                    // If false, a user cannot dismiss the nag message.
+				'dismiss_msg'  => '',                      // If 'dismissable' is false, this message will be output at top of nag.
+				'is_automatic' => false,                   // Automatically activate plugins after installation or not.
+				'message'      => '',                      // Message to output right before the plugins table.
+
+				'strings'      => [
+					'notice_can_install_recommended'  => _n_noop(
+						'Stem recommends the following plugin: %1$s.',
+						'Stem recommends the following plugins: %1$s.',
+						'stem'
+					),
+					'notice_can_install_required'  => _n_noop(
+						'Stem requires the following plugin: %1$s.',
+						'Stem requires the following plugins: %1$s.',
+						'stem'
+					)
+				]
+			);
+
+			tgmpa( $plugins, $config );
+		});
 	}
 
 	/**
