@@ -212,7 +212,7 @@ class Context {
 	 */
 	public function __construct($rootPath) {
 		$this->siteHost = parse_url(site_url(), PHP_URL_HOST);
-		$this->httpHost = $_SERVER['HTTP_HOST'];
+		$this->httpHost = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : null;
 
 		if (!file_exists($rootPath . '/config/app.json'))
 			throw new \Exception('Missing app.json for theme.');
