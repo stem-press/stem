@@ -87,6 +87,12 @@ class Context {
 	public $rootPath;
 
 	/**
+	 * Root url to the theme
+	 * @var string
+	 */
+	public $themePath;
+
+	/**
 	 * Path to views
 	 * @var string
 	 */
@@ -255,6 +261,7 @@ class Context {
 		$this->router = new Router($this);
 
 		// Paths
+		$this->themePath = get_template_directory_uri() . '/';
 		$this->jsPath  = get_template_directory_uri() . '/js/';
 		$this->cssPath = get_template_directory_uri() . '/css/';
 		$this->imgPath = get_template_directory_uri() . '/img/';
@@ -274,6 +281,52 @@ class Context {
 			$this->viewClass = '\ILab\Stem\External\Twig\TwigView';
 		} else if ($viewEngine == 'blade') {
 			$this->viewClass = '\ILab\Stem\External\Blade\BladeView';
+		}
+
+		// Enable/disable XML RPC
+		if ($this->setting('options/disable-xml-rpc', false)) {
+			add_filter('xmlrpc_enabled', '__return_false', 10000);
+		}
+		
+		// Enable/disable WordPress JSON API
+		if ($this->setting('options/disable-wp-json-api', false)) {
+			add_filter('json_enabled', '__return_false', 10000);
+			add_filter('json_jsonp_enabled', '__return_false', 10000);
+			add_filter('rest_enabled', '__return_false', 10000);
+			add_filter('rest_jsonp_enabled', '__return_false', 10000);
+			remove_action('xmlrpc_rsd_apis', 'rest_output_rsd');
+			remove_action('wp_head', 'rest_output_link_wp_head', 10);
+			remove_action('template_redirect', 'rest_output_link_header', 11);
+		}
+
+		// Enable/disable WordPress emoji crap
+		if ($this->setting('options/disable-wp-json-api', false)) {
+			add_action( 'init', function(){
+				remove_action('admin_print_styles', 'print_emoji_styles');
+				remove_action('wp_head', 'print_emoji_detection_script', 7);
+				remove_action('admin_print_scripts', 'print_emoji_detection_script');
+				remove_action('wp_print_styles', 'print_emoji_styles');
+				remove_filter('wp_mail', 'wp_staticize_emoji_for_email');
+				remove_filter('the_content_feed', 'wp_staticize_emoji');
+				remove_filter('comment_text_rss', 'wp_staticize_emoji');
+
+				add_filter('disable-emoji', function($plugins) {
+					if (is_array($plugins)) {
+						return array_diff($plugins, ['wpemoji']);
+					} else {
+						return [];
+					}
+				}, 10000, 1);
+
+			});
+		}
+
+		// Enable/disable RSS Feeds
+		if ($this->setting('options/disable-rss', false)) {
+			add_action( 'wp_loaded', function(){
+				remove_action( 'wp_head', 'feed_links', 2 );
+				remove_action( 'wp_head', 'feed_links_extra', 3 );
+			});
 		}
 
 		// Create the controller/template dispatcher
@@ -1158,6 +1211,20 @@ class Context {
 	 */
 	public function image($src) {
 		$output = $this->imgPath . $src;
+
+		return $output;
+	}
+
+
+	/**
+	 * Returns the url for a file in the theme.
+	 *
+	 * @param $src
+	 *
+	 * @return string
+	 */
+	public function theme($src) {
+		$output = $this->themePath . $src;
 
 		return $output;
 	}
