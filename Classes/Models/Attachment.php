@@ -36,6 +36,24 @@ class Attachment extends Post {
     }
 
     /**
+     * Generates an amp-img tag.
+     * @param string $size
+     * @param array|null $attr Any additional attributes to add to the tag
+     */
+    public function ampImg($size='thumbnail', $attr=false) {
+        if (!$attr)
+            $attr=[];
+
+        $attr['layout']='responsive';
+        
+        $img=wp_get_attachment_image($this->post->ID,$size,false,$attr);
+
+        $img=str_replace('<img','<amp-img', $img);
+
+        return $img;
+    }
+
+    /**
      * Returns the url for an image using the requested size template.
      *
      * @param string $size The size template to use.
