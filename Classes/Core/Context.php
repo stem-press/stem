@@ -1020,6 +1020,21 @@ class Context {
 	}
 
 	/**
+	 * Performs a query for posts
+	 *
+	 * @param $args
+	 * @return array
+	 */
+	public function findPosts($args){
+		$query=new \WP_Query($args);
+		$posts=[];
+		foreach($query->posts as $post) {
+			$posts[]=$this->modelForPost($post);
+		}
+		return $posts;
+	}
+
+	/**
 	 * Set the factory for creating a controller for a given post type
 	 *
 	 * @param $type
