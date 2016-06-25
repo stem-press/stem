@@ -101,7 +101,7 @@ class Dispatcher {
 
             // if we found a controller, then invoke the method and return it's output
             if ($controller) {
-                Log::debug("Found controller.",['templateName' => $templateName, 'controller' => $controller]);
+                Log::debug("Found controller.",['templateName' => $templateName]);
 
                 if (method_exists($controller,$method))
                     $response=call_user_func([$controller,$method],$this->context->request);
