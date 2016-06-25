@@ -33,9 +33,14 @@ function arrayPath($array, $path, $defaultValue = null) {
  * @param $data
  * @param bool $die
  */
-function vomit($data, $die = true) {
-	print_r($data);
+if (!function_exists('vomit')) {
+	function vomit($data, $die=true)
+	{
+		echo '<pre>';
+		print_r($data);
+		echo '</pre>';
 
-	if ($die)
-		die;
+		if ($die)
+			die;
+	}
 }

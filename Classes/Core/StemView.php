@@ -234,7 +234,7 @@ class StemView extends View {
             ini_set('display_errors',$oldDisplayErrors);
             ini_set('xdebug.force_display_errors',$oldXDebugDisplayErrors);
 
-            $view=($block) ? $block->view : $this->view;
+            $view=($block) ? $block->viewName : $this->viewName;
             $errLine=($block) ? $errLine+$block->line : $errLine;
 
             throw new ViewException($data,$original,$errStr,$errNo,1,$view,$errLine);
@@ -320,7 +320,7 @@ class StemView extends View {
     }
 
     private static function renderErrorView(ViewException $ex) {
-        $view=new StemView(null,'error');
+        $view=new StemView(Context::current(), 'error');
         return $view->render(['message'=>$ex->getMessage(),
                               'line'=>$ex->getLine(),
                               'original'=>$ex->getOriginal(),

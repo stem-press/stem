@@ -75,27 +75,27 @@ class Term extends WordPressModel {
     }
 
     public function slug() {
-        return $this->name;
+        return $this->slug;
     }
 
     public function group() {
-        return $this->name;
+        return $this->group;
     }
 
     public function taxonomy() {
-        return $this->name;
+        return $this->taxonomy;
     }
 
     public function description() {
-        return $this->name;
+        return $this->description;
     }
 
     public function parent() {
-        return $this->name;
+        return $this->parent;
     }
 
     public function count() {
-        return $this->name;
+        return $this->count;
     }
 
     public function __debugInfo() {

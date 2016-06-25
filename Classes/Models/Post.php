@@ -93,7 +93,7 @@ class Post extends WordPressModel
             $this->topCategories = [];
             foreach ($cats as $category)
             {
-                $parent = $category->parent;
+                $parent = $category->parent();
                 if ($parent == null)
                     $this->topCategories[] = $category;
                 else
