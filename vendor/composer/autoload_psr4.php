@@ -8,6 +8,8 @@ $baseDir = dirname($vendorDir);
 return array(
     'duncan3dc\\Laravel\\' => array($vendorDir . '/duncan3dc/blade/src'),
     'duncan3dc\\LaravelTests\\' => array($vendorDir . '/duncan3dc/blade/tests'),
+    'Symfony\\Polyfill\\Php55\\' => array($vendorDir . '/symfony/polyfill-php55'),
+    'Symfony\\Polyfill\\Php54\\' => array($vendorDir . '/symfony/polyfill-php54'),
     'Symfony\\Polyfill\\Mbstring\\' => array($vendorDir . '/symfony/polyfill-mbstring'),
     'Symfony\\Component\\Translation\\' => array($vendorDir . '/symfony/translation'),
     'Symfony\\Component\\Routing\\' => array($vendorDir . '/symfony/routing'),

@@ -13,16 +13,13 @@ namespace Symfony\Component\HttpFoundation\Tests\Session\Storage\Handler;
 
 use Symfony\Component\HttpFoundation\Session\Storage\Handler\PdoSessionHandler;
 
+/**
+ * @requires extension pdo_sqlite
+ * @group time-sensitive
+ */
 class PdoSessionHandlerTest extends \PHPUnit_Framework_TestCase
 {
     private $dbFile;
-
-    protected function setUp()
-    {
-        if (!class_exists('PDO') || !in_array('sqlite', \PDO::getAvailableDrivers())) {
-            $this->markTestSkipped('This test requires SQLite support in your environment');
-        }
-    }
 
     protected function tearDown()
     {
@@ -30,6 +27,7 @@ class PdoSessionHandlerTest extends \PHPUnit_Framework_TestCase
         if ($this->dbFile) {
             @unlink($this->dbFile);
         }
+        parent::tearDown();
     }
 
     protected function getPersistentSqliteDsn()
@@ -137,6 +135,10 @@ class PdoSessionHandlerTest extends \PHPUnit_Framework_TestCase
 
     public function testReadConvertsStreamToString()
     {
+        if (defined('HHVM_VERSION')) {
+            $this->markTestSkipped('PHPUnit_MockObject cannot mock the PDOStatement class on HHVM. See https://github.com/sebastianbergmann/phpunit-mock-objects/pull/289');
+        }
+
         $pdo = new MockPdo('pgsql');
         $pdo->prepareResult = $this->getMock('PDOStatement');
 
@@ -154,6 +156,10 @@ class PdoSessionHandlerTest extends \PHPUnit_Framework_TestCase
 
     public function testReadLockedConvertsStreamToString()
     {
+        if (defined('HHVM_VERSION')) {
+            $this->markTestSkipped('PHPUnit_MockObject cannot mock the PDOStatement class on HHVM. See https://github.com/sebastianbergmann/phpunit-mock-objects/pull/289');
+        }
+
         $pdo = new MockPdo('pgsql');
         $selectStmt = $this->getMock('PDOStatement');
         $insertStmt = $this->getMock('PDOStatement');
@@ -205,7 +211,7 @@ class PdoSessionHandlerTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * Simulates session_regenerate_id(true) which will require an INSERT or UPDATE (replace)
+     * Simulates session_regenerate_id(true) which will require an INSERT or UPDATE (replace).
      */
     public function testWriteDifferentSessionIdThanRead()
     {

@@ -15,6 +15,7 @@ namespace QueryPath;
 
 use \QueryPath\CSS\QueryPathEventHandler;
 use \QueryPath;
+use \Masterminds\HTML5;
 
 
 /**
@@ -144,7 +145,11 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
         $this->document = $document->ownerDocument;
         //$this->matches = array($document);
         $this->setMatches($document);
-      }
+	  }
+	  elseif ($document instanceof \Masterminds\HTML5) {
+		$this->document = $document;
+		$this->setMatches($document->documentElement);
+	  }
       elseif ($document instanceof \SimpleXMLElement) {
         $import = dom_import_simplexml($document);
         $this->document = $import->ownerDocument;
@@ -244,7 +249,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    * @param string $selector
    *  A selector. If this is supplied, QueryPath will navigate to the
    *  document root and then run the query. (Added in QueryPath 2.0 Beta 2)
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  The DOMQuery object, wrapping the root element (document element)
    *  for the current document.
    */
@@ -259,7 +264,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *
    * @param string $selector
    *   CSS 3 Selector
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    * @see filter()
    * @see is()
    * @todo If a find() returns zero matches, then a subsequent find() will
@@ -305,7 +310,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *      in conjunction with 'namespace_uri'
    *   - 'namespace_uri': The URI to be used as the default namespace URI. Used
    *      with 'namespace_prefix'
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  A DOMQuery object wrapping the results of the query.
    * @see find()
    * @author M Butcher
@@ -409,6 +414,16 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
   }
 
   /**
+   * Get the namespace of the current element.
+   *
+   * If QP is currently pointed to a list of elements, this will get the
+   * namespace of the first element.
+   */
+  public function ns() {
+    return $this->get(0)->namespaceURI;
+  }
+
+  /**
    * Get the DOMDocument that we currently work with.
    *
    * This returns the current DOMDocument. Any changes made to this document will be
@@ -423,7 +438,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
   /**
    * On an XML document, load all XIncludes.
    *
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    */
   public function xinclude() {
     $this->document->xinclude();
@@ -565,7 +580,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *  apply all rules to all elements in the set.
    * @param string $value
    *  The value to set. This is only set if $name is a string.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    */
   public function css($name = NULL, $value = '') {
     if (empty($name)) {
@@ -640,7 +655,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    * @param resource $context
    *  A valid context. Use this only if you need to pass a stream context. This is only necessary
    *  if $data is a URL. (See {@link stream_context_create()}).
-   * @retval mixed
+   * @return \QueryPath\DOMQuery|string
    *  If this is called as a setter, this will return a DOMQuery object. Otherwise, it
    *  will attempt to fetch data out of the attribute and return that.
    * @see http://en.wikipedia.org/wiki/Data:_URL
@@ -684,7 +699,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *
    * @param string $name
    *  Name of the parameter to remove.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  The DOMQuery object with the same elements.
    * @see attr()
    */
@@ -705,7 +720,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    * @param $index
    *  The index of the element to keep. The rest will be
    *  discarded.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    * @see get()
    * @see is()
    * @see end()
@@ -775,7 +790,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *
    * @param string $selector
    *   The selector to use as a filter.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *   The DOMQuery with non-matching items filtered out.
    * @see filterLambda()
    * @see filterCallback()
@@ -857,7 +872,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    * @param boolean $modifyDOM
    *   If this is TRUE, the sorted results will be inserted back into
    *   the DOM at the position of the original first element.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *   This object.
    */
   public function sort($comparator, $modifyDOM = FALSE) {
@@ -915,7 +930,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *
    * @param string $fn
    *  Inline lambda function in a string.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    * @see filter()
    * @see map()
    * @see mapLambda()
@@ -960,7 +975,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *
    * @param string $regex
    *  A regular expression.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    * @see filter()
    * @see filterCallback()
    * @see preg_match()
@@ -995,7 +1010,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    * @param callback $callback.
    *   A callback either as a string (function) or an array (object, method OR
    *   classname, method).
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *   Query path object augmented according to the function.
    * @see filter()
    * @see filterLambda()
@@ -1021,7 +1036,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    * @param string $selector
    *  A selector to use as a negation filter. If the filter is matched, the
    *  element will be removed from the list.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  The DOMQuery object with matching items filtered out.
    * @see find()
    */
@@ -1089,7 +1104,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *  - $index: The index position in the list of items wrapped by this object.
    *  - $item: The current item.
    *
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  The DOMQuery object wrapping a list of whatever values were returned
    *  by each run of the callback.
    *
@@ -1141,7 +1156,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *  The number of items to include in the slice. If nothing is specified, the
    *  all remaining matches (from $start onward) will be included in the sliced
    *  list.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    * @see array_slice()
    */
   public function slice($start, $length = 0) {
@@ -1180,7 +1195,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *
    * @param callback $callback
    *  The callback to run.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  The DOMQuery.
    * @see eachLambda()
    * @see filter()
@@ -1207,7 +1222,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *   method is not necessary and should be avoided.
    * @param string $lambda
    *  The lambda function. This will be passed ($index, &$item).
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  The DOMQuery object.
    * @see each()
    * @see filterLambda()
@@ -1239,7 +1254,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *
    * @param mixed $data
    *  This can be either a string (the usual case), or a DOM Element.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  The DOMQuery object.
    * @see appendTo()
    * @see prepend()
@@ -1287,7 +1302,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *
    * @param DOMQuery $dest
    *  A DOMQuery object that will be appended to.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  The original DOMQuery, unaltered. Only the destination DOMQuery will
    *  be modified.
    * @see append()
@@ -1306,7 +1321,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *
    * @param mixed $data
    *  This can be either a string (the usual case), or a DOM Element.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    * @see append()
    * @see before()
    * @see after()
@@ -1341,7 +1356,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    * @see appendTo()
    * @param DOMQuery $dest
    *  The destination DOMQuery object.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  The original DOMQuery, unmodified. NOT the destination DOMQuery.
    * @throws QueryPath::Exception
    *  Thrown if $data is an unsupported object type.
@@ -1360,7 +1375,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    * @param mixed $data
    *  The data to be inserted. This can be XML in a string, a DomFragment, a DOMElement,
    *  or the other usual suspects. (See {@link qp()}).
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  Returns the DOMQuery with the new modifications. The list of elements currently
    *  selected will remain the same.
    * @see insertBefore()
@@ -1386,7 +1401,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *
    * @param DOMQuery $dest
    *  Destination DOMQuery document.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  The current DOMQuery object, unaltered. Only the destination DOMQuery
    *  object is altered.
    * @see before()
@@ -1405,7 +1420,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *
    * @param DOMQuery $dest
    *  Destination object where the current elements will be deposited.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  The present DOMQuery, unaltered. Only the destination object is altered.
    * @see after()
    * @see insertBefore()
@@ -1426,7 +1441,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *
    * @param mixed $data
    *  The data to be appended.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  The DOMQuery object (with the items inserted).
    * @see before()
    * @see append()
@@ -1434,6 +1449,9 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *  Thrown if $data is an unsupported object type.
    */
   public function after($data) {
+    if (empty($data)) {
+      return $this;
+    }
     $data = $this->prepareInsert($data);
     foreach ($this->matches as $m) {
       $ins = $data->cloneNode(TRUE);
@@ -1450,7 +1468,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    * @param mixed $new
    *  A DOMElement or XML in a string. This will replace all elements
    *  currently wrapped in the DOMQuery object.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  The DOMQuery object wrapping <b>the items that were removed</b>.
    *  This remains consistent with the jQuery API.
    * @see append()
@@ -1501,7 +1519,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    * element, and replace the child as the root element. Be careful, though.
    * You cannot set more than one child as a root element.)
    *
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  The DOMQuery object, with the same element(s) selected.
    * @throws QueryPath::Exception
    *  An exception is thrown if one attempts to unwrap a root element.
@@ -1547,7 +1565,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *
    * @param mixed $markup
    *  Markup that will wrap each element in the current list.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  The DOMQuery object with the wrapping changes made.
    * @see wrapAll()
    * @see wrapInner()
@@ -1599,7 +1617,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *
    * @param string $markup
    *  Markup that will wrap all elements in the current list.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  The DOMQuery object with the wrapping changes made.
    * @see wrap()
    * @see wrapInner()
@@ -1644,7 +1662,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *
    * @param string $markup
    *  Markup that will wrap children of each element in the current list.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  The DOMQuery object with the wrapping changes made.
    * @see wrap()
    * @see wrapAll()
@@ -1693,7 +1711,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    * In the case where there are multiple nodes at the same depth, all of the
    * nodes at that depth will be included.
    *
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  The DOMQuery wrapping the single deepest node.
    */
   public function deepest() {
@@ -1847,7 +1865,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *
    * @param string $selector
    *  A CSS Selector.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  The Query path wrapping a list of removed items.
    * @see replaceAll()
    * @see replaceWith()
@@ -1891,7 +1909,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *  The selector.
    * @param DOMDocument $document
    *  The destination document.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  The DOMQuery wrapping the modified document.
    * @deprecated Due to the fact that this is not a particularly friendly method,
    *  and that it can be easily replicated using {@see replaceWith()}, it is to be
@@ -1921,7 +1939,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *
    * @param string $selector
    *  A valid selector.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  The DOMQuery object with the newly added elements.
    * @see append()
    * @see after()
@@ -1967,7 +1985,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *
    * The last one returns an empty array because only one level of changes is stored.
    *
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  A DOMNode object reflecting the list of matches prior to the last destructive
    *  operation.
    * @see andSelf()
@@ -1994,7 +2012,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    * are beneath p elements.
    *
    * @see end();
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  A DOMNode object with the results of the last two "destructive" operations.
    * @see add()
    * @see end()
@@ -2014,7 +2032,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    * This is equivalent to jQuery's empty() function. (However, empty() is a
    * PHP built-in, and cannot be used as a method name.)
    *
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  The DOMQuery object with the child nodes removed.
    * @see replaceWith()
    * @see replaceAll()
@@ -2036,7 +2054,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *
    * @param string $selector
    *  A valid selector.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  A DOMQuery wrapping all of the children.
    * @see removeChildren()
    * @see parent()
@@ -2083,7 +2101,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    * This does not process iframes. Xinclude processing is dependent on the
    * DOM implementation and configuration.
    *
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  A DOMNode object wrapping all child nodes for all elements in the
    *  DOMNode object.
    * @see find()
@@ -2118,7 +2136,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    * @param string $selector
    *  If the optional selector is provided, siblings will be filtered through
    *  this expression.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  The DOMQuery containing the matched siblings.
    * @see contents()
    * @see children()
@@ -2152,7 +2170,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    * It is provided for jQuery 1.3 compatibility.
    * @param string $selector
    *  A CSS Selector to match.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  The set of matches.
    * @since 2.0
    */
@@ -2188,7 +2206,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *
    * @param string $selector
    *  A valid CSS3 selector.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  A DOMNode object wrapping the matching parents.
    * @see children()
    * @see siblings()
@@ -2224,7 +2242,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    * @see parent()
    * @param string $selector
    *  A valid CSS 3 Selector.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  A DOMNode object containing the matching ancestors.
    * @see siblings()
    * @see children()
@@ -2309,6 +2327,47 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
     }
     // saveHTML cannot take a node and serialize it.
     return $this->document->saveXML($first);
+  }
+
+  /**
+   * Write the QueryPath document to HTML5.
+   *
+   * See html()
+   */
+  function html5($markup = NULL) {
+    $html5 = new HTML5($this->options);
+
+    // append HTML to existing
+    if (isset($markup)) {
+
+      // Parse the HTML and insert it into the DOM
+      $doc = $html5->loadFragment($markup);
+      $this->removeChildren();
+      $this->append($doc);
+      return $this;
+    }
+
+    $length = $this->size();
+    if ($length == 0) {
+      return NULL;
+    }
+    // Only return the first item -- that's what JQ does.
+    $first = $this->getFirstMatch();
+
+    // Catch cases where first item is not a legit DOM object.
+    if (!($first instanceof \DOMNode)) {
+      return NULL;
+    }
+
+    // Added by eabrand.
+    if(!$first->ownerDocument->documentElement) {
+      return NULL;
+    }
+
+    if ($first instanceof \DOMDocument || $first->isSameNode($first->ownerDocument->documentElement)) {
+      return $html5->saveHTML($this->document); //$this->document->saveHTML();
+    }
+    return $html5->saveHTML($first);
   }
 
   /**
@@ -2415,6 +2474,37 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
     $buffer = '';
     foreach ($first->childNodes as $child) {
       $buffer .= $this->document->saveXML($child);
+    }
+
+    return $buffer;
+  }
+
+  /**
+   * Get child elements as an HTML5 string.
+   *
+   * TODO: This is a very simple alteration of innerXML. Do we need better
+   * support?
+   */
+  public function innerHTML5() {
+    $length = $this->size();
+    if ($length == 0) {
+      return NULL;
+    }
+    // Only return the first item -- that's what JQ does.
+    $first = $this->getFirstMatch();
+
+    // Catch cases where first item is not a legit DOM object.
+    if (!($first instanceof \DOMNode)) {
+      return NULL;
+    }
+    elseif (!$first->hasChildNodes()) {
+      return '';
+    }
+
+    $html5 = new HTML5($this->options);
+    $buffer = '';
+    foreach ($first->childNodes as $child) {
+      $buffer .= $html5->saveHTML($child);
     }
 
     return $buffer;
@@ -2725,7 +2815,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *  sent to the remote browser.
    * @param int $options
    *  (As of QueryPath 2.1) Pass libxml options to the saving mechanism.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  The DOMQuery object, unmodified.
    * @see xml()
    * @see innerXML()
@@ -2762,7 +2852,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *  The path to the file into which the XML should be written. if
    *  this is NULL, data will be written to STDOUT, which is usually
    *  sent to the remote browser.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  The DOMQuery object, unmodified.
    * @see html()
    * @see innerHTML()
@@ -2788,6 +2878,27 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
   }
 
   /**
+   * Write the document to HTML5.
+   *
+   * This works the same as the other write* functions, but it encodes the output
+   * as HTML5 with UTF-8.
+   * @see html5()
+   * @see innerHTML5()
+   * @throws Exception
+   *  In the event that a file cannot be written, an Exception will be thrown.
+   */
+  public function writeHTML5($path = NULL) {
+    $html5 = new HTML5();
+    if ($path == NULL) {
+      // Print the document to stdout.
+      print $html5->saveHTML($this->document);
+      return;
+    }
+
+    $html5->save($this->document, $path);
+  }
+
+  /**
    * Write an XHTML file to output.
    *
    * Typically, you should use this instead of {@link writeHTML()}.
@@ -2804,7 +2915,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    * @see xhtml()
    * @param string $path
    *  The filename of the file to write to.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  Returns the DOMQuery, unmodified.
    * @throws Exception
    *  In the event that the output file cannot be written, an exception is
@@ -2821,7 +2932,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *
    * @param string $selector
    *  A CSS3 selector.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  The DOMQuery object.
    * @see nextAll()
    * @see prev()
@@ -2860,7 +2971,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *
    * @param string $selector
    *  A valid CSS 3 selector.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  The DOMQuery object, now containing the matching siblings.
    * @see next()
    * @see prevAll()
@@ -2895,7 +3006,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *
    * @param string $selector
    *  A valid CSS 3 selector.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  A DOMNode object, now containing any previous siblings that have been
    *  found.
    * @see prevAll()
@@ -2932,7 +3043,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *
    * @param string $selector
    *  A valid CSS 3 selector.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  The DOMQuery object, now wrapping previous sibling elements.
    * @see prev()
    * @see nextAll()
@@ -2969,7 +3080,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *
    * @param string $class
    *  The name of the class.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  Returns the DOMQuery object.
    * @see css()
    * @see attr()
@@ -3014,7 +3125,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *
    * @param string $class
    *  The class name to remove.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  The modified DOMNode object.
    * @see attr()
    * @see addClass()
@@ -3125,7 +3236,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    * @param string $selector
    *  If a selector is passed in, an additional {@link find()} will be executed
    *  on the branch before it is returned. (Added in QueryPath 2.0.)
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  A copy of the DOMQuery object that points to the same set of elements that
    *  the original DOMQuery was pointing to.
    * @since 1.1
@@ -3169,7 +3280,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    * This is a destructive operation, which means that end() will revert
    * the list back to the clone's original.
    * @see qp()
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    */
   public function cloneAll() {
     $found = new \SplObjectStorage();
@@ -3206,7 +3317,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *
    * @param string $selector
    *  A CSS Selector.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  The Query path wrapping a list of removed items.
    * @see replaceAll()
    * @see replaceWith()
@@ -3237,7 +3348,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *
    * @param DOMQuery $dest
    *  A DOMQuery Selector.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  The Query path wrapping a list of removed items.
    * @see replaceAll()
    * @see replaceWith()
@@ -3311,7 +3422,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    * empty() function. However, `empty` is a built-in in PHP, and cannot be used as a
    * function name.
    *
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  The DOMQuery object with the newly emptied elements.
    * @see removeChildren()
    * @since 2.1
@@ -3328,7 +3439,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *
    *
    *
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  A DOMQuery wrapping all of the children.
    * @see removeChildren()
    * @see parent()
@@ -3353,7 +3464,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *
    *
    *
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  A DOMQuery wrapping all of the children.
    * @see removeChildren()
    * @see parent()
@@ -3377,7 +3488,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    * Get the first matching element.
    *
    *
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  A DOMQuery wrapping all of the children.
    * @see next()
    * @see prev()
@@ -3399,7 +3510,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    * Get the first child of the matching element.
    *
    *
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  A DOMQuery wrapping all of the children.
    * @see next()
    * @see prev()
@@ -3427,7 +3538,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    * Get the last matching element.
    *
    *
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  A DOMQuery wrapping all of the children.
    * @see next()
    * @see prev()
@@ -3452,7 +3563,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    * Get the last child of the matching element.
    *
    *
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  A DOMQuery wrapping all of the children.
    * @see next()
    * @see prev()
@@ -3485,7 +3596,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *
    * @param string $selector
    *  A valid CSS 3 selector.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  The DOMQuery object, now containing the matching siblings.
    * @see next()
    * @see prevAll()
@@ -3526,7 +3637,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    *
    * @param string $selector
    *  A valid CSS 3 selector.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  The DOMQuery object, now wrapping previous sibling elements.
    * @see prev()
    * @see nextAll()
@@ -3560,7 +3671,7 @@ class DOMQuery implements \QueryPath\Query, \IteratorAggregate, \Countable {
    * @see parent()
    * @param string $selector
    *  A valid CSS 3 Selector.
-   * @retval object DOMQuery
+   * @return \QueryPath\DOMQuery
    *  A DOMNode object containing the matching ancestors.
    * @see siblings()
    * @see children()

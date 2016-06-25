@@ -14,9 +14,11 @@ namespace QueryPath\Tests;
  */
 
 use QueryPath\DOMQuery;
+use \Masterminds\HTML5;
 
 /** */
-require_once 'PHPUnit/Autoload.php';
+//require_once 'PHPUnit/Autoload.php';
+require __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/TestCase.php';
 
 define('DATA_FILE', __DIR__ . '/../../data.xml');
@@ -115,6 +117,11 @@ class DOMQueryTest extends TestCase {
     $qp = htmlqp(HTML_IN_XML_FILE);
     $this->assertEquals(1, count($qp->get()));
     $this->assertTrue($qp->get(0) instanceof \DOMNode);
+
+	// HTML5
+	$html5 = new \Masterminds\HTML5();
+	$dom = $html5->loadHTML(\QueryPath::HTML_STUB);
+	qp($dom,'html');
 
     // Stripping #13 (CR) from HTML.
     $borken = '<html><head></head><body><p>' . chr(13) . '</p><div id="after"/></body></html>';
@@ -998,6 +1005,16 @@ class DOMQueryTest extends TestCase {
     </body></html>';
     $cr = $this->contentsRecurse(qp($xml));
     $this->assertEquals(14, count($cr), implode("\n", $cr));
+  }
+
+  public function testNS() {
+    $xml = '<?xml version="1.0"?><root xmlns="foo:bar"><e>test</e></root>';
+
+    $q = qp($xml, "e");
+
+    $this->assertEquals(1, $q->size());
+
+    $this->assertEquals("foo:bar", $q->ns());
   }
 
   /**

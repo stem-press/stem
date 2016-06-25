@@ -1,7 +1,7 @@
 <?php
 namespace QueryPath\Tests;
 
-require_once 'PHPUnit/Autoload.php';
+//require_once 'PHPUnit/Autoload.php';
 require_once __DIR__ . '/TestCase.php';
 //require_once __DIR__ . '/../../../src/qp.php';
 require_once __DIR__ . '/../../../src/QueryPath.php';
@@ -17,6 +17,11 @@ class QueryPathTest extends TestCase {
 
   public function testWithHTML() {
     $qp = \QueryPath::with(\QueryPath::HTML_STUB);
+
+    $this->assertInstanceOf('\QueryPath\DOMQuery', $qp);
+  }
+  public function testWithHTML5() {
+    $qp = \QueryPath::withHTML5(\QueryPath::HTML5_STUB);
 
     $this->assertInstanceOf('\QueryPath\DOMQuery', $qp);
   }

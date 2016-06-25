@@ -96,6 +96,26 @@ class BladeInstance implements FactoryContract
 
 
     /**
+     * Register a custom Blade compiler.
+     *
+     * @param callable $compiler
+     *
+     * @return static
+     */
+    public function extend(callable $compiler)
+    {
+        $this
+            ->getViewFactory()
+            ->getEngineResolver()
+            ->resolve("blade")
+            ->getCompiler()
+            ->extend($compiler);
+
+        return $this;
+    }
+
+
+    /**
      * Add a path to look for views in.
      *
      * @param string $path The path to look in

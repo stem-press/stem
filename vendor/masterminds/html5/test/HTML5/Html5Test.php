@@ -92,6 +92,21 @@ class Html5Test extends TestCase
         $this->assertEmpty($this->html5->getErrors());
     }
 
+    public function testLoadHTMLWithComments()
+    {
+        $contents = '<!--[if lte IE 8]> <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]> <!--><html class="no-js" lang="en"><!--<![endif]-->
+</html>';
+
+        $dom = $this->html5->loadHTML($contents);
+        $this->assertInstanceOf('\DOMDocument', $dom);
+
+        $expected = '<!DOCTYPE html>
+<!--[if lte IE 8]> <html class="no-js lt-ie9" lang="en"> <![endif]--><!--[if gt IE 8]> <!--><html class="no-js" lang="en"><!--<![endif]--></html>
+';
+        $this->assertEquals($expected, $this->html5->saveHTML($dom));
+    }
+
     public function testLoadHTMLFragment()
     {
         $fragment = '<section id="Foo"><div class="Bar">Baz</div></section>';
@@ -302,6 +317,9 @@ class Html5Test extends TestCase
 
     public function testAttributes()
     {
+        $res = $this->cycle('<use xlink:href="#svg-track" xmlns:xlink="http://www.w3.org/1999/xlink"></use>');
+        $this->assertContains('<use xlink:href="#svg-track" xmlns:xlink="http://www.w3.org/1999/xlink"></use>', $res);
+
         $res = $this->cycle('<div attr="val">FOO</div>');
         $this->assertRegExp('|<div attr="val">FOO</div>|', $res);
 

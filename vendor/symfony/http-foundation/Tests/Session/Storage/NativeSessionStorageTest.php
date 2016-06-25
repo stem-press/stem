@@ -83,6 +83,16 @@ class NativeSessionStorageTest extends \PHPUnit_Framework_TestCase
         $storage->getBag('non_existing');
     }
 
+    /**
+     * @expectedException \LogicException
+     */
+    public function testRegisterBagForAStartedSessionThrowsException()
+    {
+        $storage = $this->getStorage();
+        $storage->start();
+        $storage->registerBag(new AttributeBag());
+    }
+
     public function testGetId()
     {
         $storage = $this->getStorage();
@@ -128,6 +138,13 @@ class NativeSessionStorageTest extends \PHPUnit_Framework_TestCase
         $storage->getBag('attributes')->set('lucky', 42);
 
         $this->assertEquals(42, $_SESSION['_sf2_attributes']['lucky']);
+    }
+
+    public function testRegenerationFailureDoesNotFlagStorageAsStarted()
+    {
+        $storage = $this->getStorage();
+        $this->assertFalse($storage->regenerate());
+        $this->assertFalse($storage->isStarted());
     }
 
     public function testDefaultSessionCacheLimiter()
@@ -198,12 +215,11 @@ class NativeSessionStorageTest extends \PHPUnit_Framework_TestCase
         $this->assertInstanceOf('Symfony\Component\HttpFoundation\Session\Storage\Proxy\NativeProxy', $storage->getSaveHandler());
     }
 
+    /**
+     * @requires PHP 5.4
+     */
     public function testSetSaveHandler54()
     {
-        if (PHP_VERSION_ID < 50400) {
-            $this->markTestSkipped('Test skipped, for PHP 5.4 only.');
-        }
-
         $this->iniSet('session.save_handler', 'files');
         $storage = $this->getStorage();
         $storage->setSaveHandler();
