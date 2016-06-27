@@ -40,12 +40,13 @@ class Attachment extends Post {
      * @param string $size
      * @param array|null $attr Any additional attributes to add to the tag
      */
-    public function ampImg($size='thumbnail', $attr=false) {
+    public function ampImg($size='thumbnail', $responsive = true, $attr=false) {
         if (!$attr)
             $attr=[];
 
-        $attr['layout']='responsive';
-        
+        if ($responsive)
+            $attr['layout']='responsive';
+
         $img=wp_get_attachment_image($this->post->ID,$size,false,$attr);
 
         $img=str_replace('<img','<amp-img', $img);

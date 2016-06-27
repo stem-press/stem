@@ -133,7 +133,6 @@ class Context {
 	 * @var array
 	 */
 	public $theme = [];
-
 	/**
 	 * Callback for theme setup
 	 * @var callable
@@ -212,6 +211,11 @@ class Context {
 	 */
 	private $isAMPContext = false;
 
+	private $imgixEnabled = false;
+
+	private $currentImageSize = null;
+
+	private $srcsetConfig = [];
 
 	/**
 	 * Constructor
@@ -223,6 +227,14 @@ class Context {
 	 * @throws \Exception
 	 */
 	public function __construct($rootPath) {
+		$this->imgixEnabled = apply_filters('ilab_imgix_enabled', false);
+
+		if (!$this->imgixEnabled) {
+			add_action('ilab_imgix_setup',function(){
+				error_log('imgix setup');
+			});
+		}
+
 		$this->siteHost = parse_url(site_url(), PHP_URL_HOST);
 		$this->httpHost = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : null;
 
@@ -472,6 +484,14 @@ class Context {
 				});
 			});
 		}
+
+		add_filter('image_downsize', [$this, 'imageDownsize'], 3, 3 );
+		add_filter('wp_calculate_image_srcset',[$this,'calculateSrcSet'], 9999, 5);
+		add_filter('wp_calculate_image_sizes',[$this,'calculateImageSizes'],3, 5);
+
+		add_filter('ilab_s3_can_calculate_srcset',function(){
+			return (!$this->imgixEnabled);
+		});
 	}
 
 	/**
@@ -646,28 +666,44 @@ class Context {
 		// configure image sizes
 		if (file_exists($this->rootPath . '/config/sizes.json')) {
 			$sizesConfig = JSONParser::parse(file_get_contents($this->rootPath . '/config/sizes.json'));
-			$customSizes = [];
 
-			foreach ($sizesConfig as $key => $info) {
-				if ($key == 'post-thumbnail') {
-					set_post_thumbnail_size($info['width'], $info['height'], $info['crop']);
-				}
-				else {
-					add_image_size($key, $info['width'], $info['height'], $info['crop']);
-				}
+			if (isset($sizesConfig['srcset']))
+				$this->srcsetConfig = $sizesConfig['srcset'];
 
-				if (isset($info['display']) && $info['display'])
-					$customSizes[] = $key;
-			}
+			if (isset($sizesConfig['sizes'])) {
+				$customSizes = [];
 
-			if (count($customSizes) > 0) {
-				add_filter('image_size_names_choose', function($sizes) use ($customSizes) {
-					foreach ($customSizes as $size) {
-						$sizes[$size] = ucwords(str_replace('_', ' ', str_replace('-', ' ', $size)));
+				foreach ($sizesConfig['sizes'] as $key => $info) {
+					if ($key == 'post-thumbnail') {
+						set_post_thumbnail_size($info['width'], $info['height'], $info['crop']);
+					}
+					else {
+						add_image_size($key, $info['width'], $info['height'], $info['crop']);
 					}
 
+					if (isset($info['display']) && $info['display'])
+						$customSizes[] = $key;
+				}
+
+				if (count($customSizes) > 0) {
+					add_filter('image_size_names_choose', function($sizes) use ($customSizes) {
+						foreach ($customSizes as $size) {
+							$sizes[$size] = ucwords(str_replace('_', ' ', str_replace('-', ' ', $size)));
+						}
+
+						return $sizes;
+					});
+				}
+			}
+
+			if (isset($sizesConfig['disable-wp-sizes'])) {
+				$disabled = $sizesConfig['disable-wp-sizes'];
+				add_filter('intermediate_image_sizes_advanced', function($sizes) use ($disabled) {
+					foreach($sizes as $disabled)
+						unset($sizes[$disabled]);
+
 					return $sizes;
-				});
+				}, 10000);
 			}
 		}
 
@@ -1426,5 +1462,49 @@ class Context {
 		}
 
 		return $menu;
+	}
+
+	public function imageDownsize($fail,$id,$size)  {
+		if (!is_array($size))
+			$this->currentImageSize = $size;
+		else
+			$this->currentImageSize = null;
+
+		return $fail;
+	}
+	public function calculateSrcSet($sources, $size_array, $image_src, $image_meta, $attachment_id) {
+		if (!$this->imgixEnabled || !$this->currentImageSize)
+			return $sources;
+
+		$newsources=[];
+
+		$src = apply_filters('imgix_build_srcset_url',$attachment_id, $this->currentImageSize, null);
+		if (is_array($src)) {
+			$newsources[$src[1]]=[
+				'url' => $src[0],
+				'descriptor' => 'w',
+				'value' => $src[1]
+			];
+		}
+
+		if (!isset($this->srcsetConfig[$this->currentImageSize]))
+			return $newsources;
+
+		foreach($this->srcsetConfig[$this->currentImageSize] as $width => $sizeInfo) {
+			$src = apply_filters('imgix_build_srcset_url',$attachment_id, $this->currentImageSize, $sizeInfo);
+			if (is_array($src)) {
+				$newsources[$src[1]]=[
+					'url' => $src[0],
+					'descriptor' => 'w',
+					'value' => $src[1]
+				];
+			}
+		}
+
+		return $newsources;
+	}
+
+	public function calculateImageSizes($sizes,  $size,  $image_src,  $image_meta,  $attachment_id) {
+		return $sizes;
 	}
 }
