@@ -49,6 +49,10 @@ class Post extends WordPressModel
         return implode(' ', $result);
     }
 
+    public function type() {
+        return $this->post->post_type;
+    }
+
     public function author()
     {
         if ($this->author)
@@ -141,12 +145,7 @@ class Post extends WordPressModel
         return $this->post->post_title;
     }
 
-    public function type()
-    {
-        return $this->post->post_type;
-    }
-
-    public function content()
+    public function content($stripEmptyParagraphs = false)
     {
         if ($this->content)
             return $this->content;
@@ -157,6 +156,9 @@ class Post extends WordPressModel
         $post = $this->post;
         $this->content = apply_filters('the_content', $this->post->post_content);
         $post = $previousPost;
+
+        if ($stripEmptyParagraphs)
+            $this->content = str_replace("<p>&nbsp;</p>","",$this->content);
 
         return $this->content;
     }

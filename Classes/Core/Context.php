@@ -472,6 +472,9 @@ class Context {
 								return "<amp-twitter width=486 height=657 layout='responsive' data-tweetid='$tweetId' data-cards='visible'></amp-twitter>";
 							}
 
+							if (strpos($url, 'soundcloud')>0)
+								return '';
+
 							return $cache;
 						}, 10, 4);
 
