@@ -19,3 +19,12 @@ define('ILAB_STEM_VIEW_DIR',ILAB_STEM_DIR.'/views');
 $plug_url = plugin_dir_url( __FILE__ );
 define('ILAB_STEM_PUB_JS_URL',$plug_url.'public/js');
 define('ILAB_STEM_PUB_CSS_URL',$plug_url.'public/css');
+
+
+register_activation_hook( __FILE__, function(){
+	flush_rewrite_rules();
+});
+
+register_deactivation_hook( __FILE__, function(){
+	flush_rewrite_rules();
+});
