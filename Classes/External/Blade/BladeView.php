@@ -3,6 +3,7 @@ namespace ILab\Stem\External\Blade;
 
 use duncan3dc\Laravel\BladeInstance;
 use ILab\Stem\Core\Context;
+use ILab\Stem\Core\UI;
 use ILab\Stem\Core\View;
 use ILab\Stem\Models\Theme;
 
@@ -17,11 +18,11 @@ class BladeView extends View {
 
 	private $blade = null;
 
-	public function __construct(Context $context=null, $viewName=null) {
-		parent::__construct($context, $viewName);
+	public function __construct(Context $context=null, UI $ui=null, $viewName=null) {
+		parent::__construct($context, $ui, $viewName);
 
 		$viewPath = $context->rootPath.'/views/';
-		$cache = $context->setting('options/views/cache');
+		$cache = $ui->setting('options/views/cache');
 
 		$this->blade = new BladeInstance($viewPath, $cache);
 	}
@@ -30,16 +31,16 @@ class BladeView extends View {
 		return $this->blade->render($this->viewName, $data);
 	}
 
-	public static function renderView(Context $context, $view, $data) {
-		$view=new BladeView($context, $view);
+	public static function renderView(Context $context, UI $ui, $view, $data) {
+		$view=new BladeView($context, $ui, $view);
 		return $view->render($data);
 	}
 
-	public static function viewExists(Context $context, $view) {
-		$exists = file_exists($context->viewPath.$view.'.blade.php');
+	public static function viewExists(UI $ui, $view) {
+		$exists = file_exists($ui->viewPath.$view.'.blade.php');
 
 		if (!$exists) {
-			return file_exists($context->viewPath.$view.'.html.blade.php');
+			return file_exists($ui->viewPath.$view.'.html.blade.php');
 		}
 
 		return $exists;

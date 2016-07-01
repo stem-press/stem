@@ -78,7 +78,7 @@ class Dispatcher {
             else
             {
                 // Otherwise, we check to see if the template exists.
-                if ($this->context->viewExists('templates/'.$name))
+                if ($this->context->ui->viewExists('templates/'.$name))
                 {
                     if ($pageType=='none')
                     {
@@ -86,7 +86,7 @@ class Dispatcher {
 
                         // Template exists but page type doesn't map to a built-in
                         // controller, so we just render the template as is.
-                        echo $this->context->render('templates/' . $name, [$this->context]);
+                        echo $this->context->ui->render('templates/' . $name, [$this->context]);
                         return true;
                     }
 

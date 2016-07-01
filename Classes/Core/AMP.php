@@ -17,6 +17,12 @@ class AMP {
 	private $context;
 
 	/**
+	 * UI Context
+	 * @var UI
+	 */
+	private $ui;
+
+	/**
 	 * Determines if this is a request for an AMP page
 	 * @var bool
 	 */
@@ -26,11 +32,13 @@ class AMP {
 	 * Constructor
 	 *
 	 * @param $context Context The current context
+	 * @param $ui UI The current UI context
 	 */
-	public function __construct(Context $context) {
+	public function __construct(Context $context, UI $ui) {
+		$this->ui = $ui;
 		$this->context = $context;
 		$ampWasEnabled = get_site_option('stem-amp-enabled', false);
-		if ($this->context->setting('amp/enabled', false)) {
+		if ($this->ui->setting('options/amp/enabled', false)) {
 			add_action('init',function() use ($ampWasEnabled) {
 				add_rewrite_endpoint('amp',EP_PERMALINK);
 
@@ -39,7 +47,7 @@ class AMP {
 					flush_rewrite_rules();
 				}
 
-				foreach($this->context->setting('amp/post-types',[]) as $postType)
+				foreach($this->ui->setting('options/amp/post-types',[]) as $postType)
 					add_post_type_support($postType, 'amp');
 
 				add_action('wp',function(){

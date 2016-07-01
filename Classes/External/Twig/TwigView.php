@@ -2,6 +2,7 @@
 namespace ILab\Stem\External\Twig;
 
 use ILab\Stem\Core\Context;
+use ILab\Stem\Core\UI;
 use ILab\Stem\Core\View;
 
 /**
@@ -15,8 +16,8 @@ class TwigView extends View {
 
     private $twig = null;
 
-    public function __construct(Context $context=null, $viewName=null) {
-        parent::__construct($context, $viewName);
+    public function __construct(Context $context=null, UI $ui=null, $viewName=null) {
+        parent::__construct($context, $ui, $viewName);
 
         $loader = new \Twig_Loader_Filesystem($context->rootPath.'/views/');
 
@@ -41,16 +42,16 @@ class TwigView extends View {
         return $this->twig->render($this->viewName.'.twig', $data);
     }
     
-    public static function renderView(Context $context, $view, $data) {
-        $view=new TwigView($context, $view);
+    public static function renderView(Context $context, UI $ui, $view, $data) {
+        $view=new TwigView($context, $ui, $view);
         return $view->render($data);
     }
 
-    public static function viewExists(Context $context, $view) {
-        $exists = file_exists($context->viewPath.$view.'.twig');
+    public static function viewExists(UI $ui, $view) {
+        $exists = file_exists($ui->viewPath.$view.'.twig');
 
         if (!$exists) {
-            return file_exists($context->viewPath.$view.'.html.twig');
+            return file_exists($ui->viewPath.$view.'.html.twig');
         }
 
         return $exists;

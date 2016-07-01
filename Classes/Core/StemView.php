@@ -65,7 +65,7 @@ class StemView extends View {
 
     protected $data;
 
-    public function __construct(Context $context, $viewName)
+    public function __construct(Context $context, UI $ui=null, $viewName)
     {
         parent::__construct($context, $viewName);
 

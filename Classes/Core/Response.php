@@ -15,7 +15,7 @@ class Response extends \Symfony\Component\HttpFoundation\Response {
 			$content                 = json_encode($data);
 		}
 		else
-			$content = Context::current()->render($view, $data);
+			$content = Context::current()->ui->render($view, $data);
 
 		parent::__construct($content, $status, $headers);
 	}

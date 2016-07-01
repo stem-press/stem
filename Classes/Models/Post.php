@@ -304,7 +304,7 @@ class Post extends WordPressModel
 
         $permalink = get_permalink($this->id);
 
-        if ($this->context->useRelative) {
+        if ($this->context->ui->useRelative) {
             if ($permalink && !empty($permalink)) {
                 $parsed = parse_url($permalink);
                 $plink  = $parsed['path'];
