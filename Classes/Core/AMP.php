@@ -37,13 +37,13 @@ class AMP {
 	public function __construct(Context $context, UI $ui) {
 		$this->ui = $ui;
 		$this->context = $context;
-		$ampWasEnabled = get_site_option('stem-amp-enabled', false);
+		$ampWasEnabled = get_option('stem-amp-enabled', false);
 		if ($this->ui->setting('options/amp/enabled', false)) {
 			add_action('init',function() use ($ampWasEnabled) {
 				add_rewrite_endpoint('amp',EP_PERMALINK);
 
 				if (!$ampWasEnabled) {
-					update_site_option('stem-amp-enabled', true);
+					update_option('stem-amp-enabled', true);
 					flush_rewrite_rules();
 				}
 
@@ -105,7 +105,7 @@ class AMP {
 				});
 			});
 		} else if ($ampWasEnabled) {
-			update_site_option('stem-amp-enabled', false);
+			update_option('stem-amp-enabled', false);
 			flush_rewrite_rules();
 		}
 	}
