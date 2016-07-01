@@ -86,6 +86,13 @@ class AMP {
 							if (strpos($url, 'soundcloud')>0)
 								return '';
 
+							if (strpos($url, 'instagram')>0) {
+								if (preg_match('#instagram.com\/p\/([aA-zZ0-9]+)#',$url, $matches)) {
+									$instaId = $matches[1];
+									return "<amp-instagram width=600 height=400 layout='responsive'  data-shortcode='$instaId'></amp-instagram>";
+								}
+							}
+
 							return $cache;
 						}, 10, 4);
 
