@@ -67,12 +67,18 @@ class Context {
 	 * @var array
 	 */
 	public $config;
-	
+
 	/**
 	 * Callback for theme setup
 	 * @var callable
 	 */
 	protected $setupCallback;
+
+	/**
+	 * Callback for post deployment.  You need to set 'stem-new-deploy' option to true via WP-CLI to trigger this.
+	 * @var callable
+	 */
+	protected $deployCallback;
 
 	/**
 	 * Callback for pre_get_posts hook
@@ -372,6 +378,17 @@ class Context {
 			call_user_func($this->setupCallback);
 
 		$this->setupPostFilter();
+
+		if ($this->setting('options/flush-on-deploy', false)) {
+			if (get_option('stem-new-deploy', false)) {
+				update_option('stem-new-deploy', false);
+				flush_rewrite_rules();
+				// call the user supplied deploy callback
+				if ($this->deployCallback)
+					call_user_func($this->deployCallback);
+			}
+		}
+
 	}
 	
 	/**
@@ -405,7 +422,7 @@ class Context {
 				]
 			];
 
-			$otherPlugins = $this->setting('options/plugins');
+			$otherPlugins = $this->setting('plugins');
 			if ($otherPlugins)
 				$plugins = array_merge($plugins, $otherPlugins);
 
@@ -568,6 +585,16 @@ class Context {
 	 */
 	public function onSetup($callback) {
 		$this->setupCallback = $callback;
+	}
+
+	/**
+	 * Sets a user supplied callback to call after a site has been deployed.  You need to set 'stem-new-deploy' option
+	 * to true via WP-CLI to trigger this.
+	 *
+	 * @param $callback callable
+	 */
+	public function onDeploy($callback) {
+		$this->deployCallback = $callback;
 	}
 
 	/**
