@@ -112,7 +112,7 @@ class UI {
 	 * The forced domain
 	 * @var string
 	 */
-	protected $forcedDomain = null;
+	public $forcedDomain = null;
 
 	/**
 	 * View class
