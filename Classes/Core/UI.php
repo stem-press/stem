@@ -344,8 +344,8 @@ class UI {
 			if (isset($sizesConfig['disable-wp-sizes'])) {
 				$disabled = $sizesConfig['disable-wp-sizes'];
 				add_filter('intermediate_image_sizes_advanced', function($sizes) use ($disabled) {
-					foreach($sizes as $disabled)
-						unset($sizes[$disabled]);
+					foreach($disabled as $size)
+						unset($sizes[$size]);
 
 					return $sizes;
 				}, 10000);
