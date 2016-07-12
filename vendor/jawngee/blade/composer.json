@@ -1,9 +1,9 @@
 {
-    "name": "duncan3dc/blade",
+    "name": "jawngee/blade",
     "type": "library",
     "description": "Use Laravel Blade templates without the full Laravel framework",
     "keywords": ["laravel", "templating", "template", "views"],
-    "homepage": "https://github.com/duncan3dc/blade",
+    "homepage": "https://github.com/jawngee/blade",
     "license": "Apache-2.0",
     "authors": [{
         "name": "Craig Duncan",

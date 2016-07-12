@@ -6,8 +6,8 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
-    'duncan3dc\\Laravel\\' => array($vendorDir . '/duncan3dc/blade/src'),
-    'duncan3dc\\LaravelTests\\' => array($vendorDir . '/duncan3dc/blade/tests'),
+    'duncan3dc\\Laravel\\' => array($vendorDir . '/jawngee/blade/src'),
+    'duncan3dc\\LaravelTests\\' => array($vendorDir . '/jawngee/blade/tests'),
     'Symfony\\Polyfill\\Php55\\' => array($vendorDir . '/symfony/polyfill-php55'),
     'Symfony\\Polyfill\\Php54\\' => array($vendorDir . '/symfony/polyfill-php54'),
     'Symfony\\Polyfill\\Mbstring\\' => array($vendorDir . '/symfony/polyfill-mbstring'),

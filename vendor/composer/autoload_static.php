@@ -62,11 +62,11 @@ class ComposerStaticInit63966c268fa453a8094d300335533436
     public static $prefixDirsPsr4 = array (
         'duncan3dc\\Laravel\\' => 
         array (
-            0 => __DIR__ . '/..' . '/duncan3dc/blade/src',
+            0 => __DIR__ . '/..' . '/jawngee/blade/src',
         ),
         'duncan3dc\\LaravelTests\\' => 
         array (
-            0 => __DIR__ . '/..' . '/duncan3dc/blade/tests',
+            0 => __DIR__ . '/..' . '/jawngee/blade/tests',
         ),
         'Symfony\\Polyfill\\Php55\\' => 
         array (
