@@ -1,7 +1,7 @@
 <?php
-namespace ILab\Stem\External\Twig;
+namespace ILab\Stem\External\Twig\Extensions;
 
-class WordpressExtension extends \Twig_Extension {
+class WordPressExtension extends \Twig_Extension {
     // lifted from: https://api.wpseek.com/1.1/wordpress/functions.plain
     private $functionNames = [
         '_',

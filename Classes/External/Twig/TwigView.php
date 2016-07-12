@@ -4,6 +4,9 @@ namespace ILab\Stem\External\Twig;
 use ILab\Stem\Core\Context;
 use ILab\Stem\Core\UI;
 use ILab\Stem\Core\View;
+use ILab\Stem\External\Twig\Extensions\EnqueueTokenParser;
+use ILab\Stem\External\Twig\Extensions\HeaderFooterTokenParser;
+use ILab\Stem\External\Twig\Extensions\WordPressExtension;
 
 /**
  * Class TwigView
@@ -32,9 +35,12 @@ class TwigView extends View {
         }
 
         $this->twig = new \Twig_Environment($loader, $args);
-        $this->twig->addExtension(new WordpressExtension());
+        $this->twig->addExtension(new WordPressExtension());
+        $this->twig->addTokenParser(new EnqueueTokenParser($context));
+        $this->twig->addTokenParser(new HeaderFooterTokenParser($context, 'header'));
+        $this->twig->addTokenParser(new HeaderFooterTokenParser($context, 'footer'));
 
-        if (file_exists($context->viewPath.$this->viewName.'.html.twig'))
+        if (file_exists($context->ui->viewPath.$this->viewName.'.html.twig'))
             $this->viewName.='.html';
     }
     

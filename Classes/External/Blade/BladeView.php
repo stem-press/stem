@@ -1,6 +1,7 @@
 <?php
 namespace ILab\Stem\External\Blade;
 
+use duncan3dc\Laravel\Blade;
 use duncan3dc\Laravel\BladeInstance;
 use ILab\Stem\Core\Context;
 use ILab\Stem\Core\UI;
@@ -25,6 +26,7 @@ class BladeView extends View {
 		$cache = $ui->setting('options/views/cache');
 
 		$this->blade = new BladeInstance($viewPath, $cache);
+		$this->registerDirectives();
 	}
 
 	public function render($data) {
@@ -44,5 +46,36 @@ class BladeView extends View {
 		}
 
 		return $exists;
+	}
+
+	protected function registerDirectives() {
+		$this->blade->directive('enqueue', [$this, 'enqueue']);
+		$this->blade->directive('header', [$this, 'header']);
+		$this->blade->directive('footer', [$this, 'footer']);
+	}
+
+	public function enqueue($expression) {
+		$expression = trim($expression, '()');
+		$args = explode(',', $expression);
+
+		if (count($args)==2) {
+			$type = trim($args[0], " \"'");
+			$resource = trim($args[1], " \"'");
+
+			if (($type == 'js') || ($type == 'script'))
+				wp_enqueue_script($resource, $this->context->ui->script($resource), ['jquery'], false, true);
+			else if (($type == 'css') || ($type == 'style'))
+				wp_enqueue_style($resource, $this->context->ui->css($resource));
+		}
+
+		return null;
+	}
+
+	public function header($expression) {
+		return $this->context->ui->header();
+	}
+
+	public function footer($expression) {
+		return $this->context->ui->footer();
 	}
 }
