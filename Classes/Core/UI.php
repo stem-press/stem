@@ -773,8 +773,20 @@ class UI {
 	}
 
 	public function calculateSrcSet($sources, $size_array, $image_src, $image_meta, $attachment_id) {
-		if (!$this->imgixEnabled || !$this->currentImageSize)
+		if (!$this->imgixEnabled)
 			return $sources;
+
+
+		if (!$this->currentImageSize) {
+			$is_crop = (strpos($image_src,'fit=crop') > 0);
+			foreach($sources as $key => $source) {
+				$src = apply_filters('imgix_build_srcset_url',$attachment_id, [$source['value'], ($is_crop) ? $source['value'] : 15000, ($is_crop) ? 'crop' : 'fit'], null);
+				$source['url'] = $src[0];
+				$sources[$key] = $source;
+			}
+
+			return $sources;
+		}
 
 		$newsources=[];
 
