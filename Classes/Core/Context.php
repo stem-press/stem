@@ -495,15 +495,15 @@ class Context {
 				$post_types = $this->setting('post-types');
 
 			if ($post_types && (count($post_types)>1)) {
-				add_action('pre_get_posts', function($query) {
+				add_action('pre_get_posts', function($query) use($post_types) {
 					if (($query->is_home() && $query->is_main_query()) || ($query->is_search()) || ($query->is_tag())) {
 						if ($query->is_search()) {
-							if (isset($this->config['search-options']['post-types']))
-								$query->set('post_type', $this->config['search-options']['post-types']);
+							if ($post_types)
+								$query->set('post_type', $post_types);
 						}
 						else {
-							if (isset($this->config['post-types']))
-								$query->set('post_type', $this->config['post-types']);
+							if ($post_types)
+								$query->set('post_type', $post_types);
 						}
 
 						if ($this->preGetPostsCallback)
