@@ -93,12 +93,20 @@ class AMP {
 								}
 							}
 
+							if (strpos($url, 'vine.co')>0) {
+								if (preg_match('#vine.co\/v\/([aA-zZ0-9]+)#',$url, $matches)) {
+									$vineId = $matches[1];
+									return "<amp-vine width=600 height=400 layout='responsive'  data-vineid='$vineId'></amp-vine>";
+								}
+							}
+
 							return $cache;
 						}, 10, 4);
 
 						add_filter('the_content',function($content) {
 							$content = str_replace('<img ','<amp-img layout="responsive" ',$content);
 							$content = preg_replace('/<p>(<amp-youtube(?:.*)><\/amp-youtube>)<\/p>/', "$1", $content);
+							$content = preg_replace('#style=\"[^"]+\"#','',$content);
 							return $content;
 						}, 100000);
 					}
