@@ -7,6 +7,7 @@ use ILab\Stem\Core\Context;
 use ILab\Stem\Core\UI;
 use ILab\Stem\Core\View;
 use ILab\Stem\Models\Theme;
+use ILab\Stem\Utilities\ArgumentParser;
 
 /**
  * Class BladeView
@@ -56,16 +57,31 @@ class BladeView extends View {
 
 	public function enqueue($expression) {
 		$expression = trim($expression, '()');
-		$args = explode(',', $expression);
 
-		if (count($args)==2) {
-			$type = trim($args[0], " \"'");
-			$resource = trim($args[1], " \"'");
+		$args = ArgumentParser::Parse($expression);
 
-			if (($type == 'js') || ($type == 'script'))
-				wp_enqueue_script($resource, $this->context->ui->script($resource), ['jquery'], false, true);
-			else if (($type == 'css') || ($type == 'style'))
-				wp_enqueue_style($resource, $this->context->ui->css($resource));
+		if (count($args)>2) {
+			$type = $args[0];
+			$resource = $args[1];
+
+			$dep = [];
+
+			if (count($args)>=3)
+				$dep = is_array($args[2]) ? $args[2] : [$args[2]];
+
+			for($i = 0; $i<count($dep); $i++)
+				$dep[$i] = "'{$dep[$i]}'";
+
+			if ($type == 'js')
+				$dep[] = "'jquery'";
+
+			$deps = '['.implode(',', $dep).']';
+
+			if (($type == 'js') || ($type == 'script')) {
+				return "<?php wp_enqueue_script('$resource', '{$this->context->ui->script($resource)}', $deps, false, true); ?>";
+			} else if (($type == 'css') || ($type == 'style')) {
+				return "<?php wp_enqueue_style('$resource'', '{$this->context->ui->css($resource)}', $deps); ?>";
+			}
 		}
 
 		return null;
