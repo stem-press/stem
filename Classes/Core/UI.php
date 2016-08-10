@@ -270,10 +270,7 @@ class UI {
 
 		if ($this->setting('enqueue/defer-all')) {
 			add_filter('script_loader_tag', function ($tag, $handle) {
-				if (strpos($handle, 'jquery-')===0)
-					return str_replace( ' src', ' defer src', $tag );
-				else
-					return str_replace( ' src', ' defer async src', $tag );
+				return str_replace( ' src', ' defer src', $tag );
 			}, 10, 2);
 		}
 
