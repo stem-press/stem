@@ -88,10 +88,10 @@ class BladeView extends View {
 	}
 
 	public function header($expression) {
-		return $this->context->ui->header();
+		return "<?php echo ILab\\Stem\\Core\\Context::current()->ui->header(); ?>";
 	}
 
 	public function footer($expression) {
-		return $this->context->ui->footer();
+		return "<?php echo ILab\\Stem\\Core\\Context::current()->ui->footer(); ?>";
 	}
 }
