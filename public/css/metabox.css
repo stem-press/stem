@@ -1,0 +1,24 @@
+#stem_meta{
+    overflow: hidden;
+    padding-bottom: 1em;
+}
+
+#stem_meta p{
+    clear: both;
+}
+
+.stem-row-title{
+    display: block;
+    float: left;
+    width: 200px;
+}
+
+.stem-row-content{
+    float: left;
+    padding-bottom: 1em;
+}
+
+.stem-row-content label{
+    display: block;
+    line-height: 1.75em;
+}

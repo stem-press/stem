@@ -104,6 +104,8 @@ class Context {
 	 */
 	protected $controllerFactories = [];
 
+	public $cacheControl = null;
+
 	/**
 	 * Determines if the context is running in debug mode
 	 * @var bool
@@ -315,6 +317,8 @@ class Context {
 		// Require our plugins
 		$this->setupRequiredPlugins();
 
+		$this->cacheControl = new CacheControl($this);
+
 		$this->ui = new UI($this);
 	}
 
@@ -388,7 +392,6 @@ class Context {
 					call_user_func($this->deployCallback);
 			}
 		}
-
 	}
 	
 	/**
@@ -483,6 +486,7 @@ class Context {
 	public function onPreGetPosts($callable) {
 		$this->preGetPostsCallback = $callable;
 	}
+
 
 	/**
 	 * Sets up post filtering, enabling options for searching by tag and including custom post types in

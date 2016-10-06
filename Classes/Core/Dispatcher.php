@@ -84,6 +84,8 @@ class Dispatcher {
                     {
                         Log::debug("Found template.",['templateName' => $templateName]);
 
+	                    $this->context->cacheControl->sendHTTPHeaders();
+
                         // Template exists but page type doesn't map to a built-in
                         // controller, so we just render the template as is.
                         echo $this->context->ui->render('templates/' . $name, [$this->context]);
@@ -117,11 +119,13 @@ class Dispatcher {
 
                 if (is_object($response) && ($response instanceof Response))
                 {
+                	$this->context->cacheControl->addResponseHeaders($response);
                     $response->send();
                 }
                 else if (is_string($response))
                 {
-                    echo $response;
+	                $this->context->cacheControl->sendHTTPHeaders();
+	                echo $response;
                 }
 
                 return true;

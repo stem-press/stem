@@ -51,8 +51,28 @@ class BladeView extends View {
 
 	protected function registerDirectives() {
 		$this->blade->directive('enqueue', [$this, 'enqueue']);
+		$this->blade->directive('cacheControl', [$this, 'cacheControl']);
 		$this->blade->directive('header', [$this, 'header']);
 		$this->blade->directive('footer', [$this, 'footer']);
+	}
+
+	public function cacheControl($expression) {
+		$expression = trim($expression, '()');
+
+		$args = ArgumentParser::Parse($expression);
+
+		$cc = null;
+		$ma = null;
+		$sma = null;
+
+		if (count($args)>0)
+			$cc = $args[0];
+		if (count($args)>1)
+			$ma = $args[1];
+		if (count($args)>2)
+			$sma = $args[2];
+
+		$this->context->cacheControl->setCacheControlHeaders($cc, $ma, $sma);
 	}
 
 	public function enqueue($expression) {

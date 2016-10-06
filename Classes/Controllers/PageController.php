@@ -25,8 +25,10 @@ class PageController extends Controller
 
         if ($wp_query->post) {
             $post = $context->modelForPost($wp_query->post);
-            if ($post instanceof Page)
-                $this->page = $post;
+            if ($post instanceof Page) {
+	            $this->page = $post;
+                $context->cacheControl->setCacheControlHeadersForPage($this->page->id);
+            }
          }
     }
 

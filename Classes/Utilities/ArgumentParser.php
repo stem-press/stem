@@ -62,6 +62,10 @@ class ArgumentParser
 			$index++;
 		}
 
+		if (!empty($currentVal)) {
+			$result[] = trim($currentVal, "\"'\t\n\r\0\x0B");
+		}
+
 		return $result;
 	}
 }
