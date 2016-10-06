@@ -295,6 +295,7 @@ class Dispatcher {
         elseif ($wp_query->is_search() && $this->dispatchTemplate('search','search')):
         elseif ($wp_query->is_front_page() && $this->dispatchTemplate('front-page','posts')):
         elseif ($wp_query->is_home() && $this->dispatchTemplate(['home','index'],'posts')):
+        elseif ($wp_query->is_posts_page && $this->dispatchTemplate('posts','posts')):
         elseif ($wp_query->is_post_type_archive() && $this->dispatchPostTypeArchiveTemplate()):
         elseif ($wp_query->is_tax() && $this->dispatchTaxonomyTemplate()):
         elseif ($wp_query->is_attachment() && $this->dispatchAttachmentTemplate()):
