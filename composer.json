@@ -1,6 +1,7 @@
 {
   "name": "ILab/Stem",
   "description": "Theme building plug-in for Wordpress",
+  "type": "wordpress-muplugin",
   "license": "LGPL",
   "keywords": ["stem"],
   "authors": [
