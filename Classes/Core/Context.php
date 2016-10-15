@@ -155,15 +155,19 @@ class Context {
 		$this->siteHost = parse_url(site_url(), PHP_URL_HOST);
 		$this->httpHost = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : null;
 
-		if (!file_exists($rootPath . '/config/app.json'))
-			throw new \Exception('Missing app.json for theme.');
+		// Load the config
+		if (file_exists($rootPath . '/config/app.php')) {
+			$this->config = include $rootPath . '/config/app.php';
+		} else if (file_exists($rootPath . '/config/app.json')) {
+			$this->config = JSONParser::parse(file_get_contents($rootPath . '/config/app.json'));
+		} else {
+			throw new \Exception('Missing app.json or app.php configuration for theme.');
+		}
 
 		// Create the request object
 		$this->request     = Request::createFromGlobals();
 		$this->environment = getenv('WP_ENV') ?: 'development';
 		$this->debug = (defined(WP_DEBUG) || ($this->environment == 'development'));
-		$this->config      = JSONParser::parse(file_get_contents($rootPath . '/config/app.json'));
-
 
 		// Initialize logging
 		$loggingConfig = null;
@@ -361,19 +365,46 @@ class Context {
 	}
 
 	/**
+	 * Parse routes from a JSON configuration file.
+	 *
+	 * @deprecated
+	 */
+	private function parseRoutesJSON() {
+		$routesConfig = JSONParser::parse(file_get_contents($this->rootPath . '/config/routes.json'));
+		foreach ($routesConfig as $routeName => $routeInfo) {
+			$defaults     = (isset($routeInfo['defaults']) && is_array($routeInfo['defaults'])) ? $routeInfo['defaults'] : [];
+			$requirements = (isset($routeInfo['requirements']) && is_array($routeInfo['requirements'])) ? $routeInfo['requirements'] : [];
+			$methods      = (isset($routeInfo['methods']) && is_array($routeInfo['methods'])) ? $routeInfo['methods'] : [];
+			$this->router->addRoute($routeName, $routeInfo['endPoint'], $routeInfo['controller'], $defaults, $requirements, $methods);
+		}
+	}
+
+	/**
+	 * Parse routes from a PHP configuration file.
+	 */
+	private function parseRoutesPHP() {
+		$routesConfig = include $this->rootPath . '/config/routes.php';
+
+		vomit($routesConfig);
+
+		foreach ($routesConfig as $route => $routeInfo) {
+			$defaults     = (isset($routeInfo['defaults']) && is_array($routeInfo['defaults'])) ? $routeInfo['defaults'] : [];
+			$requirements = (isset($routeInfo['requirements']) && is_array($routeInfo['requirements'])) ? $routeInfo['requirements'] : [];
+			$methods      = (isset($routeInfo['methods']) && is_array($routeInfo['methods'])) ? $routeInfo['methods'] : [];
+			$this->router->addRoute($route, $route, $routeInfo['controller'], $defaults, $requirements, $methods);
+		}
+	}
+
+	/**
 	 * Additional setup
 	 */
 	protected function setup() {
 		// configure routes
-		if (file_exists($this->rootPath . '/config/routes.json')) {
-			$routesConfig = JSONParser::parse(file_get_contents($this->rootPath . '/config/routes.json'));
-			foreach ($routesConfig as $routeName => $routeInfo) {
-				$defaults     = (isset($routeInfo['defaults']) && is_array($routeInfo['defaults'])) ? $routeInfo['defaults'] : [];
-				$requirements = (isset($routeInfo['requirements']) && is_array($routeInfo['requirements'])) ? $routeInfo['requirements'] : [];
-				$methods      = (isset($routeInfo['methods']) && is_array($routeInfo['methods'])) ? $routeInfo['methods'] : [];
-				$this->router->addRoute($routeName, $routeInfo['endPoint'], $routeInfo['controller'], $defaults, $requirements, $methods);
-			}
-		}
+
+		if (file_exists($this->rootPath . '/config/routes.php'))
+			$this->parseRoutesPHP();
+		else if (file_exists($this->rootPath . '/config/routes.json'))
+			$this->parseRoutesJSON();
 
 		$this->ui->setup();
 

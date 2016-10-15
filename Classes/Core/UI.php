@@ -142,7 +142,9 @@ class UI {
 			});
 		}
 
-		if (file_exists($context->rootPath . '/config/ui.json')) {
+		if (file_exists($context->rootPath . '/config/ui.php')) {
+			$this->config = include $context->rootPath . '/config/ui.php';
+		} else if (file_exists($context->rootPath . '/config/ui.json')) {
 			$this->config = JSONParser::parse(file_get_contents($context->rootPath . '/config/ui.json'));
 		}
 
