@@ -279,7 +279,7 @@ class Context {
 		if (isset($this->config['page-controllers'])) {
 			$this->templates = $this->config['page-controllers'];
 			foreach ($this->config['page-controllers'] as $key => $controller) {
-				$this->controllerMap[strtolower(preg_replace("/\\s+/", "-", $key))] = $controller;
+				$this->controllerMap[strtolower(preg_replace('|[^aA-zZ0-9_]+|', "-", $key))] = $controller;
 			}
 
 			add_filter('theme_page_templates', function($page_templates, $theme, $post) {
@@ -384,9 +384,6 @@ class Context {
 	 */
 	private function parseRoutesPHP() {
 		$routesConfig = include $this->rootPath . '/config/routes.php';
-
-		vomit($routesConfig);
-
 		foreach ($routesConfig as $route => $routeInfo) {
 			$defaults     = (isset($routeInfo['defaults']) && is_array($routeInfo['defaults'])) ? $routeInfo['defaults'] : [];
 			$requirements = (isset($routeInfo['requirements']) && is_array($routeInfo['requirements'])) ? $routeInfo['requirements'] : [];
@@ -710,6 +707,27 @@ class Context {
 	}
 
 	/**
+	 * Creates a model instance for the supplied post ID
+	 *
+	 * @param int $postId
+	 *
+	 * @return Attachment|Page|Post
+	 */
+	public function modelForPostID($postId) {
+		if (!$postId)
+			return null;
+
+		$result = null;
+
+		if (isset($this->modelCache["m-$postId"]))
+			return $this->modelCache["m-$postId"];
+
+		$post = \WP_Post::get_instance($postId);
+
+		return $this->modelForPost($post);
+	}
+
+	/**
 	 * Performs a query for posts
 	 *
 	 * @param $args
@@ -797,7 +815,7 @@ class Context {
 		if (isset($this->controllerMap[$wpTemplateName])) {
 			$class = $this->controllerMap[$wpTemplateName];
 			if (class_exists($class)) {
-				$controller = new $class($this, $wpTemplateName);
+				$controller = new $class($this, null);
 
 				return $controller;
 			}

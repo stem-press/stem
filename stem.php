@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: ILAB Stem App Framework
-Plugin URI: http://interfacelab.com/stem
+Plugin URI: https://github.com/jawngee/stem
 Description: Framework for building applications using Wordpress and Symfony
 Author: Jon Gilkison
 Version: 0.1

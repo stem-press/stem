@@ -34,6 +34,6 @@ class PageController extends Controller
 
     public function getIndex(Request $request) {
         if ($this->template)
-            return new Response($this->template,['page'=>$this->page]);
+            return new Response($this->template, ['page'=>$this->page]);
     }
 }

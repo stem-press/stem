@@ -149,11 +149,12 @@ class UI {
 		}
 
 		// Paths
+		$pub = "/".trim($this->setting('enqueue/public-path',''),'/');
 		$this->viewPath  = $context->rootPath . '/views/';
-		$this->themePath = get_template_directory_uri() . '/';
-		$this->jsPath  = get_template_directory_uri() . '/js/';
-		$this->cssPath = get_template_directory_uri() . '/css/';
-		$this->imgPath = get_template_directory_uri() . '/img/';
+		$this->themePath = get_template_directory_uri();
+		$this->jsPath  = get_template_directory_uri() . $pub . "/js/";
+		$this->cssPath = get_template_directory_uri() . $pub . "/css/";
+		$this->imgPath = get_template_directory_uri() . $pub . "/img/";
 
 		// Options
 		$this->useRelative = $this->setting('options/relative-links', true);
@@ -322,48 +323,58 @@ class UI {
 	 */
 	private function loadImageSizes() {
 		// configure image sizes
-		if (file_exists($this->context->rootPath . '/config/sizes.json')) {
+		if (file_exists($this->context->rootPath . '/config/sizes.php')) {
+			$sizesConfig = include  $this->context->rootPath . '/config/sizes.php';
+		} else if (file_exists($this->context->rootPath . '/config/sizes.json')) {
 			$sizesConfig = JSONParser::parse(file_get_contents($this->context->rootPath . '/config/sizes.json'));
+		} else {
+			return;
+		}
 
-			if (isset($sizesConfig['srcset']))
-				$this->srcsetConfig = $sizesConfig['srcset'];
+		if (isset($sizesConfig['srcset']))
+			$this->srcsetConfig = $sizesConfig['srcset'];
 
-			if (isset($sizesConfig['sizes'])) {
-				$customSizes = [];
+		if (isset($sizesConfig['sizes'])) {
+			$customSizes = [];
 
-				foreach ($sizesConfig['sizes'] as $key => $info) {
-					if ($key == 'post-thumbnail') {
-						set_post_thumbnail_size($info['width'], $info['height'], $info['crop']);
-					}
-					else {
-						add_image_size($key, $info['width'], $info['height'], $info['crop']);
-					}
-
-					if (isset($info['display']) && $info['display'])
-						$customSizes[] = $key;
+			foreach ($sizesConfig['sizes'] as $key => $info) {
+				if ($key == 'original') {
+					Log::warning("Your sizes config has specified a size for 'original'.  This is a keyword and cannot be used.  Skipping for now.");
+					continue;
 				}
 
-				if (count($customSizes) > 0) {
-					add_filter('image_size_names_choose', function($sizes) use ($customSizes) {
-						foreach ($customSizes as $size) {
-							$sizes[$size] = ucwords(str_replace('_', ' ', str_replace('-', ' ', $size)));
-						}
-
-						return $sizes;
-					});
+				if ($key == 'post-thumbnail') {
+					set_post_thumbnail_size($info['width'], $info['height'], $info['crop']);
 				}
+				else {
+					add_image_size($key, $info['width'], $info['height'], $info['crop']);
+				}
+
+				if (isset($info['display']) && $info['display'])
+					$customSizes[] = $key;
 			}
 
-			if (isset($sizesConfig['disable-wp-sizes'])) {
-				$disabled = $sizesConfig['disable-wp-sizes'];
-				add_filter('intermediate_image_sizes_advanced', function($sizes) use ($disabled) {
-					foreach($disabled as $size)
-						unset($sizes[$size]);
+			if (count($customSizes) > 0) {
+				add_filter('image_size_names_choose', function($sizes) use ($customSizes) {
+					foreach ($customSizes as $size) {
+						$sizes[$size] = ucwords(str_replace('_', ' ', str_replace('-', ' ', $size)));
+					}
 
 					return $sizes;
-				}, 10000);
+				});
 			}
 		}
+
+		if (isset($sizesConfig['disable-wp-sizes'])) {
+			$disabled = $sizesConfig['disable-wp-sizes'];
+			add_filter('intermediate_image_sizes_advanced', function($sizes) use ($disabled) {
+				foreach($disabled as $size)
+					unset($sizes[$size]);
+
+				return $sizes;
+			}, 10000);
+		}
+
 	}
 
 
@@ -721,12 +732,14 @@ class UI {
 			return "<ul>" . implode("\n", $links) . "</ul>";
 		}
 		else {
+
 			$menu    = wp_nav_menu([
 				                       'theme_location' => $name,
 				                       'echo'           => false,
 				                       'container'      => false,
 				                       'items_wrap'     => '%3$s'
 			                       ]);
+
 			$matches = [];
 			preg_match_all('#(<li\s+id=\"[aA-zZ0-9-]+\"\s+class=\"([^"]+)\"\s*>(.*)<\/li>)#', $menu, $matches);
 			if (isset($matches[2]) && isset($matches[3]) && (count($matches[2]) == 0)) {

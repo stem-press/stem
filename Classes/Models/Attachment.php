@@ -15,13 +15,13 @@ class Attachment extends Post {
     /**
      * Returns an img tag using the requested size template.
      *
-     * @param string $size The size template to use
+     * @param string $size The size template to use, specify 'original' for original size.
      * @param bool $attr Any additional attributes to add to the tag
      * @param bool $stripDimensions Strip dimensions from the tag
      *
      * @return string
      */
-    public function img($size='thumbnail',$attr=false, $stripDimensions=false) {
+    public function img($size='original',$attr=false, $stripDimensions=false) {
         if (!$attr)
             $img=wp_get_attachment_image($this->post->ID,$size);
         else
