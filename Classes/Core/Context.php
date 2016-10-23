@@ -143,6 +143,12 @@ class Context {
 	public $ui = null;
 
 	/**
+	 * The Admin context
+	 * @var Admin
+	 */
+	public $admin = null;
+
+	/**
 	 * Constructor
 	 *
 	 * Throws an exception if config/app.json file is missing.
@@ -190,6 +196,13 @@ class Context {
 		// Setup our paths
 		$this->rootPath  = $rootPath;
 		$this->classPath = $rootPath . '/classes/';
+		if (!file_exists($this->classPath)) {
+			$this->classPath = $rootPath . '/Classes/';
+			if (!file_exists($this->classPath)) {
+				throw new \xception("Missing 'classes' directory in Stem application directory: {$rootPath}");
+			}
+		}
+
 
 		// Create the router for extra routes
 		$this->router = new Router($this);
@@ -252,9 +265,19 @@ class Context {
 			}
 
 			$class = strtr($class, '\\', DIRECTORY_SEPARATOR);
+
+			$classParts = explode(DIRECTORY_SEPARATOR, $class);
+			if (count($classParts)>1) {
+				array_shift($classParts);
+				$shortClass = implode(DIRECTORY_SEPARATOR, $classParts);
+				if (file_exists($this->classPath . $shortClass . '.php')) {
+					require_once($this->classPath . $shortClass . '.php');
+					return true;
+				}
+			}
+
 			if (file_exists($this->classPath . $class . '.php')) {
 				require_once($this->classPath . $class . '.php');
-
 				return true;
 			}
 
@@ -324,6 +347,8 @@ class Context {
 		$this->cacheControl = new CacheControl($this);
 
 		$this->ui = new UI($this);
+
+		$this->admin = new Admin($this);
 	}
 
 	/**
