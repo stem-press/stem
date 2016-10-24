@@ -486,6 +486,11 @@ class UI {
 			'option_type'   => 'option',
 		) );
 
+		add_filter('kirki/config',function($config){
+			$config['styles_priority'] = 100000;
+			return $config;
+		});
+
 		add_filter( 'kirki/control_types', function( $controls ) {
 			$controls['media'] = '\WP_Customize_Media_Control';
 			$controls['cropped_image'] = '\WP_Customize_Cropped_Image_Control';
