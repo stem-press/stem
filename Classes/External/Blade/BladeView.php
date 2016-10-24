@@ -50,68 +50,32 @@ class BladeView extends View {
 	}
 
 	protected function registerDirectives() {
-		$this->blade->directive('enqueue', [$this, 'enqueue']);
-		$this->blade->directive('cacheControl', [$this, 'cacheControl']);
-		$this->blade->directive('header', [$this, 'header']);
-		$this->blade->directive('footer', [$this, 'footer']);
-	}
+		$defaultDirectives = [
+			'menu' => "\\ILab\\Stem\\External\\Blade\\Directives\\MenuDirective",
+			'enqueue' => "\\ILab\\Stem\\External\\Blade\\Directives\\EnqueueDirective",
+			'cacheControl' => "\\ILab\\Stem\\External\\Blade\\Directives\\CacheControlDirective",
+			'header' => "\\ILab\\Stem\\External\\Blade\\Directives\\HeaderDirective",
+			'footer' => "\\ILab\\Stem\\External\\Blade\\Directives\\FooterDirective",
+			'css' => "\\ILab\\Stem\\External\\Blade\\Directives\\CSSDirective",
+			'image' => "\\ILab\\Stem\\External\\Blade\\Directives\\ImageDirective",
+			'script' => "\\ILab\\Stem\\External\\Blade\\Directives\\ScriptDirective",
+			'file' => "\\ILab\\Stem\\External\\Blade\\Directives\\FileDirective",
+		];
 
-	public function cacheControl($expression) {
-		$expression = trim($expression, '()');
+		$directives = $this->context->ui->setting('options/views/directives',[]);
 
-		$args = ArgumentParser::Parse($expression);
+		$directives = array_merge($defaultDirectives, $directives);
 
-		$cc = null;
-		$ma = null;
-		$sma = null;
+		foreach($directives as $key => $class) {
+			if (class_exists($class)) {
+				$directive = new $class($this->context);
+				$this->blade->directive($key, function($expression) use ($directive) {
+					$expression = trim($expression, '()');
+					$args = ArgumentParser::Parse($expression);
 
-		if (count($args)>0)
-			$cc = $args[0];
-		if (count($args)>1)
-			$ma = $args[1];
-		if (count($args)>2)
-			$sma = $args[2];
-
-		$this->context->cacheControl->setCacheControlHeaders($cc, $ma, $sma);
-	}
-
-	public function enqueue($expression) {
-		$expression = trim($expression, '()');
-
-		$args = ArgumentParser::Parse($expression);
-
-		if (count($args)>2) {
-			$type = $args[0];
-			$resource = $args[1];
-
-			$dep = [];
-
-			if (count($args)>=3)
-				$dep = is_array($args[2]) ? $args[2] : [$args[2]];
-
-			for($i = 0; $i<count($dep); $i++)
-				$dep[$i] = "'{$dep[$i]}'";
-
-			if ($type == 'js')
-				$dep[] = "'jquery'";
-
-			$deps = '['.implode(',', $dep).']';
-
-			if (($type == 'js') || ($type == 'script')) {
-				return "<?php wp_enqueue_script('$resource', '{$this->context->ui->script($resource)}', $deps, false, true); ?>";
-			} else if (($type == 'css') || ($type == 'style')) {
-				return "<?php wp_enqueue_style('$resource'', '{$this->context->ui->css($resource)}', $deps); ?>";
+					return $directive->execute($args);
+				});
 			}
 		}
-
-		return null;
-	}
-
-	public function header($expression) {
-		return "<?php echo ILab\\Stem\\Core\\Context::current()->ui->header(); ?>";
-	}
-
-	public function footer($expression) {
-		return "<?php echo ILab\\Stem\\Core\\Context::current()->ui->footer(); ?>";
 	}
 }
