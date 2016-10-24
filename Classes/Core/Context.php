@@ -455,9 +455,16 @@ class Context {
 			return;
 
 		$files = glob($this->rootPath . '/config/types/*.json');
-
 		foreach ($files as $file) {
 			$type = JSONParser::parse(file_get_contents($file));
+			$name = (isset($type['name'])) ? $type['name'] : null;
+			register_post_type($name, $type);
+		}
+
+
+		$files = glob($this->rootPath . '/config/types/*.php');
+		foreach ($files as $file) {
+			$type = include $file;
 			$name = (isset($type['name'])) ? $type['name'] : null;
 			register_post_type($name, $type);
 		}
@@ -513,12 +520,11 @@ class Context {
 	}
 
 	/**
-	 * Install custom post types
+	 * Installs types from a single JSON file
+	 * @deprecated
 	 */
-	public function installCustomPostTypes() {
+	private function installCustomPostTypesFromJSON() {
 		if (!file_exists($this->rootPath . '/config/types.json')) {
-			$this->installMultipleCustomPostTypes();
-
 			return;
 		}
 
@@ -527,7 +533,28 @@ class Context {
 		foreach ($types as $cpt => $details) {
 			register_post_type($cpt, $details);
 		}
+	}
 
+	/**
+	 * Installs custom post types from a PHP config.
+	 */
+	private function installCustomPostTypesFromPHP() {
+		if (!file_exists($this->rootPath . '/config/types.php')) {
+			return;
+		}
+
+		$types = include $this->rootPath.'/config/types.php';
+		foreach ($types as $cpt => $details) {
+			register_post_type($cpt, $details);
+		}
+	}
+
+	/**
+	 * Install custom post types
+	 */
+	public function installCustomPostTypes() {
+		$this->installCustomPostTypesFromJSON();
+		$this->installCustomPostTypesFromPHP();
 		$this->installMultipleCustomPostTypes();
 	}
 
@@ -850,8 +877,15 @@ class Context {
 	public function mapController($wpTemplateName) {
 		if (isset($this->controllerMap[$wpTemplateName])) {
 			$class = $this->controllerMap[$wpTemplateName];
+			$template = null;
+
+			if (is_array($class)) {
+				$template = (isset($class['template'])) ? $class['template'] : null;
+				$class = (isset($class['controller'])) ? $class['controller'] : null;
+			}
+
 			if (class_exists($class)) {
-				$controller = new $class($this, null);
+				$controller = new $class($this, $template);
 
 				return $controller;
 			}
