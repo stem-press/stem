@@ -20,10 +20,10 @@ use ILab\Stem\Core\ViewDirective;
 class FileDirective extends ViewDirective {
 	public function execute($args) {
 		if (count($args)==0)
-			throw new \Exception("Missing file name for @theme directive.");
+			throw new \Exception("Missing file name for @file directive.");
 
 		$file = $args[0];
 
-		return "<?php echo ILab\\Stem\\Core\\Context::current()->ui->theme('{$file}'); ?>";
+		return "<?php echo ILab\\Stem\\Core\\Context::current()->ui->file('{$file}'); ?>";
 	}
 }

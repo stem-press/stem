@@ -60,6 +60,7 @@ class BladeView extends View {
 			'image' => "\\ILab\\Stem\\External\\Blade\\Directives\\ImageDirective",
 			'script' => "\\ILab\\Stem\\External\\Blade\\Directives\\ScriptDirective",
 			'file' => "\\ILab\\Stem\\External\\Blade\\Directives\\FileDirective",
+			'theme' => "\\ILab\\Stem\\External\\Blade\\Directives\\ThemeDirective",
 		];
 
 		$directives = $this->context->ui->setting('options/views/directives',[]);

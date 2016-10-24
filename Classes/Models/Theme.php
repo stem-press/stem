@@ -18,7 +18,6 @@ final class Theme {
 
 	public function __construct(Context $context) {
 		$this->context = $context;
-		Log::info('Post', $_POST);
 	}
 
 	public function __get($name) {
@@ -34,7 +33,7 @@ final class Theme {
 			$val = get_option($name);
 
 			if (!$val) {
-				$val = $this->context->themeSetting("settings/$name/default", null);
+				$val = $this->context->ui->setting("customizer/settings/$name/default", null);
 			}
 
 			$this->values[$name] = $val;

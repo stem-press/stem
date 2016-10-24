@@ -127,6 +127,12 @@ class UI {
 	public $amp = null;
 
 	/**
+	 * Customizer theme manager
+	 * @var Theme
+	 */
+	public $theme = null;
+
+	/**
 	 * Constructor
 	 *
 	 * @param $context Context The current context
@@ -188,6 +194,8 @@ class UI {
 		add_filter('ilab_s3_can_calculate_srcset',function(){
 			return (!$this->imgixEnabled);
 		});
+
+		$this->theme = new Theme($this->context);
 	}
 
 	public function setup() {
@@ -383,8 +391,8 @@ class UI {
 	 */
 	private function setupTheme() {
 		// configure menus
-		if (isset($this->config['menu'])) {
-			$menus = [];
+		$menus = $this->setting('menu', []);
+		if (count($menus)>0) {
 			foreach ($this->config['menu'] as $key => $title) {
 				$menus[$key] = __($title, $this->textdomain);
 			}
@@ -392,25 +400,24 @@ class UI {
 			register_nav_menus($menus);
 		}
 
-		// configure sidebars
-		add_action( 'widgets_init', function() {
-			if (isset($this->config['sidebars'])) {
-				foreach ($this->config['sidebars'] as $key => $settings) {
+
+		$sidebars = $this->setting('sidebars',[]);
+		if (count($sidebars)>0) {
+			add_action( 'widgets_init', function() use ($sidebars) {
+				foreach ($sidebars as $key => $settings) {
 					$settings['id'] = $key;
 					register_sidebar($settings);
 				}
-			}
-		});
+			});
+		}
 
 		// Configure customizer
-		$useKirki = $this->setting('useKirki', true);
+		$useKirki = $this->setting('customizer/use_kirki', true);
 		if ($useKirki)
 			$useKirki = class_exists('\Kirki');
 
 		if ($useKirki) {
-			add_action('customize_register', function(\WP_Customize_Manager $wp_customize) {
-				$this->setupKirkiCustomizer($wp_customize);
-			}, 11);
+			$this->setupKirkiCustomizer();
 		} else {
 			add_action('customize_register', function(\WP_Customize_Manager $wp_customize) {
 				$this->setupWPCustomizer($wp_customize);
@@ -424,20 +431,23 @@ class UI {
 	 * @param \WP_Customize_Manager $wp_customize
 	 */
 	private function setupWPCustomizer(\WP_Customize_Manager $wp_customize) {
-		if (isset($this->config['panels'])) {
-			foreach($this->config['panels'] as $key => $data) {
+		$panels = $this->setting('customizer/panels',[]);
+		if (count($panels)>0) {
+			foreach($panels as $key => $data) {
 				$wp_customize->add_panel($key, $data);
 			}
 		}
 
-		if (isset($this->config['sections'])) {
-			foreach($this->config['sections'] as $key => $data) {
+		$sections = $this->setting('customizer/sections', []);
+		if (count($sections)>0) {
+			foreach($sections as $key => $data) {
 				$wp_customize->add_section($key, $data);
 			}
 		}
 
-		if (isset($this->config['settings'])) {
-			foreach($this->config['settings'] as $setting => $data) {
+		$settings  = $this->setting('customizer/settings', []);
+		if (count($settings)>0) {
+			foreach($settings as $setting => $data) {
 				$control = null;
 				if (isset($data['control'])) {
 					$control = $data['control'];
@@ -453,7 +463,7 @@ class UI {
 					} else if ($control['type'] == 'image') {
 						unset($control['type']);
 						$wp_customize->add_control(new \WP_Customize_Image_Control($wp_customize, $setting, $control));
-					}  else if ($control['type'] == 'cropped') {
+					}  else if (($control['type'] == 'cropped_image') || ($control['type'] == 'cropped')) {
 						unset($control['type']);
 						$wp_customize->add_control(new \WP_Customize_Cropped_Image_Control($wp_customize, $setting, $control));
 					}  else if ($control['type'] == 'media') {
@@ -469,34 +479,36 @@ class UI {
 
 	/**
 	 * Set up the Kirki Customizer
-	 *
-	 * @param \WP_Customize_Manager $wp_customize
 	 */
-	public function setupKirkiCustomizer(\WP_Customize_Manager $wp_customize) {
+	public function setupKirkiCustomizer() {
+		\Kirki::add_config($this->textdomain, array(
+			'capability'    => 'edit_theme_options',
+			'option_type'   => 'option',
+		) );
+
 		add_filter( 'kirki/control_types', function( $controls ) {
 			$controls['media'] = '\WP_Customize_Media_Control';
 			$controls['cropped_image'] = '\WP_Customize_Cropped_Image_Control';
 			return $controls;
 		} );
 
-		\Kirki::add_config($this->textdomain, array(
-			'capability'    => 'edit_theme_options',
-			'option_type'   => 'option',
-		) );
-
-		if (isset($this->config['panels'])) {
-			foreach($this->config['panels'] as $key => $data) {
+		$panels = $this->setting('customizer/panels',[]);
+		if (count($panels)>0) {
+			foreach($panels as $key => $data) {
 				\Kirki::add_panel($key, $data);
 			}
 		}
-		if (isset($this->config['sections'])) {
-			foreach($this->config['sections'] as $key => $data) {
+
+		$sections = $this->setting('customizer/sections',[]);
+		if (count($sections)>0) {
+			foreach($sections as $key => $data) {
 				\Kirki::add_section($key, $data);
 			}
 		}
 
-		if (isset($this->config['settings'])) {
-			foreach($this->config['settings'] as $setting => $data) {
+		$settings = $this->setting('customizer/settings',[]);
+		if (count($settings)>0) {
+			foreach($settings as $setting => $data) {
 				$control = null;
 				if (isset($data['control'])) {
 					$control = $data['control'];
@@ -556,7 +568,7 @@ class UI {
 			$data['ui']=$this;
 
 		if (!isset($data['theme']))
-			$data['theme']=new Theme($this->context);
+			$data['theme']=$this->theme;
 
 		$vc     = $this->viewClass;
 		$result = $vc::renderView($this->context, $this, $view, $data);
@@ -664,7 +676,7 @@ class UI {
 	 *
 	 * @return string
 	 */
-	public function theme($src) {
+	public function file($src) {
 		$output = $this->themePath . $src;
 
 		return $output;
