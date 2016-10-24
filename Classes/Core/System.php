@@ -61,11 +61,21 @@ function unsetArrayPath(&$array, $path) {
 if (!function_exists('vomit')) {
 	function vomit($data, $die=true)
 	{
-		echo '<pre>';
-		print_r($data);
-		echo '</pre>';
+		\ILab\Stem\Utilities\Debug\VarDumper::dump($data);
 
 		if ($die)
 			die;
+	}
+}
+
+
+/**
+ * Vomits a dump of data
+ * @param $data
+ */
+if (!function_exists('vd')) {
+	function vd($data)
+	{
+		\ILab\Stem\Utilities\Debug\VarDumper::dump($data);
 	}
 }

@@ -21,9 +21,15 @@ class BladeView extends View {
 	private $blade = null;
 
 	public function __construct(Context $context=null, UI $ui=null, $viewName=null) {
+		if (strpos($viewName,'stem-system.') === 0) {
+			$viewPath = ILAB_STEM_VIEW_DIR;
+			$viewName=str_replace('stem-system.','',$viewName);
+		}
+		else
+			$viewPath = $context->rootPath.'/views/';
+
 		parent::__construct($context, $ui, $viewName);
 
-		$viewPath = $context->rootPath.'/views/';
 		$cache = $ui->setting('options/views/cache');
 
 		$this->blade = new BladeInstance($viewPath, $cache);

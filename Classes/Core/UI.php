@@ -118,7 +118,7 @@ class UI {
 	 * View class
 	 * @var string
 	 */
-	protected $viewClass = 'ILab\Stem\Core\StemView';
+	protected $viewClass = '\ILab\Stem\External\Blade\BladeView';
 
 	/**
 	 * Amp manager
@@ -172,10 +172,7 @@ class UI {
 		$viewEngine = $this->setting('options/views/engine');
 		if ($viewEngine == 'twig') {
 			$this->viewClass = '\ILab\Stem\External\Twig\TwigView';
-		} else if ($viewEngine == 'blade') {
-			$this->viewClass = '\ILab\Stem\External\Blade\BladeView';
 		}
-
 
 		// Load our clean up options
 		$this->removeText = $this->setting('clean/remove/text',[]);

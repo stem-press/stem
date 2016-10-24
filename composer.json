@@ -22,7 +22,8 @@
     "monolog/monolog": "^1.19",
     "jawngee/blade": "dev-master",
     "nesbot/carbon": "^1.21",
-    "tgmpa/tgm-plugin-activation": "^2.6"
+    "tgmpa/tgm-plugin-activation": "^2.6",
+    "symfony/var-dumper": "^3.1"
   },
   "require-dev": {},
   "autoload": {

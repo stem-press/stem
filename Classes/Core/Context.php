@@ -632,7 +632,18 @@ class Context {
 	 * Dispatches the current request
 	 */
 	protected function dispatch() {
-		$this->dispatcher->dispatch();
+		try {
+			$this->dispatcher->dispatch();
+		} catch (\Exception $ex) {
+			if (env('WP_ENV')!='production') {
+				$res = new \Symfony\Component\HttpFoundation\Response($this->ui->render('stem-system.error',['ex'=>$ex, 'data' => \ILab\Stem\Core\Response::$lastData]), 500);
+				$res->send();
+				die;
+
+			} else {
+				$this->dispatcher->dispatchError(500, $ex);
+			}
+		}
 	}
 
 	/**

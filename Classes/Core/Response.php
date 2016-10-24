@@ -5,7 +5,11 @@ namespace ILab\Stem\Core;
 use Symfony\Component\HttpFoundation\Request;
 
 class Response extends \Symfony\Component\HttpFoundation\Response {
+	public static $lastData = [];
+
 	public function __construct($view, $data=[], $status = 200, $headers = array()) {
+		self::$lastData = $data;
+
 		$req     = Request::createFromGlobals();
 		$accept  = $req->headers->get('Accept');
 		$is_json = ($accept == 'application/json') || ($accept == 'text/json');

@@ -1,6 +1,7 @@
 <?php
 
 namespace ILab\Stem\Core;
+use ILab\Stem\Controllers\ErrorController;
 use ILab\Stem\Controllers\PageController;
 use ILab\Stem\Controllers\PostController;
 use ILab\Stem\Controllers\PostsController;
@@ -291,7 +292,10 @@ class Dispatcher {
             return;
         }
 
-        if     ($wp_query->is_404() && $this->dispatchTemplate('404','none')):
+        if ($wp_query->is_404())
+        	ErrorController::setCurrentError(404);
+
+        if     ($wp_query->is_404() && $this->dispatchTemplate(['404','error'],'none')):
         elseif ($wp_query->is_search() && $this->dispatchTemplate('search','search')):
         elseif ($wp_query->is_front_page() && $this->dispatchTemplate('front-page','posts')):
         elseif ($wp_query->is_home() && $this->dispatchTemplate(['home','index'],'posts')):
@@ -309,8 +313,11 @@ class Dispatcher {
         elseif ($wp_query->is_paged() && $this->dispatchTemplate('paged','posts')):
         else :
             $this->dispatchTemplate('index','posts');
-            // TODO: 500 error
-
         endif;
+    }
+
+    public function dispatchError($statusCode, $exception) {
+    	ErrorController::setCurrentError($statusCode, $exception);
+	    $this->dispatchTemplate([$statusCode, 'error'], 'none');
     }
 }
