@@ -103,15 +103,36 @@ class Admin {
 			}
 		}
 
-		add_action( 'admin_enqueue_scripts', function() {
-			wp_register_style( 'custom_wp_admin_css', $this->context->ui->css('stem-admin.css'), false, '1.0.0' );
-			wp_enqueue_style( 'custom_wp_admin_css' );
-		});
 
-		add_action( 'login_enqueue_scripts', function(){
-			wp_register_style( 'custom_wp_admin_css', $this->context->ui->css('stem-admin.css'), false, '1.0.0' );
-			wp_enqueue_style( 'custom_wp_admin_css' );
-		});
+		$js = $this->setting('customize/enqueue/js', []);
+		if(count($js) > 0) {
+			add_action( 'admin_enqueue_scripts', function() use ($js) {
+				foreach($js as $key => $script) {
+					wp_register_script($key, $this->context->ui->script($script));
+					wp_enqueue_script($key);
+				}
+			});
+		}
+
+		$css = $this->setting('customize/enqueue/css', []);
+		if(count($css) > 0) {
+			$css = $this->setting('customize/enqueue/css', []);
+			if(count($css) > 0) {
+				add_action( 'login_enqueue_scripts', function() use ($css) {
+					foreach($css as $key => $stylesheet) {
+						wp_register_style($key, $this->context->ui->css($stylesheet));
+						wp_enqueue_style($key);
+					}
+				});
+			}
+
+			add_action( 'admin_enqueue_scripts', function() use ($css) {
+				foreach($css as $key => $stylesheet) {
+					wp_register_style($key, $this->context->ui->css($stylesheet));
+					wp_enqueue_style($key);
+				}
+			});
+		}
 	}
 
 	/**

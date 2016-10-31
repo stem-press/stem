@@ -61,7 +61,7 @@ class Attachment extends Post {
      *
      * @return string|null
      */
-    public function src($size='thumbnail') {
+    public function src($size='original') {
         $result=wp_get_attachment_image_src($this->post->ID,$size);
         if ($result && is_array($result) && (count($result)>0))
             return $result[0];
