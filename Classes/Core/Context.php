@@ -786,6 +786,8 @@ class Context {
 			return $this->modelCache["m-$postId"];
 
 		$post = \WP_Post::get_instance($postId);
+		if (!$post)
+			return false;
 
 		return $this->modelForPost($post);
 	}
