@@ -12,7 +12,8 @@ class PostsController extends Controller {
     public $page=null;
     public $posts=[];
     public $totalPosts=0;
-    public $currentPage=0;
+	public $currentPage=1;
+	public $totalPages=0;
 
     public function __construct(Context $context, $template=null) {
         parent::__construct($context,$template);
@@ -24,6 +25,7 @@ class PostsController extends Controller {
 	        $context->cacheControl->setCacheControlHeadersForPage($this->page->id);
         }
 
+	    $this->totalPages=$wp_query->max_num_pages;
         $this->totalPosts=$wp_query->found_posts;
         $this->currentPage=$wp_query->query_vars['paged'] ?: 1;
 
@@ -40,6 +42,7 @@ class PostsController extends Controller {
                 'page' => $this->page,
                 'totalPosts' => $this->totalPosts,
                 'currentPage' => $this->currentPage,
+                'totalPages' => $this->totalPages,
                 'posts'=>$this->posts
             ]);
     }
