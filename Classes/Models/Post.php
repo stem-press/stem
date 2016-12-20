@@ -252,7 +252,7 @@ class Post extends WordPressModel
         }
         if (!strlen($text))
         {
-            $text = Text::trim($this->content(), $len, true, $allowed_tags);
+            $text = Text::trim($this->content(), $len, null, $allowed_tags);
             $trimmed = true;
         }
         if (!strlen(trim($text)))
@@ -269,7 +269,10 @@ class Post extends WordPressModel
             $last = $text[strlen($text) - 1];
             if ($last != '.' && $trimmed)
             {
-                $text .= ' &hellip; ';
+	            if (strpos($text, '&hellip;') > 0)
+	            	$text = str_replace('&hellip;', ' &hellip;', $text);
+	            else
+                    $text .= ' &hellip; ';
             }
             if (!$strip)
             {

@@ -156,6 +156,8 @@ class UI {
 
 		// Paths
 		$pub = "/".trim($this->setting('enqueue/public-path',''),'/');
+		if ($pub == '/')
+			$pub = '';
 		$this->viewPath  = $context->rootPath . '/views/';
 		$this->themePath = get_template_directory_uri();
 		$this->jsPath  = get_template_directory_uri() . $pub . "/js/";
