@@ -109,6 +109,12 @@ class UI {
 	protected $replaceRegexes = [];
 
 	/**
+	 * Array of ShortCode classes
+	 * @var array
+	 */
+	protected $shortCodes = [];
+
+	/**
 	 * The forced domain
 	 * @var string
 	 */
@@ -290,6 +296,7 @@ class UI {
 
 
 		$this->setupTheme();
+		$this->setupShortCodes();
 	}
 
 	/**
@@ -384,6 +391,41 @@ class UI {
 
 	}
 
+	private function setupShortCodes() {
+		$shortCodes = $this->setting('shortcodes', []);
+		foreach($shortCodes as $key => $data) {
+			$shortCode = null;
+			$uiConfig = null;
+
+			if (is_array($data)) {
+				$class = arrayPath($data, 'class', null);
+				if ($class && class_exists($class)) {
+					$config = arrayPath($data, 'config', []);
+					$uiConfig = arrayPath($data, 'ui', null);
+					$shortCode = new $class($this->context, $config);
+				}
+
+			} else if (is_string($data)) {
+				if (class_exists($data)) {
+					$shortCode = new $data($this->context, []);
+				}
+			}
+
+			if ($shortCode) {
+				add_shortcode($key, function($attrs, $content = null) use ($shortCode) {
+					return $shortCode->render($attrs, $content);
+				});
+
+				if (function_exists('shortcode_ui_register_for_shortcode')) {
+					if (!$uiConfig) {
+						$shortCode->registerUI($key);
+					} else {
+						// TODO: Shortcode ui registration
+					}
+				}
+			}
+		}
+	}
 
 	/**
 	 * Sets up the theme settings/widgets/menus
