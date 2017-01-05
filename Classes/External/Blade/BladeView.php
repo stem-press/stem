@@ -33,6 +33,14 @@ class BladeView extends View {
 		$cache = $ui->setting('options/views/cache');
 
 		$this->blade = new BladeInstance($viewPath, $cache);
+
+		$additionalPaths = apply_filters('stem/additional_view_paths', []);
+		if (is_array($additionalPaths)) {
+			foreach($additionalPaths as $path) {
+				$this->blade->addPath($path);
+			}
+		}
+
 		$this->registerDirectives();
 	}
 
