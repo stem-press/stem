@@ -297,6 +297,7 @@ class UI {
 
 		$this->setupTheme();
 		$this->setupShortCodes();
+		$this->setupEditor();
 	}
 
 	/**
@@ -389,6 +390,81 @@ class UI {
 			}, 10000);
 		}
 
+	}
+
+	private function setupEditor() {
+		$styles = $this->setting('editor/styles', []);
+		if (is_array($styles) && (count($styles)>0)) {
+
+			add_filter('admin_enqueue_scripts', function() use ($styles) {
+				foreach ($styles as $style)
+					add_editor_style($this->css($style));
+			});
+		}
+
+		$plugins = $this->setting('editor/plugins', []);
+		foreach($plugins as $pluginData) {
+			$plugin = null;
+
+			if (is_array($pluginData)) {
+				$class = arrayPath($pluginData, 'class', null);
+				if ($class && class_exists($class)) {
+					$config = arrayPath($pluginData, 'config', []);
+					$plugin = new $class($this->context, $config);
+				}
+			} else if (is_string($pluginData)) {
+				if (class_exists($pluginData)) {
+					$plugin = new $pluginData($this->context, []);
+				}
+			}
+
+			if ($plugin) {
+				$styles = $plugin->styles();
+				if ($styles) {
+					if (is_string($styles))
+						$styles=[$styles];
+
+					add_filter('admin_enqueue_scripts', function() use ($styles) {
+						foreach($styles as $style)
+							add_editor_style($style);
+					});
+				}
+
+				$scripts = $plugin->scripts();
+				if ($scripts) {
+					if (is_string($scripts))
+						$scripts=[$plugin->identifier() => $scripts];
+
+					add_filter('mce_external_plugins', function($externalPlugins) use ($scripts) {
+						$externalPlugins = array_merge($externalPlugins, $scripts);
+						return $externalPlugins;
+					}, 1000, 1);
+				}
+
+				$buttons = $plugin->buttons();
+				if ($buttons) {
+					if (is_string($buttons))
+						$buttons=[$buttons];
+
+					add_filter('mce_buttons', function($mceButtons) use ($buttons) {
+						$mceButtons = array_merge($mceButtons, $buttons);
+						return $mceButtons;
+					}, 1000, 1);
+				}
+
+				add_action('before_wp_tiny_mce', function($mceSettings) use ($plugin) {
+					$plugin->onBeforeInit($mceSettings);
+				});
+
+				add_action('wp_tiny_mce_init', function($mceSettings) use ($plugin) {
+					$plugin->onInit($mceSettings);
+				});
+
+				add_action('after_wp_tiny_mce', function($mceSettings) use ($plugin) {
+					$plugin->onAfterInit($mceSettings);
+				});
+			}
+		}
 	}
 
 	private function setupShortCodes() {
