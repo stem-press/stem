@@ -337,6 +337,7 @@ class UI {
 	 * Load custom image sizes
 	 */
 	private function loadImageSizes() {
+
 		// configure image sizes
 		if (file_exists($this->context->rootPath . '/config/sizes.php')) {
 			$sizesConfig = include  $this->context->rootPath . '/config/sizes.php';
@@ -365,14 +366,20 @@ class UI {
 					add_image_size($key, $info['width'], $info['height'], $info['crop']);
 				}
 
-				if (isset($info['display']) && $info['display'])
-					$customSizes[] = $key;
+				$display = arrayPath($info, 'display', false);
+				$name = arrayPath($info, 'name', null);
+
+				if ($display && empty($name)) {
+					$customSizes[$key] = ucwords(str_replace('_', ' ', str_replace('-', ' ', $key)));
+				} else if (!empty($name)) {
+					$customSizes[$key] = $name;
+				}
 			}
 
 			if (count($customSizes) > 0) {
 				add_filter('image_size_names_choose', function($sizes) use ($customSizes) {
-					foreach ($customSizes as $size) {
-						$sizes[$size] = ucwords(str_replace('_', ' ', str_replace('-', ' ', $size)));
+					foreach ($customSizes as $key => $size) {
+						$sizes[$key] =$size;
 					}
 
 					return $sizes;
