@@ -400,6 +400,7 @@ class Context {
 			$defaults     = (isset($routeInfo['defaults']) && is_array($routeInfo['defaults'])) ? $routeInfo['defaults'] : [];
 			$requirements = (isset($routeInfo['requirements']) && is_array($routeInfo['requirements'])) ? $routeInfo['requirements'] : [];
 			$methods      = (isset($routeInfo['methods']) && is_array($routeInfo['methods'])) ? $routeInfo['methods'] : [];
+
 			$this->router->addRoute($routeName, $routeInfo['endPoint'], $routeInfo['controller'], $defaults, $requirements, $methods);
 		}
 	}
@@ -413,7 +414,24 @@ class Context {
 			$defaults     = (isset($routeInfo['defaults']) && is_array($routeInfo['defaults'])) ? $routeInfo['defaults'] : [];
 			$requirements = (isset($routeInfo['requirements']) && is_array($routeInfo['requirements'])) ? $routeInfo['requirements'] : [];
 			$methods      = (isset($routeInfo['methods']) && is_array($routeInfo['methods'])) ? $routeInfo['methods'] : [];
-			$this->router->addRoute($route, $route, $routeInfo['controller'], $defaults, $requirements, $methods);
+			$destination = arrayPath($routeInfo, 'controller', null);
+			if (!$destination) {
+				$template = arrayPath($routeInfo, 'template', null);
+				if ($template) {
+					$destination = function() use ($template) {
+						return new Response($template, ['request' => $this->request]);
+					};
+				}
+				else {
+					$destination = arrayPath($routeInfo, 'function', null);
+				}
+
+			}
+
+			if ($destination)
+				$this->router->addRoute($route, $route, $destination, $defaults, $requirements, $methods);
+			else
+				Log::error("Invalid destination for route '$route'.");
 		}
 	}
 
