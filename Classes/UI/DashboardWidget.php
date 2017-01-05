@@ -1,6 +1,6 @@
 <?php
 
-namespace ILab\Stem\Widgets;
+namespace ILab\Stem\UI;
 
 use ILab\Stem\Core\Context;
 use Symfony\Component\HttpFoundation\Request;
