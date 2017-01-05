@@ -2,11 +2,8 @@
 
 namespace ILab\Stem\Core;
 
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Request;
-
 /**
- * Class Controller
+ * Class Controller.
  *
  * Abstract base class for theme controllers.  Every controller should implement `getIndex($request)` as this is the
  * default method.  You can also create new methods to be called from forms or ajax in your themes using the standard
@@ -29,18 +26,18 @@ use Symfony\Component\HttpFoundation\Request;
  * hidden input will be used by Stem to figure out that *postComment* is the method to call.
  *
  * You should use routes though.
- *
- * @package ILab\Stem\Core
  */
-abstract class Controller {
+abstract class Controller
+{
     public $context;
-	public $template=null;
+    public $template = null;
 
     /**
      * @param $context
      */
-    public function __construct(Context $context, $template=null) {
-        $this->context=$context;
-        $this->template=$template;
+    public function __construct(Context $context, $template = null)
+    {
+        $this->context = $context;
+        $this->template = $template;
     }
 }

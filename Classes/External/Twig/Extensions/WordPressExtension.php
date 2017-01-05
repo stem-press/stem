@@ -1,7 +1,9 @@
 <?php
+
 namespace ILab\Stem\External\Twig\Extensions;
 
-class WordPressExtension extends \Twig_Extension {
+class WordPressExtension extends \Twig_Extension
+{
     // lifted from: https://api.wpseek.com/1.1/wordpress/functions.plain
     private $functionNames = [
         '_',
@@ -2720,15 +2722,16 @@ class WordPressExtension extends \Twig_Extension {
         'xmlrpc_getposttitle',
         'xmlrpc_pingback_error',
         'xmlrpc_removepostdata',
-        'zeroise'
+        'zeroise',
     ];
 
     private $twigFunctions = [];
 
     public function __construct()
     {
-        foreach($this->functionNames as $func)
+        foreach ($this->functionNames as $func) {
             $this->twigFunctions[] = new \Twig_SimpleFunction($func, $func);
+        }
     }
 
     public function getFunctions()
