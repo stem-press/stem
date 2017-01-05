@@ -78,33 +78,33 @@ class Dispatcher {
             }
             else
             {
-                // Otherwise, we check to see if the template exists.
-                if ($this->context->ui->viewExists('templates/'.$name))
-                {
-                    if ($pageType=='none')
-                    {
-                        Log::debug("Found template.",['templateName' => $templateName]);
+	            Log::debug("Trying to mapping controller for class.",['name' => $name]);
+	            $controller=$this->context->mapController($name);
 
-	                    $this->context->cacheControl->sendHTTPHeaders();
+	            // Otherwise, we check to see if the template exists.
+	            if (!$controller) {
+		            if ($this->context->ui->viewExists('templates/'.$name))
+		            {
+			            if ($pageType=='none')
+			            {
+				            Log::debug("Found template.",['templateName' => $templateName]);
 
-                        // Template exists but page type doesn't map to a built-in
-                        // controller, so we just render the template as is.
-                        echo $this->context->ui->render('templates/' . $name, [$this->context]);
-                        return true;
-                    }
+				            $this->context->cacheControl->sendHTTPHeaders();
 
-                    $controller=$this->context->createController($pageType,$name);
-                }
-                else
-                {
-                    Log::debug("Trying to mapping controller for class.",['name' => $name]);
-                    $controller=$this->context->mapController($name);
-                }
+				            // Template exists but page type doesn't map to a built-in
+				            // controller, so we just render the template as is.
+				            echo $this->context->ui->render('templates/' . $name, [$this->context]);
+				            return true;
+			            }
+
+			            $controller=$this->context->createController($pageType,$name);
+		            }
+	            }
             }
 
             // if we found a controller, then invoke the method and return it's output
-            if ($controller) {
-                Log::debug("Found controller.",['templateName' => $templateName]);
+            if (!empty($controller)) {
+                Log::debug("Found controller.",['templateName' => $templateName, 'controller' => get_class($controller)]);
 
                 if (method_exists($controller,$method))
                     $response=call_user_func([$controller,$method],$this->context->request);
