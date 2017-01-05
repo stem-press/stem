@@ -2,11 +2,11 @@
 
 namespace ILab\Stem\Models;
 
-
 use ILab\Stem\Core\Context;
 
-class Term extends WordPressModel {
-    private static $termCache=[];
+class Term extends WordPressModel
+{
+    private static $termCache = [];
 
     public $id;
 
@@ -19,100 +19,117 @@ class Term extends WordPressModel {
     protected $count = 0;
     protected $permalink = null;
 
-    public function __construct(Context $context, $termId, $taxonomy, $termData=null) {
-        if (!$termData)
-            $termData=get_term($termId,$taxonomy);
+    public function __construct(Context $context, $termId, $taxonomy, $termData = null)
+    {
+        if (! $termData) {
+            $termData = get_term($termId, $taxonomy);
+        }
 
-        if (!$termData)
+        if (! $termData) {
             throw new \Exception('Invalid term and taxonomy');
+        }
+        $this->context = $context;
+        $this->id = $termData->term_id;
+        $this->name = $termData->name;
+        $this->slug = $termData->slug;
+        $this->group = $termData->term_group;
+        $this->taxonomy = $taxonomy ?: $termData->taxonomy;
+        $this->description = $termData->description;
+        $this->count = $termData->count;
 
-        $this->context=$context;
-        $this->id=$termData->term_id;
-        $this->name=$termData->name;
-        $this->slug=$termData->slug;
-        $this->group=$termData->term_group;
-        $this->taxonomy=$taxonomy ?: $termData->taxonomy;
-        $this->description=$termData->description;
-        $this->count=$termData->count;
-
-        if ($termData->parent)
-        {
-            $this->parent=self::term($context, $termData->parent, $taxonomy);
+        if ($termData->parent) {
+            $this->parent = self::term($context, $termData->parent, $taxonomy);
         }
     }
 
-    public static function termFromTermData($context, $termData) {
-        return new Term($context, null, null, $termData);
+    public static function termFromTermData($context, $termData)
+    {
+        return new self($context, null, null, $termData);
     }
 
-    public static function findTerm($termToFind) {
-        $terms=get_terms(['post_tag'],['slug'=>sanitize_title($termToFind)]);
+    public static function findTerm($termToFind)
+    {
+        $terms = get_terms(['post_tag'], ['slug'=>sanitize_title($termToFind)]);
+
         return $terms;
     }
 
-    public static function term($context, $termId, $taxonomy) {
-        $key="$taxonomy-$termId";
-        if (isset(self::$termCache[$key]))
+    public static function term($context, $termId, $taxonomy)
+    {
+        $key = "$taxonomy-$termId";
+        if (isset(self::$termCache[$key])) {
             return self::$termCache[$key];
+        }
 
-        $term=new Term($context, $termId, $taxonomy);
-        self::$termCache[$key]=$term;
+        $term = new self($context, $termId, $taxonomy);
+        self::$termCache[$key] = $term;
 
         return $term;
     }
 
-    public function permalink() {
-        if ($this->permalink)
+    public function permalink()
+    {
+        if ($this->permalink) {
             return $this->permalink;
+        }
 
         $this->permalink = get_term_link($this->id);
 
         return $this->permalink;
     }
 
-    public function name() {
+    public function name()
+    {
         return $this->name;
     }
 
-    public function slug() {
+    public function slug()
+    {
         return $this->slug;
     }
 
-    public function group() {
+    public function group()
+    {
         return $this->group;
     }
 
-    public function taxonomy() {
+    public function taxonomy()
+    {
         return $this->taxonomy;
     }
 
-    public function description() {
+    public function description()
+    {
         return $this->description;
     }
 
-    public function parent() {
+    public function parent()
+    {
         return $this->parent;
     }
 
-    public function count() {
+    public function count()
+    {
         return $this->count;
     }
 
-    public function __debugInfo() {
+    public function __debugInfo()
+    {
         return [
             'id'=>$this->id,
             'name'=>$this->name,
             'slug'=>$this->slug,
             'group'=>$this->group,
-            'taxonomy'=>$this->taxonomy
+            'taxonomy'=>$this->taxonomy,
         ];
     }
 
-    public function jsonSerialize() {
+    public function jsonSerialize()
+    {
         return [
             'name'=>$this->name,
             'slug'=>$this->slug,
-            'taxonomy'=>($this->taxonomy=='post_tag') ? 'tag' : $this->taxonomy
+            'taxonomy'=>($this->taxonomy == 'post_tag') ? 'tag' : $this->taxonomy,
         ];
     }
 }

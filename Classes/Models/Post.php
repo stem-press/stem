@@ -2,17 +2,14 @@
 
 namespace ILab\Stem\Models;
 
-
 use Carbon\Carbon;
 use ILab\Stem\Core\Context;
 use ILab\Stem\Utilities\Text;
 
 /**
- * Class Post
+ * Class Post.
  *
  * Represents a WordPress post
- *
- * @package ILab\Stem\Models
  */
 class Post extends WordPressModel
 {
@@ -32,7 +29,6 @@ class Post extends WordPressModel
     private $updated = null;
     private $content = null;
 
-
     public function __construct(Context $context, \WP_Post $post)
     {
         $this->id = $post->ID;
@@ -40,41 +36,46 @@ class Post extends WordPressModel
         $this->post = $post;
     }
 
-    public function wpPost() {
+    public function wpPost()
+    {
         return $this->post;
     }
 
-    public function cssClass($class = '') {
+    public function cssClass($class = '')
+    {
         $result = get_post_class($class, $this->id);
+
         return implode(' ', $result);
     }
 
-    public function type() {
+    public function type()
+    {
         return $this->post->post_type;
     }
 
     public function author()
     {
-        if ($this->author)
+        if ($this->author) {
             return $this->author;
+        }
 
-        if ($this->post->post_author)
+        if ($this->post->post_author) {
             $this->author = new User($this->context, new \WP_User($this->post->post_author));
+        }
 
         return $this->author;
     }
 
     public function categories()
     {
-        if ($this->categories)
+        if ($this->categories) {
             return $this->categories;
+        }
 
         $categories = wp_get_post_categories($this->post->ID);
-        if ($categories && (count($categories) > 0))
-        {
+        if ($categories && (count($categories) > 0)) {
             $this->categories = [];
-            foreach ($categories as $categoryID)
-            {
+            foreach ($categories as $categoryID) {
                 $this->categories[] = Term::term($this->context, $categoryID, 'category');
             }
         }
@@ -82,41 +83,39 @@ class Post extends WordPressModel
         return $this->categories;
     }
 
-    public function slug() {
+    public function slug()
+    {
         return $this->post->post_name;
     }
 
     public function topCategory()
     {
-        if ($this->topCategory)
+        if ($this->topCategory) {
             return $this->topCategory;
+        }
 
         $cats = $this->categories();
-        if ($cats)
-        {
+        if ($cats) {
             $this->topCategories = [];
-            foreach ($cats as $category)
-            {
+            foreach ($cats as $category) {
                 $parent = $category->parent();
-                if ($parent == null)
+                if ($parent == null) {
                     $this->topCategories[] = $category;
-                else
-                {
-                    while (true)
-                    {
-                        if ($parent->parent == null)
-                        {
+                } else {
+                    while (true) {
+                        if ($parent->parent == null) {
                             $this->topCategories[] = $parent;
                             break;
-                        }
-                        else
+                        } else {
                             $parent = $parent->parent;
+                        }
                     }
                 }
             }
 
-            if (count($this->topCategories) > 0)
+            if (count($this->topCategories) > 0) {
                 $this->topCategory = $this->topCategories[0];
+            }
         }
 
         return $this->topCategory;
@@ -124,15 +123,14 @@ class Post extends WordPressModel
 
     public function tags()
     {
-        if ($this->tags)
+        if ($this->tags) {
             return $this->tags;
+        }
 
         $this->tags = [];
         $tags = wp_get_post_tags($this->post->ID);
-        if ($tags && (count($tags) > 0))
-        {
-            foreach ($tags as $tag)
-            {
+        if ($tags && (count($tags) > 0)) {
+            foreach ($tags as $tag) {
                 $this->tags[] = Term::termFromTermData($this->context, $tag);
             }
         }
@@ -147,8 +145,9 @@ class Post extends WordPressModel
 
     public function content($stripEmptyParagraphs = false)
     {
-        if ($this->content)
+        if ($this->content) {
             return $this->content;
+        }
 
         global $post;
 
@@ -157,31 +156,33 @@ class Post extends WordPressModel
         $this->content = apply_filters('the_content', $this->post->post_content);
         $post = $previousPost;
 
-        if ($stripEmptyParagraphs)
-            $this->content = str_replace("<p>&nbsp;</p>","",$this->content);
+        if ($stripEmptyParagraphs) {
+            $this->content = str_replace('<p>&nbsp;</p>', '', $this->content);
+        }
 
         return $this->content;
     }
-    
-    public function videoEmbeds() {
-        $embedRegexes=[
+
+    public function videoEmbeds()
+    {
+        $embedRegexes = [
             "#(http|https):\\/\\/(www.)*youtube.com\\/embed\\/([^'\"]+)#i",
             '#(http|https)://(www\.)?youtube\.com/watch.*#i',
             '#(http|https)://(www\.)?youtube\.com/playlist.*#i',
             '#(http|https)://youtu\.be/.*#i',
-            '#(http|https)?://(.+\.)?vimeo\.com/.*#i'
+            '#(http|https)?://(.+\.)?vimeo\.com/.*#i',
         ];
 
-        $embeds=[];
+        $embeds = [];
 
         foreach ($embedRegexes as $regex) {
-            $matches=[];
+            $matches = [];
             if (preg_match_all($regex, $this->post->post_content, $matches)) {
-                $match=$matches[0][0];
+                $match = $matches[0][0];
 
-                if (strpos($match,'embed')>0) {
-                    $parts=explode("/",$match);
-                    $embeds[] = "https://www.youtube.com/watch?v=".array_pop($parts);
+                if (strpos($match, 'embed') > 0) {
+                    $parts = explode('/', $match);
+                    $embeds[] = 'https://www.youtube.com/watch?v='.array_pop($parts);
                 } else {
                     $embeds[] = $match;
                 }
@@ -193,8 +194,9 @@ class Post extends WordPressModel
 
     public function date()
     {
-        if ($this->date)
+        if ($this->date) {
             return $this->date;
+        }
 
         $this->date = new Carbon($this->post->post_date_gmt);
 
@@ -203,9 +205,11 @@ class Post extends WordPressModel
         //return mysql2date($format, $this->post->post_date);
     }
 
-    public function updated() {
-        if ($this->updated)
+    public function updated()
+    {
+        if ($this->updated) {
             return $this->updated;
+        }
 
         $this->updated = new Carbon($this->post->post_modified_gmt);
 
@@ -214,12 +218,14 @@ class Post extends WordPressModel
 
     public function thumbnail()
     {
-        if ($this->thumbnail)
+        if ($this->thumbnail) {
             return $this->thumbnail;
+        }
 
         $thumb_id = get_post_thumbnail_id($this->post->ID);
-        if ($thumb_id)
+        if ($thumb_id) {
             $this->thumbnail = $this->context->modelForPost(\WP_Post::get_instance($thumb_id));
+        }
 
         return $this->thumbnail;
     }
@@ -228,97 +234,85 @@ class Post extends WordPressModel
     {
         $text = '';
         $trimmed = false;
-        if (isset($this->post->post_excerpt) && strlen($this->post->post_excerpt))
-        {
-            if ($force)
-            {
+        if (isset($this->post->post_excerpt) && strlen($this->post->post_excerpt)) {
+            if ($force) {
                 $text = Text::trim($this->post->post_excerpt, $len, true, $allowed_tags);
                 $trimmed = true;
-            }
-            else
-            {
+            } else {
                 $text = $this->post->post_excerpt;
             }
         }
-        if (!strlen($text) && strpos($this->post->post_content, '<!--more-->') !== false)
-        {
+        if (! strlen($text) && strpos($this->post->post_content, '<!--more-->') !== false) {
             $pieces = explode('<!--more-->', $this->post->post_content);
             $text = $pieces[0];
-            if ($force)
-            {
+            if ($force) {
                 $text = Text::trim($text, $len, true, $allowed_tags);
                 $trimmed = true;
             }
         }
-        if (!strlen($text))
-        {
+        if (! strlen($text)) {
             $text = Text::trim($this->content(), $len, null, $allowed_tags);
             $trimmed = true;
         }
-        if (!strlen(trim($text)))
-        {
+        if (! strlen(trim($text))) {
             return trim($text);
         }
-        if ($strip)
-        {
+        if ($strip) {
             $text = trim(strip_tags($text));
         }
-        if (strlen($text))
-        {
+        if (strlen($text)) {
             $text = trim($text);
             $last = $text[strlen($text) - 1];
-            if ($last != '.' && $trimmed)
-            {
-	            if (strpos($text, '&hellip;') > 0)
-	            	$text = str_replace('&hellip;', ' &hellip;', $text);
-	            else
+            if ($last != '.' && $trimmed) {
+                if (strpos($text, '&hellip;') > 0) {
+                    $text = str_replace('&hellip;', ' &hellip;', $text);
+                } else {
                     $text .= ' &hellip; ';
+                }
             }
-            if (!$strip)
-            {
+            if (! $strip) {
                 $last_p_tag = strrpos($text, '</p>');
-                if ($last_p_tag !== false)
-                {
+                if ($last_p_tag !== false) {
                     $text = substr($text, 0, $last_p_tag);
                 }
-                if ($last != '.' && $trimmed)
-                {
+                if ($last != '.' && $trimmed) {
                     $text .= ' &hellip; ';
                 }
             }
 
-            if ($readmore)
-            {
-                $text .= ' <a href="' . $this->permalink() . '" class="read-more">' . $readmore . '</a>';
+            if ($readmore) {
+                $text .= ' <a href="'.$this->permalink().'" class="read-more">'.$readmore.'</a>';
             }
 
-            if (!$strip)
-            {
+            if (! $strip) {
                 $text .= '</p>';
             }
         }
+
         return trim($text);
     }
 
     public function permalink()
     {
-        if ($this->permalink)
+        if ($this->permalink) {
             return $this->permalink;
+        }
 
         $permalink = get_permalink($this->id);
 
         if ($this->context->ui->useRelative) {
-            if ($permalink && !empty($permalink)) {
+            if ($permalink && ! empty($permalink)) {
                 $parsed = parse_url($permalink);
-                $plink  = $parsed['path'];
-                if (isset($parsed['query']) && !empty($parsed['query']))
-                    $plink .= '?' . $parsed['query'];
+                $plink = $parsed['path'];
+                if (isset($parsed['query']) && ! empty($parsed['query'])) {
+                    $plink .= '?'.$parsed['query'];
+                }
 
                 $permalink = $plink;
             }
         }
 
-        $this->permalink=$permalink;
+        $this->permalink = $permalink;
 
         return $this->permalink;
     }
@@ -331,8 +325,7 @@ class Post extends WordPressModel
     public function related($postTypes, $limit)
     {
         global $wpdb;
-        array_walk($postTypes, function (&$value, $index)
-        {
+        array_walk($postTypes, function (&$value, $index) {
             $value = "'$value'";
         });
         $postTypes = implode(',', $postTypes);
@@ -357,19 +350,19 @@ ORDER BY COUNT(*) DESC, random desc
 limit $limit
 QUERY;
 
-        $results=$wpdb->get_results($query);
-        $related=[];
+        $results = $wpdb->get_results($query);
+        $related = [];
         if ($results) {
-            foreach($results as $result)
-            {
-                $related[]=$this->context->modelForPost(\WP_Post::get_instance($result->ID));
+            foreach ($results as $result) {
+                $related[] = $this->context->modelForPost(\WP_Post::get_instance($result->ID));
             }
         }
 
         return $related;
     }
 
-    public function editLink() {
+    public function editLink()
+    {
         return get_edit_post_link($this->id);
     }
 
@@ -384,12 +377,13 @@ QUERY;
 //        ];
 //    }
 
-    public function jsonSerialize() {
+    public function jsonSerialize()
+    {
         return [
             'type'=>$this->post->post_type,
             'title'=>$this->title(),
             'slug'=>$this->slug(),
-	        'author'=>$this->author()->displayName(),
+            'author'=>$this->author()->displayName(),
             'date'=>$this->date()->toIso8601String(),
             'updated'=>$this->updated()->toIso8601String(),
             'content'=>$this->content(),
@@ -398,8 +392,7 @@ QUERY;
             'mime_type'=>$this->post->post_mime_type,
             'thumbnail'=>$this->thumbnail(),
             'categories'=>$this->categories(),
-            'tags'=>$this->tags()
+            'tags'=>$this->tags(),
         ];
     }
-
 }

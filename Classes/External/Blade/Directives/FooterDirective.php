@@ -1,10 +1,11 @@
 <?php
+
 namespace ILab\Stem\External\Blade\Directives;
 
 use ILab\Stem\Core\ViewDirective;
 
 /**
- * Class FooterDirective
+ * Class FooterDirective.
  *
  * Adds an `@footer` directive to Blade templates for outputting WordPress's footer stuff.
  *
@@ -12,11 +13,11 @@ use ILab\Stem\Core\ViewDirective;
  * ```
  * @footer()
  * ```
- *
- * @package ILab\Stem\External\Blade\Directives
  */
-class FooterDirective extends ViewDirective {
-	public function execute($args) {
-		return "<?php echo ILab\\Stem\\Core\\Context::current()->ui->footer(); ?>";
-	}
+class FooterDirective extends ViewDirective
+{
+    public function execute($args)
+    {
+        return '<?php echo ILab\\Stem\\Core\\Context::current()->ui->footer(); ?>';
+    }
 }
