@@ -4,6 +4,7 @@ namespace Illuminate\Container;
 
 use Closure;
 use ArrayAccess;
+use LogicException;
 use ReflectionClass;
 use ReflectionMethod;
 use ReflectionFunction;
@@ -190,8 +191,8 @@ class Container implements ArrayAccess, ContainerContract
         }
 
         // If no concrete type was given, we will simply set the concrete type to the
-        // abstract type. This will allow concrete type to be registered as shared
-        // without being forced to state their classes in both of the parameter.
+        // abstract type. After that, the concrete type to be registered as shared
+        // without being forced to state their classes in both of the parameters.
         $this->dropStaleInstances($abstract);
 
         if (is_null($concrete)) {
@@ -224,10 +225,10 @@ class Container implements ArrayAccess, ContainerContract
      */
     protected function getClosure($abstract, $concrete)
     {
-        return function ($c, $parameters = []) use ($abstract, $concrete) {
+        return function ($container, $parameters = []) use ($abstract, $concrete) {
             $method = ($abstract == $concrete) ? 'build' : 'make';
 
-            return $c->$method($concrete, $parameters);
+            return $container->$method($concrete, $parameters);
         };
     }
 
@@ -603,6 +604,20 @@ class Container implements ArrayAccess, ContainerContract
     }
 
     /**
+     * Get a closure to resolve the given type from the container.
+     *
+     * @param  string  $abstract
+     * @param  array  $defaults
+     * @return \Closure
+     */
+    public function factory($abstract, array $defaults = [])
+    {
+        return function (array $params = []) use ($abstract, $defaults) {
+            return $this->make($abstract, $params + $defaults);
+        };
+    }
+
+    /**
      * Resolve the given type from the container.
      *
      * @param  string  $abstract
@@ -890,7 +905,7 @@ class Container implements ArrayAccess, ContainerContract
      */
     public function resolving($abstract, Closure $callback = null)
     {
-        if ($callback === null && $abstract instanceof Closure) {
+        if (is_null($callback) && $abstract instanceof Closure) {
             $this->resolvingCallback($abstract);
         } else {
             $this->resolvingCallbacks[$this->normalize($abstract)][] = $callback;
@@ -906,7 +921,7 @@ class Container implements ArrayAccess, ContainerContract
      */
     public function afterResolving($abstract, Closure $callback = null)
     {
-        if ($abstract instanceof Closure && $callback === null) {
+        if ($abstract instanceof Closure && is_null($callback)) {
             $this->afterResolvingCallback($abstract);
         } else {
             $this->afterResolvingCallbacks[$this->normalize($abstract)][] = $callback;
@@ -1070,10 +1085,20 @@ class Container implements ArrayAccess, ContainerContract
      *
      * @param  string  $abstract
      * @return string
+     *
+     * @throws \LogicException
      */
-    protected function getAlias($abstract)
+    public function getAlias($abstract)
     {
-        return isset($this->aliases[$abstract]) ? $this->aliases[$abstract] : $abstract;
+        if (! isset($this->aliases[$abstract])) {
+            return $abstract;
+        }
+
+        if ($this->aliases[$abstract] === $abstract) {
+            throw new LogicException("[{$abstract}] is aliased to itself.");
+        }
+
+        return $this->getAlias($this->aliases[$abstract]);
     }
 
     /**
@@ -1138,18 +1163,22 @@ class Container implements ArrayAccess, ContainerContract
      */
     public static function getInstance()
     {
+        if (is_null(static::$instance)) {
+            static::$instance = new static;
+        }
+
         return static::$instance;
     }
 
     /**
      * Set the shared instance of the container.
      *
-     * @param  \Illuminate\Contracts\Container\Container  $container
-     * @return void
+     * @param  \Illuminate\Contracts\Container\Container|null  $container
+     * @return static
      */
-    public static function setInstance(ContainerContract $container)
+    public static function setInstance(ContainerContract $container = null)
     {
-        static::$instance = $container;
+        return static::$instance = $container;
     }
 
     /**

@@ -6,8 +6,8 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
-    'duncan3dc\\Laravel\\' => array($vendorDir . '/jawngee/blade/src'),
-    'duncan3dc\\LaravelTests\\' => array($vendorDir . '/jawngee/blade/tests'),
+    'duncan3dc\\Laravel\\' => array($vendorDir . '/duncan3dc/blade/src'),
+    'duncan3dc\\LaravelTests\\' => array($vendorDir . '/duncan3dc/blade/tests'),
     'Symfony\\Polyfill\\Php55\\' => array($vendorDir . '/symfony/polyfill-php55'),
     'Symfony\\Polyfill\\Php54\\' => array($vendorDir . '/symfony/polyfill-php54'),
     'Symfony\\Polyfill\\Mbstring\\' => array($vendorDir . '/symfony/polyfill-mbstring'),
@@ -19,6 +19,7 @@ return array(
     'Symfony\\Component\\DomCrawler\\' => array($vendorDir . '/symfony/dom-crawler'),
     'Symfony\\Component\\Debug\\' => array($vendorDir . '/symfony/debug'),
     'Symfony\\Component\\CssSelector\\' => array($vendorDir . '/symfony/css-selector'),
+    'Psr\\Log\\' => array($vendorDir . '/psr/log/Psr/Log'),
     'Monolog\\' => array($vendorDir . '/monolog/monolog/src/Monolog'),
     'Masterminds\\' => array($vendorDir . '/masterminds/html5/src'),
     'Invoker\\' => array($vendorDir . '/php-di/invoker/src'),

@@ -38,6 +38,10 @@ class ComposerStaticInit63966c268fa453a8094d300335533436
             'Symfony\\Component\\Debug\\' => 24,
             'Symfony\\Component\\CssSelector\\' => 30,
         ),
+        'P' => 
+        array (
+            'Psr\\Log\\' => 8,
+        ),
         'M' => 
         array (
             'Monolog\\' => 8,
@@ -64,11 +68,11 @@ class ComposerStaticInit63966c268fa453a8094d300335533436
     public static $prefixDirsPsr4 = array (
         'duncan3dc\\Laravel\\' => 
         array (
-            0 => __DIR__ . '/..' . '/jawngee/blade/src',
+            0 => __DIR__ . '/..' . '/duncan3dc/blade/src',
         ),
         'duncan3dc\\LaravelTests\\' => 
         array (
-            0 => __DIR__ . '/..' . '/jawngee/blade/tests',
+            0 => __DIR__ . '/..' . '/duncan3dc/blade/tests',
         ),
         'Symfony\\Polyfill\\Php55\\' => 
         array (
@@ -113,6 +117,10 @@ class ComposerStaticInit63966c268fa453a8094d300335533436
         'Symfony\\Component\\CssSelector\\' => 
         array (
             0 => __DIR__ . '/..' . '/symfony/css-selector',
+        ),
+        'Psr\\Log\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/psr/log/Psr/Log',
         ),
         'Monolog\\' => 
         array (
@@ -177,13 +185,6 @@ class ComposerStaticInit63966c268fa453a8094d300335533436
             'QueryPath' => 
             array (
                 0 => __DIR__ . '/..' . '/querypath/querypath/src',
-            ),
-        ),
-        'P' => 
-        array (
-            'Psr\\Log\\' => 
-            array (
-                0 => __DIR__ . '/..' . '/psr/log',
             ),
         ),
         'D' => 

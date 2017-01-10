@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "ecf3835564cf7920d951276ccaf42d24",
-    "content-hash": "2f363f0171d920b72ddbc82a65310856",
+    "hash": "52215fe0aafa9a7af6ba0d02418c83a8",
+    "content-hash": "771400d3dddb044691272c3baf6c5207",
     "packages": [
         {
             "name": "container-interop/container-interop",
@@ -102,27 +102,80 @@
             "time": "2015-11-06 14:35:42"
         },
         {
-            "name": "illuminate/container",
-            "version": "v5.2.37",
+            "name": "duncan3dc/blade",
+            "version": "3.3.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/illuminate/container.git",
-                "reference": "7ec395833738b9059f829348ddc9a59d0118ac88"
+                "url": "https://github.com/duncan3dc/blade.git",
+                "reference": "10bef332b0daa43baf60c55fb623b129f41e1295"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/illuminate/container/zipball/7ec395833738b9059f829348ddc9a59d0118ac88",
-                "reference": "7ec395833738b9059f829348ddc9a59d0118ac88",
+                "url": "https://api.github.com/repos/duncan3dc/blade/zipball/10bef332b0daa43baf60c55fb623b129f41e1295",
+                "reference": "10bef332b0daa43baf60c55fb623b129f41e1295",
                 "shasum": ""
             },
             "require": {
-                "illuminate/contracts": "5.2.*",
-                "php": ">=5.5.9"
+                "illuminate/contracts": ">=5.1,<5.4",
+                "illuminate/events": ">=5.1,<5.4",
+                "illuminate/view": ">=5.1,<5.4",
+                "php": ">=5.6.0"
+            },
+            "require-dev": {
+                "mockery/mockery": "^0.9.5",
+                "phpunit/phpunit": "^5.5"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "duncan3dc\\Laravel\\": "src/",
+                    "duncan3dc\\LaravelTests\\": "tests/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "Craig Duncan",
+                    "email": "git@duncanc.co.uk",
+                    "homepage": "https://github.com/duncan3dc",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Use Laravel Blade templates without the full Laravel framework",
+            "homepage": "https://github.com/duncan3dc/blade",
+            "keywords": [
+                "laravel",
+                "template",
+                "templating",
+                "views"
+            ],
+            "time": "2016-08-24 12:55:43"
+        },
+        {
+            "name": "illuminate/container",
+            "version": "v5.3.23",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/illuminate/container.git",
+                "reference": "8047b47e1f731c975d9aa0fe0b269064d3f1346d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/illuminate/container/zipball/8047b47e1f731c975d9aa0fe0b269064d3f1346d",
+                "reference": "8047b47e1f731c975d9aa0fe0b269064d3f1346d",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/contracts": "5.3.*",
+                "php": ">=5.6.4"
             },
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "5.2-dev"
+                    "dev-master": "5.3-dev"
                 }
             },
             "autoload": {
@@ -137,34 +190,34 @@
             "authors": [
                 {
                     "name": "Taylor Otwell",
-                    "email": "taylorotwell@gmail.com"
+                    "email": "taylor@laravel.com"
                 }
             ],
             "description": "The Illuminate Container package.",
-            "homepage": "http://laravel.com",
-            "time": "2016-05-29 02:18:23"
+            "homepage": "https://laravel.com",
+            "time": "2016-10-02 01:14:30"
         },
         {
             "name": "illuminate/contracts",
-            "version": "v5.2.37",
+            "version": "v5.3.23",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/contracts.git",
-                "reference": "f4f44d7c6d20404da8dfc655bd3d6dd788dfdce5"
+                "reference": "ce5d73c6015b2054d32f3f8530767847b358ae4e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/illuminate/contracts/zipball/f4f44d7c6d20404da8dfc655bd3d6dd788dfdce5",
-                "reference": "f4f44d7c6d20404da8dfc655bd3d6dd788dfdce5",
+                "url": "https://api.github.com/repos/illuminate/contracts/zipball/ce5d73c6015b2054d32f3f8530767847b358ae4e",
+                "reference": "ce5d73c6015b2054d32f3f8530767847b358ae4e",
                 "shasum": ""
             },
             "require": {
-                "php": ">=5.5.9"
+                "php": ">=5.6.4"
             },
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "5.2-dev"
+                    "dev-master": "5.3-dev"
                 }
             },
             "autoload": {
@@ -179,37 +232,37 @@
             "authors": [
                 {
                     "name": "Taylor Otwell",
-                    "email": "taylorotwell@gmail.com"
+                    "email": "taylor@laravel.com"
                 }
             ],
             "description": "The Illuminate Contracts package.",
-            "homepage": "http://laravel.com",
-            "time": "2016-05-31 21:36:13"
+            "homepage": "https://laravel.com",
+            "time": "2016-09-26 20:36:27"
         },
         {
             "name": "illuminate/events",
-            "version": "v5.2.37",
+            "version": "v5.3.23",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/events.git",
-                "reference": "5a5e5d72bf3a2d01d8b15e89440026a60bc4a81b"
+                "reference": "cb29124d4eaba8a60bad40e95e3d8b199d040d77"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/illuminate/events/zipball/5a5e5d72bf3a2d01d8b15e89440026a60bc4a81b",
-                "reference": "5a5e5d72bf3a2d01d8b15e89440026a60bc4a81b",
+                "url": "https://api.github.com/repos/illuminate/events/zipball/cb29124d4eaba8a60bad40e95e3d8b199d040d77",
+                "reference": "cb29124d4eaba8a60bad40e95e3d8b199d040d77",
                 "shasum": ""
             },
             "require": {
-                "illuminate/container": "5.2.*",
-                "illuminate/contracts": "5.2.*",
-                "illuminate/support": "5.2.*",
-                "php": ">=5.5.9"
+                "illuminate/container": "5.3.*",
+                "illuminate/contracts": "5.3.*",
+                "illuminate/support": "5.3.*",
+                "php": ">=5.6.4"
             },
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "5.2-dev"
+                    "dev-master": "5.3-dev"
                 }
             },
             "autoload": {
@@ -224,32 +277,32 @@
             "authors": [
                 {
                     "name": "Taylor Otwell",
-                    "email": "taylorotwell@gmail.com"
+                    "email": "taylor@laravel.com"
                 }
             ],
             "description": "The Illuminate Events package.",
-            "homepage": "http://laravel.com",
-            "time": "2016-01-01 01:00:19"
+            "homepage": "https://laravel.com",
+            "time": "2016-08-12 14:24:30"
         },
         {
             "name": "illuminate/filesystem",
-            "version": "v5.2.37",
+            "version": "v5.3.23",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/filesystem.git",
-                "reference": "e9c3ba4fce5853f559f805a5626b18517a55b8b3"
+                "reference": "82576e0a6193e76929c929c8a2d3e1552ab64e76"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/illuminate/filesystem/zipball/e9c3ba4fce5853f559f805a5626b18517a55b8b3",
-                "reference": "e9c3ba4fce5853f559f805a5626b18517a55b8b3",
+                "url": "https://api.github.com/repos/illuminate/filesystem/zipball/82576e0a6193e76929c929c8a2d3e1552ab64e76",
+                "reference": "82576e0a6193e76929c929c8a2d3e1552ab64e76",
                 "shasum": ""
             },
             "require": {
-                "illuminate/contracts": "5.2.*",
-                "illuminate/support": "5.2.*",
-                "php": ">=5.5.9",
-                "symfony/finder": "2.8.*|3.0.*"
+                "illuminate/contracts": "5.3.*",
+                "illuminate/support": "5.3.*",
+                "php": ">=5.6.4",
+                "symfony/finder": "3.1.*"
             },
             "suggest": {
                 "league/flysystem": "Required to use the Flysystem local and FTP drivers (~1.0).",
@@ -259,7 +312,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "5.2-dev"
+                    "dev-master": "5.3-dev"
                 }
             },
             "autoload": {
@@ -274,45 +327,46 @@
             "authors": [
                 {
                     "name": "Taylor Otwell",
-                    "email": "taylorotwell@gmail.com"
+                    "email": "taylor@laravel.com"
                 }
             ],
             "description": "The Illuminate Filesystem package.",
-            "homepage": "http://laravel.com",
-            "time": "2016-05-31 15:08:27"
+            "homepage": "https://laravel.com",
+            "time": "2016-11-07 22:09:46"
         },
         {
             "name": "illuminate/support",
-            "version": "v5.2.37",
+            "version": "v5.3.23",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/support.git",
-                "reference": "6e86ac2b4e3d0c42c2dc846dbac3e74d378a812b"
+                "reference": "050d0ed3e1c0e1d129d73b2eaa14044e46a66f77"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/illuminate/support/zipball/6e86ac2b4e3d0c42c2dc846dbac3e74d378a812b",
-                "reference": "6e86ac2b4e3d0c42c2dc846dbac3e74d378a812b",
+                "url": "https://api.github.com/repos/illuminate/support/zipball/050d0ed3e1c0e1d129d73b2eaa14044e46a66f77",
+                "reference": "050d0ed3e1c0e1d129d73b2eaa14044e46a66f77",
                 "shasum": ""
             },
             "require": {
                 "doctrine/inflector": "~1.0",
                 "ext-mbstring": "*",
-                "illuminate/contracts": "5.2.*",
-                "paragonie/random_compat": "~1.4",
-                "php": ">=5.5.9"
+                "illuminate/contracts": "5.3.*",
+                "paragonie/random_compat": "~1.4|~2.0",
+                "php": ">=5.6.4"
+            },
+            "replace": {
+                "tightenco/collect": "self.version"
             },
             "suggest": {
                 "illuminate/filesystem": "Required to use the composer class (5.2.*).",
-                "jeremeamia/superclosure": "Required to be able to serialize closures (~2.2).",
-                "symfony/polyfill-php56": "Required to use the hash_equals function on PHP 5.5 (~1.0).",
-                "symfony/process": "Required to use the composer class (2.8.*|3.0.*).",
-                "symfony/var-dumper": "Improves the dd function (2.8.*|3.0.*)."
+                "symfony/process": "Required to use the composer class (3.1.*).",
+                "symfony/var-dumper": "Required to use the dd function (3.1.*)."
             },
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "5.2-dev"
+                    "dev-master": "5.3-dev"
                 }
             },
             "autoload": {
@@ -330,40 +384,40 @@
             "authors": [
                 {
                     "name": "Taylor Otwell",
-                    "email": "taylorotwell@gmail.com"
+                    "email": "taylor@laravel.com"
                 }
             ],
             "description": "The Illuminate Support package.",
-            "homepage": "http://laravel.com",
-            "time": "2016-05-30 02:40:53"
+            "homepage": "https://laravel.com",
+            "time": "2016-11-03 15:25:28"
         },
         {
             "name": "illuminate/view",
-            "version": "v5.2.37",
+            "version": "v5.3.23",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/view.git",
-                "reference": "459795e5ba447d674eae03bfb2f9bc3c6206d424"
+                "reference": "f840676c98e3cb1224267786f35eb420de55d41c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/illuminate/view/zipball/459795e5ba447d674eae03bfb2f9bc3c6206d424",
-                "reference": "459795e5ba447d674eae03bfb2f9bc3c6206d424",
+                "url": "https://api.github.com/repos/illuminate/view/zipball/f840676c98e3cb1224267786f35eb420de55d41c",
+                "reference": "f840676c98e3cb1224267786f35eb420de55d41c",
                 "shasum": ""
             },
             "require": {
-                "illuminate/container": "5.2.*",
-                "illuminate/contracts": "5.2.*",
-                "illuminate/events": "5.2.*",
-                "illuminate/filesystem": "5.2.*",
-                "illuminate/support": "5.2.*",
-                "php": ">=5.5.9",
-                "symfony/debug": "2.8.*|3.0.*"
+                "illuminate/container": "5.3.*",
+                "illuminate/contracts": "5.3.*",
+                "illuminate/events": "5.3.*",
+                "illuminate/filesystem": "5.3.*",
+                "illuminate/support": "5.3.*",
+                "php": ">=5.6.4",
+                "symfony/debug": "3.1.*"
             },
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "5.2-dev"
+                    "dev-master": "5.3-dev"
                 }
             },
             "autoload": {
@@ -378,12 +432,12 @@
             "authors": [
                 {
                     "name": "Taylor Otwell",
-                    "email": "taylorotwell@gmail.com"
+                    "email": "taylor@laravel.com"
                 }
             ],
             "description": "The Illuminate View package.",
-            "homepage": "http://laravel.com",
-            "time": "2016-05-28 21:20:12"
+            "homepage": "https://laravel.com",
+            "time": "2016-10-24 18:18:15"
         },
         {
             "name": "ircmaxell/password-compat",
@@ -426,61 +480,6 @@
                 "password"
             ],
             "time": "2014-11-20 16:49:30"
-        },
-        {
-            "name": "jawngee/blade",
-            "version": "dev-master",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/jawngee/blade.git",
-                "reference": "b3eef89e733c8c1f99a7addc737689d600d6f72b"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/jawngee/blade/zipball/b3eef89e733c8c1f99a7addc737689d600d6f72b",
-                "reference": "b3eef89e733c8c1f99a7addc737689d600d6f72b",
-                "shasum": ""
-            },
-            "require": {
-                "illuminate/contracts": ">=5.1,<5.3",
-                "illuminate/events": ">=5.1,<5.3",
-                "illuminate/view": ">=5.1,<5.3",
-                "php": ">=5.6.0"
-            },
-            "require-dev": {
-                "mockery/mockery": "^0.9.4",
-                "phpunit/phpunit": "^5.1"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "duncan3dc\\Laravel\\": "src/",
-                    "duncan3dc\\LaravelTests\\": "tests/"
-                }
-            },
-            "license": [
-                "Apache-2.0"
-            ],
-            "authors": [
-                {
-                    "name": "Craig Duncan",
-                    "email": "git@duncanc.co.uk",
-                    "homepage": "https://github.com/duncan3dc",
-                    "role": "Developer"
-                }
-            ],
-            "description": "Use Laravel Blade templates without the full Laravel framework",
-            "homepage": "https://github.com/jawngee/blade",
-            "keywords": [
-                "laravel",
-                "template",
-                "templating",
-                "views"
-            ],
-            "support": {
-                "source": "https://github.com/jawngee/blade/tree/master"
-            },
-            "time": "2016-07-12 00:14:28"
         },
         {
             "name": "masterminds/html5",
@@ -674,16 +673,16 @@
         },
         {
             "name": "paragonie/random_compat",
-            "version": "v1.4.1",
+            "version": "v2.0.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/paragonie/random_compat.git",
-                "reference": "c7e26a21ba357863de030f0b9e701c7d04593774"
+                "reference": "a9b97968bcde1c4de2a5ec6cbd06a0f6c919b46e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/paragonie/random_compat/zipball/c7e26a21ba357863de030f0b9e701c7d04593774",
-                "reference": "c7e26a21ba357863de030f0b9e701c7d04593774",
+                "url": "https://api.github.com/repos/paragonie/random_compat/zipball/a9b97968bcde1c4de2a5ec6cbd06a0f6c919b46e",
+                "reference": "a9b97968bcde1c4de2a5ec6cbd06a0f6c919b46e",
                 "shasum": ""
             },
             "require": {
@@ -718,7 +717,7 @@
                 "pseudorandom",
                 "random"
             ],
-            "time": "2016-03-18 20:34:03"
+            "time": "2016-11-07 23:38:38"
         },
         {
             "name": "php-di/invoker",
@@ -765,22 +764,30 @@
         },
         {
             "name": "psr/log",
-            "version": "1.0.0",
+            "version": "1.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/php-fig/log.git",
-                "reference": "fe0936ee26643249e916849d48e3a51d5f5e278b"
+                "reference": "4ebe3a8bf773a19edfe0a84b6585ba3d401b724d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/php-fig/log/zipball/fe0936ee26643249e916849d48e3a51d5f5e278b",
-                "reference": "fe0936ee26643249e916849d48e3a51d5f5e278b",
+                "url": "https://api.github.com/repos/php-fig/log/zipball/4ebe3a8bf773a19edfe0a84b6585ba3d401b724d",
+                "reference": "4ebe3a8bf773a19edfe0a84b6585ba3d401b724d",
                 "shasum": ""
             },
+            "require": {
+                "php": ">=5.3.0"
+            },
             "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.0.x-dev"
+                }
+            },
             "autoload": {
-                "psr-0": {
-                    "Psr\\Log\\": ""
+                "psr-4": {
+                    "Psr\\Log\\": "Psr/Log/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -794,12 +801,13 @@
                 }
             ],
             "description": "Common interface for logging libraries",
+            "homepage": "https://github.com/php-fig/log",
             "keywords": [
                 "log",
                 "psr",
                 "psr-3"
             ],
-            "time": "2012-12-21 11:40:51"
+            "time": "2016-10-10 12:19:37"
         },
         {
             "name": "querypath/querypath",
@@ -898,16 +906,16 @@
         },
         {
             "name": "symfony/debug",
-            "version": "v3.0.8",
+            "version": "v3.1.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/debug.git",
-                "reference": "c54bc3539c3b87e86799533801e8ae0e971d78c2"
+                "reference": "c058661c32f5b462722e36d120905940089cbd9a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/debug/zipball/c54bc3539c3b87e86799533801e8ae0e971d78c2",
-                "reference": "c54bc3539c3b87e86799533801e8ae0e971d78c2",
+                "url": "https://api.github.com/repos/symfony/debug/zipball/c058661c32f5b462722e36d120905940089cbd9a",
+                "reference": "c058661c32f5b462722e36d120905940089cbd9a",
                 "shasum": ""
             },
             "require": {
@@ -924,7 +932,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "3.0-dev"
+                    "dev-master": "3.1-dev"
                 }
             },
             "autoload": {
@@ -951,7 +959,7 @@
             ],
             "description": "Symfony Debug Component",
             "homepage": "https://symfony.com",
-            "time": "2016-06-29 05:40:00"
+            "time": "2016-11-15 12:55:20"
         },
         {
             "name": "symfony/dom-crawler",
@@ -1011,16 +1019,16 @@
         },
         {
             "name": "symfony/finder",
-            "version": "v3.0.8",
+            "version": "v3.1.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/finder.git",
-                "reference": "3eb4e64c6145ef8b92adefb618a74ebdde9e3fe9"
+                "reference": "74dcd370c8d057882575e535616fde935e411b19"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/finder/zipball/3eb4e64c6145ef8b92adefb618a74ebdde9e3fe9",
-                "reference": "3eb4e64c6145ef8b92adefb618a74ebdde9e3fe9",
+                "url": "https://api.github.com/repos/symfony/finder/zipball/74dcd370c8d057882575e535616fde935e411b19",
+                "reference": "74dcd370c8d057882575e535616fde935e411b19",
                 "shasum": ""
             },
             "require": {
@@ -1029,7 +1037,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "3.0-dev"
+                    "dev-master": "3.1-dev"
                 }
             },
             "autoload": {
@@ -1056,7 +1064,7 @@
             ],
             "description": "Symfony Finder Component",
             "homepage": "https://symfony.com",
-            "time": "2016-06-29 05:40:00"
+            "time": "2016-12-13 09:38:21"
         },
         {
             "name": "symfony/http-foundation",
@@ -1608,9 +1616,7 @@
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "jawngee/blade": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": [],
