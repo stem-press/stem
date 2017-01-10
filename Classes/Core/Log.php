@@ -1,34 +1,37 @@
 <?php
+
 namespace ILab\Stem\Core;
-use Monolog\Formatter\LineFormatter;
-use Monolog\Handler\BrowserConsoleHandler;
-use Monolog\Handler\ErrorLogHandler;
-use Monolog\Handler\NativeMailerHandler;
+
+use Monolog\Logger;
 use Monolog\Handler\SlackHandler;
 use Monolog\Handler\SyslogHandler;
+use Monolog\Formatter\LineFormatter;
+use Monolog\Handler\ErrorLogHandler;
 use Monolog\Handler\SyslogUdpHandler;
-use Monolog\Logger;
+use Monolog\Handler\NativeMailerHandler;
+use Monolog\Handler\BrowserConsoleHandler;
 
 /**
- * Class View
+ * Class View.
  *
  * Base class for rendering views
- *
- * @package ILab\Stem\Core
  */
-final class Log {
+final class Log
+{
     private static $logger = null;
-    
-    public static function initialize($config = null) {
+
+    public static function initialize($config = null)
+    {
         self::$logger = new Logger('stem');
 
         if ($config == null) {
             self::$logger->pushHandler(new ErrorLogHandler());
+
             return;
         }
 
-        foreach($config as $level => $handlers) {
-            switch($level) {
+        foreach ($config as $level => $handlers) {
+            switch ($level) {
                 case 'info': $logLevel = Logger::INFO; break;
                 case 'notice': $logLevel = Logger::NOTICE; break;
                 case 'warning': $logLevel = Logger::WARNING; break;
@@ -39,36 +42,35 @@ final class Log {
                 default: $logLevel = Logger::DEBUG; break;
             }
 
-            foreach($handlers as $handler => $handlerConfig) {
+            foreach ($handlers as $handler => $handlerConfig) {
                 $outputHandler = null;
-                if ($handler == 'phperror')
+                if ($handler == 'phperror') {
                     $outputHandler = new ErrorLogHandler(ErrorLogHandler::OPERATING_SYSTEM, $logLevel);
-                else if ($handler == 'browser')
+                } elseif ($handler == 'browser') {
                     $outputHandler = new BrowserConsoleHandler($logLevel);
-                else if (($handler == 'syslog') && isset($handlerConfig['ident'])) {
+                } elseif (($handler == 'syslog') && isset($handlerConfig['ident'])) {
                     $outputHandler = new SyslogHandler($handlerConfig['ident'], LOG_USER, $logLevel);
-                }
-                else if (($handler == 'syslog_udp') && isset($handlerConfig['host'])) {
+                } elseif (($handler == 'syslog_udp') && isset($handlerConfig['host'])) {
                     $port = (isset($handlerConfig['port'])) ? $handlerConfig['port'] : 514;
                     $outputHandler = new SyslogUdpHandler($handlerConfig['host'], $port, LOG_USER, $logLevel);
-                }
-                else if ($handler == 'mail') {
+                } elseif ($handler == 'mail') {
                     $to = (isset($handlerConfig['to'])) ? $handlerConfig['to'] : null;
                     $subject = (isset($handlerConfig['subject'])) ? $handlerConfig['subject'] : 'Log';
                     $from = (isset($handlerConfig['from'])) ? $handlerConfig['from'] : null;
-                    
-                    if ($to && $from)
+
+                    if ($to && $from) {
                         $outputHandler = new NativeMailerHandler($to, $subject, $from, $logLevel);
-                }
-                else if ($handler == 'slack') {
+                    }
+                } elseif ($handler == 'slack') {
                     $token = (isset($handlerConfig['token'])) ? $handlerConfig['to'] : null;
                     $channel = (isset($handlerConfig['channel'])) ? $handlerConfig['channel'] : null;
                     $username = (isset($handlerConfig['username'])) ? $handlerConfig['username'] : 'Stem';
                     $useAttachment = (isset($handlerConfig['useAttachment'])) ? $handlerConfig['useAttachment'] : true;
                     $iconEmoji = (isset($handlerConfig['iconEmoji'])) ? $handlerConfig['iconEmoji'] : null;
 
-                    if ($token && $channel)
+                    if ($token && $channel) {
                         $outputHandler = new SlackHandler($token, $channel, $username, $useAttachment, $iconEmoji, $logLevel);
+                    }
                 }
 
                 if ($outputHandler) {
@@ -78,11 +80,12 @@ final class Log {
                         $allowInlineLineBreaks = (isset($handlerConfig['format']['line-breaks'])) ? $handlerConfig['format']['line-breaks'] : false;
                         $output = $handlerConfig['format']['output'];
 
-                        $formatter = new LineFormatter($output, $date. $allowInlineLineBreaks);
+                        $formatter = new LineFormatter($output, $date.$allowInlineLineBreaks);
                     }
 
-                    if ($formatter)
+                    if ($formatter) {
                         $outputHandler->setFormatter($formatter);
+                    }
 
                     self::$logger->pushHandler($outputHandler);
                 }
@@ -90,7 +93,8 @@ final class Log {
         }
     }
 
-    public static function instance() {
+    public static function instance()
+    {
         return self::$logger;
     }
 
@@ -101,7 +105,8 @@ final class Log {
      * @param array $context
      * @return null
      */
-    public static function emergency($message, array $context = array()) {
+    public static function emergency($message, array $context = [])
+    {
         self::log(Logger::EMERGENCY, $message, $context);
     }
 
@@ -115,7 +120,8 @@ final class Log {
      * @param array $context
      * @return null
      */
-    public static function alert($message, array $context = array()) {
+    public static function alert($message, array $context = [])
+    {
         self::log(Logger::ALERT, $message, $context);
     }
 
@@ -128,7 +134,8 @@ final class Log {
      * @param array $context
      * @return null
      */
-    public static function critical($message, array $context = array()) {
+    public static function critical($message, array $context = [])
+    {
         self::log(Logger::CRITICAL, $message, $context);
     }
 
@@ -140,7 +147,8 @@ final class Log {
      * @param array $context
      * @return null
      */
-    public static function error($message, array $context = array()) {
+    public static function error($message, array $context = [])
+    {
         self::log(Logger::ERROR, $message, $context);
     }
 
@@ -154,7 +162,8 @@ final class Log {
      * @param array $context
      * @return null
      */
-    public static function warning($message, array $context = array()) {
+    public static function warning($message, array $context = [])
+    {
         self::log(Logger::WARNING, $message, $context);
     }
 
@@ -165,7 +174,8 @@ final class Log {
      * @param array $context
      * @return null
      */
-    public static function notice($message, array $context = array()) {
+    public static function notice($message, array $context = [])
+    {
         self::log(Logger::NOTICE, $message, $context);
     }
 
@@ -178,7 +188,8 @@ final class Log {
      * @param array $context
      * @return null
      */
-    public static function info($message, array $context = array()) {
+    public static function info($message, array $context = [])
+    {
         self::log(Logger::INFO, $message, $context);
     }
 
@@ -189,7 +200,8 @@ final class Log {
      * @param array $context
      * @return null
      */
-    public static function debug($message, array $context = array()) {
+    public static function debug($message, array $context = [])
+    {
         self::log(Logger::DEBUG, $message, $context);
     }
 
@@ -201,16 +213,20 @@ final class Log {
      * @param array $context
      * @return null
      */
-    public static function log($level, $message, array $context = array()) {
-        if (self::$logger)
+    public static function log($level, $message, array $context = [])
+    {
+        if (self::$logger) {
             self::$logger->addRecord($level, $message, $context);
+        }
     }
 
-    public static function flush() {
+    public static function flush()
+    {
         if (self::$logger) {
-            foreach(self::$logger->getHandlers() as $handler) {
-                if ($handler instanceof BrowserConsoleHandler)
+            foreach (self::$logger->getHandlers() as $handler) {
+                if ($handler instanceof BrowserConsoleHandler) {
                     $handler->send();
+                }
             }
         }
     }

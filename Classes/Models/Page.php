@@ -1,12 +1,12 @@
 <?php
+
 namespace ILab\Stem\Models;
 
 /**
- * Class Page
+ * Class Page.
  *
  * Represents a page
- *
- * @package ILab\Stem\Models
  */
-class Page extends Post {
+class Page extends Post
+{
 }
