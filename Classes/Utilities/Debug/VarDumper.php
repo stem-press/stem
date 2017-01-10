@@ -19,26 +19,26 @@ use Symfony\Component\VarDumper\Dumper\CliDumper;
  */
 class VarDumper
 {
-	private static $handler;
+    private static $handler;
 
-	public static function dump($var)
-	{
-		if (null === self::$handler) {
-			$cloner = new VarCloner();
-			$dumper = 'cli' === PHP_SAPI ? new CliDumper() : new HtmlDumper();
-			self::$handler = function ($var) use ($cloner, $dumper) {
-				$dumper->dump($cloner->cloneVar($var));
-			};
-		}
+    public static function dump($var)
+    {
+        if (null === self::$handler) {
+            $cloner = new VarCloner();
+            $dumper = 'cli' === PHP_SAPI ? new CliDumper() : new HtmlDumper();
+            self::$handler = function ($var) use ($cloner, $dumper) {
+                $dumper->dump($cloner->cloneVar($var));
+            };
+        }
 
-		return call_user_func(self::$handler, $var);
-	}
+        return call_user_func(self::$handler, $var);
+    }
 
-	public static function setHandler(callable $callable = null)
-	{
-		$prevHandler = self::$handler;
-		self::$handler = $callable;
+    public static function setHandler(callable $callable = null)
+    {
+        $prevHandler = self::$handler;
+        self::$handler = $callable;
 
-		return $prevHandler;
-	}
+        return $prevHandler;
+    }
 }
