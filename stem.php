@@ -12,7 +12,7 @@ define('ILAB_STEM_DIR', dirname(__FILE__));
 define('ILAB_STEM_VIEW_DIR', ILAB_STEM_DIR.'/views');
 
 if (file_exists(ILAB_STEM_DIR.'/vendor/autoload.php')) {
-	require_once ILAB_STEM_DIR.'/vendor/autoload.php';
+    require_once ILAB_STEM_DIR.'/vendor/autoload.php';
 }
 
 include 'Classes/Core/System.php';
