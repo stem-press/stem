@@ -789,35 +789,31 @@ class UI
         return $output;
     }
 
-    /**
-     * Outputs the Wordpress generated header html.
-     *
-     * @return mixed|string
-     */
-    public function header()
-    {
-        ob_start();
+	/**
+	 * Outputs the Wordpress generated header html
+	 *
+	 * @return mixed|string
+	 */
+	public function header() {
+		ob_start();
 
-        wp_head();
-        $header = ob_get_clean();
+		wp_head();
 
-        return $header;
-    }
+		return apply_filters('stem/header', ob_get_clean());
+	}
 
-    /**
-     * Outputs the Wordpress generated footer html.
-     *
-     * @return string
-     */
-    public function footer()
-    {
-        ob_start();
+	/**
+	 * Outputs the Wordpress generated footer html
+	 *
+	 * @return string
+	 */
+	public function footer() {
+		ob_start();
 
-        wp_footer();
-        $footer = ob_get_clean();
+		wp_footer();
 
-        return $footer;
-    }
+		return apply_filters('stem/footer', ob_get_clean());
+	}
 
     /**
      * Returns the image src to an image included in the theme.
