@@ -1,9 +1,9 @@
 {
-  "name": "ilab/stem",
-  "description": "Theme building plug-in for Wordpress",
+  "name": "stem-press/stem",
+  "description": "Theme building plug-in for WordPress",
   "type": "wordpress-muplugin",
   "license": "LGPL",
-  "keywords": ["stem"],
+  "keywords": ["stem", "wordpress", "bedrock"],
   "authors": [
     {
       "name": "Jon Gilkison",
@@ -20,21 +20,13 @@
     "PHP-DI/invoker": "^1.0",
     "twig/twig": "^1.24",
     "monolog/monolog": "^1.19",
-    "jawngee/blade": "dev-master",
     "nesbot/carbon": "^1.21",
-    "tgmpa/tgm-plugin-activation": "^2.6",
-    "symfony/var-dumper": "^3.1"
+    "symfony/var-dumper": "^3.1",
+    "duncan3dc/blade": "^3.3"
   },
-  "require-dev": {},
   "autoload": {
     "psr-4": {
       "ILab\\Stem\\": "Classes"
     }
-  },
-  "repositories": [
-    {
-      "type": "vcs",
-      "url": "https://github.com/jawngee/blade"
-    }
-  ]
+  }
 }
