@@ -4,7 +4,7 @@ Plugin Name: ILAB Stem App Framework
 Plugin URI: https://github.com/jawngee/stem
 Description: Framework for building applications using Wordpress and Symfony
 Author: Jon Gilkison
-Version: 0.1.5
+Version: 0.1.6
 Author URI: http://interfacelab.com
 */
 
@@ -23,12 +23,18 @@ define('ILAB_STEM_PUB_CSS_URL', $plug_url.'public/css');
 
 register_activation_hook(__FILE__, function () {
     if (! defined('WP_CLI')) {
-        flush_rewrite_rules();
+	    global $wp_rewrite;
+	    if ($wp_rewrite) {
+		    $wp_rewrite->flush_rules(true);
+	    }
     }
 });
 
 register_deactivation_hook(__FILE__, function () {
     if (! defined('WP_CLI')) {
-        flush_rewrite_rules();
+	    global $wp_rewrite;
+	    if ($wp_rewrite) {
+		    $wp_rewrite->flush_rules(true);
+	    }
     }
 });
