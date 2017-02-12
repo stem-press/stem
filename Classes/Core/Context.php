@@ -616,6 +616,29 @@ class Context
             }
         }
 
+        if ($this->setting('search-options/fulltext-search')) {
+	        add_filter('posts_search', function($search, $query){
+		        if ($query->is_main_query() && $query->is_search()) {
+			        global $wpdb;
+
+			        return $wpdb->prepare(" AND MATCH($wpdb->posts.post_title, $wpdb->posts.post_content) AGAINST(%s)", '*' . $query->get('s') . '*');
+		        } else {
+			        return $search;
+		        }
+	        }, 10000, 2);
+
+
+	        add_filter('posts_orderby', function($orderby, $query){
+		        if ($query->is_main_query() && $query->is_search()) {
+			        global $wpdb;
+
+			        return " $wpdb->posts.post_date DESC";
+		        } else {
+			        return $orderby;
+		        }
+	        }, 10000, 2);
+        }
+
         // Below alter the way wordpress searches
         $search_tags = $this->setting('search-options/search-tags');
         if ($search_tags) {
