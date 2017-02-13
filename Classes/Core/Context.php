@@ -619,8 +619,11 @@ class Context
         if ($this->setting('search-options/fulltext-search')) {
 	        add_filter('posts_search', function($search, $query){
 		        if ($query->is_main_query() && $query->is_search()) {
-			        global $wpdb;
+			        if (empty($query->get('s'))) {
+				        return ' ';
+			        }
 
+			        global $wpdb;
 			        return $wpdb->prepare(" AND MATCH($wpdb->posts.post_title, $wpdb->posts.post_content) AGAINST(%s)", '*' . $query->get('s') . '*');
 		        } else {
 			        return $search;

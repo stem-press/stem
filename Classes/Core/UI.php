@@ -654,7 +654,7 @@ class UI
             $output = preg_replace($regex, $replacement, $output);
         }
 
-        return $output;
+	    return apply_filters('stem/output', $output);
     }
 
     /**
@@ -667,9 +667,8 @@ class UI
         ob_start();
 
         wp_head();
-        $header = ob_get_clean();
 
-        return $header;
+	    return apply_filters('stem/header', ob_get_clean());
     }
 
     /**
@@ -682,9 +681,8 @@ class UI
         ob_start();
 
         wp_footer();
-        $footer = ob_get_clean();
 
-        return $footer;
+	    return apply_filters('stem/footer', ob_get_clean());
     }
 
     /**
