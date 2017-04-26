@@ -416,26 +416,31 @@ class Context
     {
         $routesConfig = include $this->rootPath.'/config/routes.php';
         foreach ($routesConfig as $route => $routeInfo) {
-            $defaults = (isset($routeInfo['defaults']) && is_array($routeInfo['defaults'])) ? $routeInfo['defaults'] : [];
-            $requirements = (isset($routeInfo['requirements']) && is_array($routeInfo['requirements'])) ? $routeInfo['requirements'] : [];
-            $methods = (isset($routeInfo['methods']) && is_array($routeInfo['methods'])) ? $routeInfo['methods'] : [];
-            $destination = arrayPath($routeInfo, 'controller', null);
-            if (! $destination) {
-                $template = arrayPath($routeInfo, 'template', null);
-                if ($template) {
-                    $destination = function () use ($template) {
-                        return new Response($template, ['request' => $this->request]);
-                    };
-                } else {
-                    $destination = arrayPath($routeInfo, 'function', null);
-                }
-            }
+	        if (!is_array($routeInfo) && is_callable($routeInfo)) {
+				$this->router->addRoute($route, $route, $routeInfo);
+	        }
+	        else {
+	            $defaults = (isset($routeInfo['defaults']) && is_array($routeInfo['defaults'])) ? $routeInfo['defaults'] : [];
+	            $requirements = (isset($routeInfo['requirements']) && is_array($routeInfo['requirements'])) ? $routeInfo['requirements'] : [];
+	            $methods = (isset($routeInfo['methods']) && is_array($routeInfo['methods'])) ? $routeInfo['methods'] : [];
+	            $destination = arrayPath($routeInfo, 'controller', null);
+	            if (! $destination) {
+	                $template = arrayPath($routeInfo, 'template', null);
+	                if ($template) {
+	                    $destination = function () use ($template) {
+	                        return new Response($template, ['request' => $this->request]);
+	                    };
+	                } else {
+	                    $destination = arrayPath($routeInfo, 'function', null);
+	                }
+	            }
 
-            if ($destination) {
-                $this->router->addRoute($route, $route, $destination, $defaults, $requirements, $methods);
-            } else {
-                Log::error("Invalid destination for route '$route'.");
-            }
+	            if ($destination) {
+	                $this->router->addRoute($route, $route, $destination, $defaults, $requirements, $methods);
+	            } else {
+	                Log::error("Invalid destination for route '$route'.");
+	            }
+	        }
         }
     }
 
