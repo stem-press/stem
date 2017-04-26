@@ -23,12 +23,18 @@ define('ILAB_STEM_PUB_CSS_URL', $plug_url.'public/css');
 
 register_activation_hook(__FILE__, function () {
     if (! defined('WP_CLI')) {
-        flush_rewrite_rules();
+	    global $wp_rewrite;
+	    if ($wp_rewrite) {
+		    $wp_rewrite->flush_rules(true);
+	    }
     }
 });
 
 register_deactivation_hook(__FILE__, function () {
     if (! defined('WP_CLI')) {
-        flush_rewrite_rules();
+	    global $wp_rewrite;
+	    if ($wp_rewrite) {
+		    $wp_rewrite->flush_rules(true);
+	    }
     }
 });
