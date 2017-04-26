@@ -32,7 +32,7 @@ final class Theme
         }
 
         if (! isset($this->values[$name])) {
-            $val = get_option($name);
+            $val = get_theme_mod($name);
 
             if (! $val) {
                 $val = $this->context->ui->setting("customizer/settings/$name/default", null);

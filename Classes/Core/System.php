@@ -56,6 +56,46 @@ function unsetArrayPath(&$array, $path)
     }
 }
 
+/**
+ * Diffs two arrays and returns an array with elements that have changed or been added.  Handles
+ * nested arrays and objects that can be serialized.
+ *
+ * @param $newArray
+ * @param $originalArray
+ *
+ * @return array
+ */
+function diffArray($newArray, $originalArray) {
+	$result = [];
+
+	$keys = array_keys($newArray);
+	foreach($keys as $key) {
+		if (array_key_exists($key, $originalArray)) {
+			$lval = $newArray[$key];
+			$rval = $originalArray[$key];
+			if (!is_array($lval) && !is_array($rval) && !is_object($lval) && !is_object($rval)) {
+				if (((string)$lval) != ((string)$rval)) {
+					$result[$key] = $lval;
+				}
+			} else if (is_array($lval) && is_array($rval)) {
+				if (count($lval) != count($rval)) {
+					$result[$key] = $lval;
+				} else  if (count(diffArray($lval, $rval))>0) {
+					$result[$key] = $lval;
+				}
+			} else if (is_object($lval) && is_object($rval)) {
+				if (serialize($lval) != serialize($rval)) {
+					$result[$key] = $lval;
+				}
+			}
+		} else {
+			$result[$key] = $newArray[$key];
+		}
+	}
+
+	return $result;
+}
+
 /*
  * Vomits a dump of data and optionally dies.
  * @param $data

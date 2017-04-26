@@ -108,6 +108,12 @@ class UI
     protected $replaceRegexes = [];
 
     /**
+     * Array of ShortCode classes.
+     * @var array
+     */
+    protected $shortCodes = [];
+
+    /**
      * The forced domain.
      * @var string
      */
@@ -295,6 +301,8 @@ class UI
         }
 
         $this->setupTheme();
+        $this->setupShortCodes();
+        $this->setupEditor();
     }
 
     /**
@@ -338,6 +346,7 @@ class UI
      */
     private function loadImageSizes()
     {
+
         // configure image sizes
         if (file_exists($this->context->rootPath.'/config/sizes.php')) {
             $sizesConfig = include $this->context->rootPath.'/config/sizes.php';
@@ -366,15 +375,20 @@ class UI
                     add_image_size($key, $info['width'], $info['height'], $info['crop']);
                 }
 
-                if (isset($info['display']) && $info['display']) {
-                    $customSizes[] = $key;
+                $display = arrayPath($info, 'display', false);
+                $name = arrayPath($info, 'name', null);
+
+                if ($display && empty($name)) {
+                    $customSizes[$key] = ucwords(str_replace('_', ' ', str_replace('-', ' ', $key)));
+                } elseif (! empty($name)) {
+                    $customSizes[$key] = $name;
                 }
             }
 
             if (count($customSizes) > 0) {
                 add_filter('image_size_names_choose', function ($sizes) use ($customSizes) {
-                    foreach ($customSizes as $size) {
-                        $sizes[$size] = ucwords(str_replace('_', ' ', str_replace('-', ' ', $size)));
+                    foreach ($customSizes as $key => $size) {
+                        $sizes[$key] = $size;
                     }
 
                     return $sizes;
@@ -391,6 +405,124 @@ class UI
 
                 return $sizes;
             }, 10000);
+        }
+    }
+
+    private function setupEditor()
+    {
+        $styles = $this->setting('editor/styles', []);
+        if (is_array($styles) && (count($styles) > 0)) {
+            add_filter('admin_enqueue_scripts', function () use ($styles) {
+                foreach ($styles as $style) {
+                    add_editor_style($this->css($style));
+                }
+            });
+        }
+
+        $plugins = $this->setting('editor/plugins', []);
+        foreach ($plugins as $pluginData) {
+            $plugin = null;
+
+            if (is_array($pluginData)) {
+                $class = arrayPath($pluginData, 'class', null);
+                if ($class && class_exists($class)) {
+                    $config = arrayPath($pluginData, 'config', []);
+                    $plugin = new $class($this->context, $config);
+                }
+            } elseif (is_string($pluginData)) {
+                if (class_exists($pluginData)) {
+                    $plugin = new $pluginData($this->context, []);
+                }
+            }
+
+            if ($plugin) {
+                $styles = $plugin->styles();
+                if ($styles) {
+                    if (is_string($styles)) {
+                        $styles = [$styles];
+                    }
+
+                    add_filter('admin_enqueue_scripts', function () use ($styles) {
+                        foreach ($styles as $style) {
+                            add_editor_style($style);
+                        }
+                    });
+                }
+
+                $scripts = $plugin->scripts();
+                if ($scripts) {
+                    if (is_string($scripts)) {
+                        $scripts = [$plugin->identifier() => $scripts];
+                    }
+
+                    add_filter('mce_external_plugins', function ($externalPlugins) use ($scripts) {
+                        $externalPlugins = array_merge($externalPlugins, $scripts);
+
+                        return $externalPlugins;
+                    }, 1000, 1);
+                }
+
+                $buttons = $plugin->buttons();
+                if ($buttons) {
+                    if (is_string($buttons)) {
+                        $buttons = [$buttons];
+                    }
+
+                    add_filter('mce_buttons', function ($mceButtons) use ($buttons) {
+                        $mceButtons = array_merge($mceButtons, $buttons);
+
+                        return $mceButtons;
+                    }, 1000, 1);
+                }
+
+                add_action('before_wp_tiny_mce', function ($mceSettings) use ($plugin) {
+                    $plugin->onBeforeInit($mceSettings);
+                });
+
+                add_action('wp_tiny_mce_init', function ($mceSettings) use ($plugin) {
+                    $plugin->onInit($mceSettings);
+                });
+
+                add_action('after_wp_tiny_mce', function ($mceSettings) use ($plugin) {
+                    $plugin->onAfterInit($mceSettings);
+                });
+            }
+        }
+    }
+
+    private function setupShortCodes()
+    {
+        $shortCodes = $this->setting('shortcodes', []);
+        foreach ($shortCodes as $key => $data) {
+            $shortCode = null;
+            $uiConfig = null;
+
+            if (is_array($data)) {
+                $class = arrayPath($data, 'class', null);
+                if ($class && class_exists($class)) {
+                    $config = arrayPath($data, 'config', []);
+                    $uiConfig = arrayPath($data, 'ui', null);
+                    $shortCode = new $class($this->context, $config);
+                }
+            } elseif (is_string($data)) {
+                if (class_exists($data)) {
+                    $shortCode = new $data($this->context, []);
+                }
+            }
+
+            if ($shortCode) {
+                add_shortcode($key, function ($attrs, $content = null) use ($shortCode) {
+                    return $shortCode->render($attrs, $content);
+                });
+
+                if (function_exists('shortcode_ui_register_for_shortcode')) {
+                    if (! $uiConfig) {
+                        $shortCode->registerUI($key);
+                    } else {
+                        // TODO: Shortcode ui registration
+                    }
+                }
+            }
         }
     }
 
@@ -657,28 +789,26 @@ class UI
 	    return apply_filters('stem/output', $output);
     }
 
-    /**
-     * Outputs the Wordpress generated header html.
-     *
-     * @return mixed|string
-     */
-    public function header()
-    {
-        ob_start();
+	/**
+	 * Outputs the Wordpress generated header html
+	 *
+	 * @return mixed|string
+	 */
+	public function header() {
+		ob_start();
 
         wp_head();
 
 	    return apply_filters('stem/header', ob_get_clean());
     }
 
-    /**
-     * Outputs the Wordpress generated footer html.
-     *
-     * @return string
-     */
-    public function footer()
-    {
-        ob_start();
+	/**
+	 * Outputs the Wordpress generated footer html
+	 *
+	 * @return string
+	 */
+	public function footer() {
+		ob_start();
 
         wp_footer();
 

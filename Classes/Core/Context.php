@@ -342,7 +342,7 @@ class Context
         add_action('init', [$this, 'installCustomPostTypes'], 10000);
 
         // Require our plugins
-        //$this->setupRequiredPlugins();
+        $this->setupRequiredPlugins();
 
         $this->cacheControl = new CacheControl($this);
 
@@ -404,6 +404,7 @@ class Context
             $defaults = (isset($routeInfo['defaults']) && is_array($routeInfo['defaults'])) ? $routeInfo['defaults'] : [];
             $requirements = (isset($routeInfo['requirements']) && is_array($routeInfo['requirements'])) ? $routeInfo['requirements'] : [];
             $methods = (isset($routeInfo['methods']) && is_array($routeInfo['methods'])) ? $routeInfo['methods'] : [];
+
             $this->router->addRoute($routeName, $routeInfo['endPoint'], $routeInfo['controller'], $defaults, $requirements, $methods);
         }
     }
@@ -418,7 +419,23 @@ class Context
             $defaults = (isset($routeInfo['defaults']) && is_array($routeInfo['defaults'])) ? $routeInfo['defaults'] : [];
             $requirements = (isset($routeInfo['requirements']) && is_array($routeInfo['requirements'])) ? $routeInfo['requirements'] : [];
             $methods = (isset($routeInfo['methods']) && is_array($routeInfo['methods'])) ? $routeInfo['methods'] : [];
-            $this->router->addRoute($route, $route, $routeInfo['controller'], $defaults, $requirements, $methods);
+            $destination = arrayPath($routeInfo, 'controller', null);
+            if (! $destination) {
+                $template = arrayPath($routeInfo, 'template', null);
+                if ($template) {
+                    $destination = function () use ($template) {
+                        return new Response($template, ['request' => $this->request]);
+                    };
+                } else {
+                    $destination = arrayPath($routeInfo, 'function', null);
+                }
+            }
+
+            if ($destination) {
+                $this->router->addRoute($route, $route, $destination, $defaults, $requirements, $methods);
+            } else {
+                Log::error("Invalid destination for route '$route'.");
+            }
         }
     }
 
@@ -480,56 +497,58 @@ class Context
         }
     }
 
-//    private function setupRequiredPlugins()
-//    {
-//        add_action('tgmpa_register', function () {
-//            $plugins = [
-//                [
-//                    'name'      => 'Kirki',
-//                    'slug'      => 'kirki',
-//                    'required'  => false,
-//                ],
-//                [
-//                    'name'      => 'Advanced Custom Fields',
-//                    'slug'      => 'advanced-custom-fields',
-//                    'required'  => false,
-//                ],
-//            ];
-//
-//            $otherPlugins = $this->setting('plugins');
-//            if ($otherPlugins) {
-//                $plugins = array_merge($plugins, $otherPlugins);
-//            }
-//
-//            $config = [
-//                'id'           => 'stem',                 // Unique ID for hashing notices for multiple instances of TGMPA.
-//                'default_path' => '',                      // Default absolute path to bundled plugins.
-//                'menu'         => 'tgmpa-install-plugins', // Menu slug.
-//                'parent_slug'  => 'plugins.php',            // Parent menu slug.
-//                'capability'   => 'manage_options',    // Capability needed to view plugin install page, should be a capability associated with the parent menu used.
-//                'has_notices'  => true,                    // Show admin notices or not.
-//                'dismissable'  => true,                    // If false, a user cannot dismiss the nag message.
-//                'dismiss_msg'  => '',                      // If 'dismissable' is false, this message will be output at top of nag.
-//                'is_automatic' => false,                   // Automatically activate plugins after installation or not.
-//                'message'      => '',                      // Message to output right before the plugins table.
-//
-//                'strings'      => [
-//                    'notice_can_install_recommended'  => _n_noop(
-//                        'Stem recommends the following plugin: %1$s.',
-//                        'Stem recommends the following plugins: %1$s.',
-//                        'stem'
-//                    ),
-//                    'notice_can_install_required'  => _n_noop(
-//                        'Stem requires the following plugin: %1$s.',
-//                        'Stem requires the following plugins: %1$s.',
-//                        'stem'
-//                    ),
-//                ],
-//            ];
-//
-//            tgmpa($plugins, $config);
-//        });
-//    }
+    private function setupRequiredPlugins()
+    {
+	    if (function_exists('tgmpa')) {
+	        add_action('tgmpa_register', function () {
+	            $plugins = [
+	                [
+	                    'name'      => 'Kirki',
+	                    'slug'      => 'kirki',
+	                    'required'  => false,
+	                ],
+	                [
+	                    'name'      => 'Advanced Custom Fields',
+	                    'slug'      => 'advanced-custom-fields',
+	                    'required'  => false,
+	                ],
+	            ];
+
+	            $otherPlugins = $this->setting('plugins');
+	            if ($otherPlugins) {
+	                $plugins = array_merge($plugins, $otherPlugins);
+	            }
+
+	            $config = [
+	                'id'           => 'stem',                 // Unique ID for hashing notices for multiple instances of TGMPA.
+	                'default_path' => '',                      // Default absolute path to bundled plugins.
+	                'menu'         => 'tgmpa-install-plugins', // Menu slug.
+	                'parent_slug'  => 'plugins.php',            // Parent menu slug.
+	                'capability'   => 'manage_options',    // Capability needed to view plugin install page, should be a capability associated with the parent menu used.
+	                'has_notices'  => true,                    // Show admin notices or not.
+	                'dismissable'  => true,                    // If false, a user cannot dismiss the nag message.
+	                'dismiss_msg'  => '',                      // If 'dismissable' is false, this message will be output at top of nag.
+	                'is_automatic' => false,                   // Automatically activate plugins after installation or not.
+	                'message'      => '',                      // Message to output right before the plugins table.
+
+	                'strings'      => [
+	                    'notice_can_install_recommended'  => _n_noop(
+	                        'Stem recommends the following plugin: %1$s.',
+	                        'Stem recommends the following plugins: %1$s.',
+	                        'stem'
+	                    ),
+	                    'notice_can_install_required'  => _n_noop(
+	                        'Stem requires the following plugin: %1$s.',
+	                        'Stem requires the following plugins: %1$s.',
+	                        'stem'
+	                    ),
+	                ],
+	            ];
+
+	            tgmpa($plugins, $config);
+	        });
+	    }
+    }
 
     /**
      * Installs types from a single JSON file.
