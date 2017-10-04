@@ -122,3 +122,28 @@ if (! function_exists('vd')) {
         \ILab\Stem\Utilities\Debug\VarDumper::dump($data);
     }
 }
+
+
+/**
+ * Recursively deletes a directory
+ *
+ * @param $dir
+ *
+ * @return bool
+ */
+function nukeDir($dir) {
+	if (empty($dir) || !is_dir($dir)) {
+		return false;
+	}
+
+	if (in_array($dir,['.', '..'])) {
+		return false;
+	}
+
+	$files = array_diff(scandir($dir), array('.','..'));
+	foreach ($files as $file) {
+		(is_dir("$dir/$file") && !is_link($dir)) ? nukeDir("$dir/$file") : unlink("$dir/$file");
+	}
+
+	return rmdir($dir);
+}
