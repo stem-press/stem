@@ -29,17 +29,18 @@ class MenuDirective extends ViewDirective
         if (count($args) == 0) {
             throw new \Exception('Missing menu slug argument for @menu directive.');
         }
+
         $slug = $args[0];
-        $stripUL = (count($args) > 1) ? $args[1] : false;
-        $removeText = (count($args) > 2) ? $args[2] : false;
+        $stripUL = (count($args) > 1) ? ($args[1] != 'false') : false;
+        $removeText = (count($args) > 2) ? ($args[2] != 'false') : false;
         $insertGap = (count($args) > 3) ? $args[3] : '';
-        $array = (count($args) > 4) ? $args[4] : false;
+        $array = (count($args) > 4) ? ($args[4] != 'false') : false;
 
-        $stripUL = ($stripUL) ? 'true' : 'false';
-        $removeText = ($removeText) ? 'true' : 'false';
-        $array = ($array) ? 'true' : 'false';
+        $stripUL = ($stripUL === false) ? 'false' : 'true';
+        $removeText = ($removeText === false) ? 'true' : 'false';
+        $array = ($array === false) ? 'true' : 'false';
 
-        $result = "<?php echo ILab\\Stem\\Core\\Context::current()->ui->menu('{$slug}',{$stripUL},'{$insertGap}',{$removeText},{$array}); ?>";
+        $result = "<?php echo ILab\\Stem\\Core\\Context::current()->ui->menu('{$slug}',{$stripUL},{$removeText},'{$insertGap}',{$array}); ?>";
 
         return $result;
     }
