@@ -184,6 +184,14 @@ class UI
             $this->viewClass = '\ILab\Stem\External\Twig\TwigView';
         }
 
+        $resetCache = $this->setting('options/views/reset-cache',false);
+        if ($resetCache) {
+        	$cacheDir = $this->setting('options/views/cache');
+        	if (!empty($cacheDir)) {
+        		nukeDir($cacheDir);
+	        }
+        }
+
         // Load our clean up options
         $this->removeText = $this->setting('clean/remove/text', []);
         $this->removeRegexes = $this->setting('clean/remove/regex', []);
