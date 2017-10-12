@@ -36,9 +36,9 @@ class MenuDirective extends ViewDirective
         $insertGap = (count($args) > 3) ? $args[3] : '';
         $array = (count($args) > 4) ? ($args[4] != 'false') : false;
 
-        $stripUL = ($stripUL === false) ? 'false' : 'true';
-        $removeText = ($removeText === false) ? 'true' : 'false';
-        $array = ($array === false) ? 'true' : 'false';
+        $stripUL = var_export($stripUL,true);
+        $removeText = var_export($removeText,true);
+        $array = var_export($array,true);
 
         $result = "<?php echo ILab\\Stem\\Core\\Context::current()->ui->menu('{$slug}',{$stripUL},{$removeText},'{$insertGap}',{$array}); ?>";
 
