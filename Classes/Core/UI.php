@@ -137,6 +137,8 @@ class UI
      */
     public $theme = null;
 
+    public $enqueueConfig = null;
+
     /**
      * Constructor.
      *
@@ -160,8 +162,10 @@ class UI
             $this->config = JSONParser::parse(file_get_contents($context->rootPath.'/config/ui.json'));
         }
 
+        $this->parseEnqueue();
+
         // Paths
-        $pub = '/'.trim($this->setting('enqueue/public-path', ''), '/');
+        $pub = '/'.trim($this->enqueueSetting('public-path', ''), '/');
         if ($pub == '/') {
             $pub = '';
         }
@@ -213,6 +217,20 @@ class UI
         $this->theme = new Theme($this->context);
     }
 
+    protected function parseEnqueue() {
+    	$routed = arrayPath($this->config,'enqueue_routes');
+    	if (!empty($routed)) {
+		    foreach($routed as $key => $enqConfig) {
+		    	if (preg_match("#$key#",$_SERVER['REQUEST_URI'])) {
+		    		$this->enqueueConfig = $enqConfig;
+		    		return;
+			    }
+		    }
+	    }
+
+	    $this->enqueueConfig = arrayPath($this->config,'enqueue');
+    }
+
     public function setup()
     {
         // configures theme support
@@ -231,20 +249,19 @@ class UI
 
         // Enqueue scripts and css
         add_action('wp_enqueue_scripts', function () {
-            if (isset($this->config['enqueue'])) {
-                $enqueueConfig = $this->config['enqueue'];
-                if (isset($enqueueConfig['use-manifest']) && $enqueueConfig['use-manifest']) {
+            if (!empty($this->enqueueConfig)) {
+                if (isset($this->enqueueConfig['use-manifest']) && $this->enqueueConfig['use-manifest']) {
                     $this->enqueueManifest();
                 }
 
-                if (isset($enqueueConfig['js'])) {
-                    foreach ($enqueueConfig['js'] as $js) {
+                if (isset($this->enqueueConfig['js'])) {
+                    foreach ($this->enqueueConfig['js'] as $js) {
                         wp_enqueue_script($js, $this->jsPath.$js, ['jquery'], false, true);
                     }
                 }
 
-                if (isset($enqueueConfig['css'])) {
-                    foreach ($enqueueConfig['css'] as $css) {
+                if (isset($this->enqueueConfig['css'])) {
+                    foreach ($this->enqueueConfig['css'] as $css) {
                         wp_enqueue_style($css, $this->cssPath.$css);
                     }
                 }
@@ -298,7 +315,7 @@ class UI
             });
         }
 
-        if ($this->setting('enqueue/defer-all') && ! is_admin()) {
+        if ($this->enqueueSetting('defer-all') && ! is_admin()) {
             add_filter('script_loader_tag', function ($tag, $handle) {
                 if (is_admin()) {
                     return $tag;
@@ -327,14 +344,29 @@ class UI
         return arrayPath($this->config, $settingPath, $default);
     }
 
-    /**
+	/**
+	 * Returns an enqueue setting using a path string, eg 'options/views/engine'.  Consider this
+	 * a poor man's xpath.
+	 *
+	 * @param $settingPath The "path" in the config settings to look up.
+	 * @param bool|mixed $default The default value to return if the settings doesn't exist.
+	 *
+	 * @return bool|mixed The result
+	 */
+	public function enqueueSetting($settingPath, $default = false)
+	{
+		return arrayPath($this->enqueueConfig, $settingPath, $default);
+	}
+
+
+	/**
      * Enqueues the css and js defined in whatever manifest file.
      */
     private function enqueueManifest()
     {
-        if (isset($this->config['enqueue']['manifest'])) {
-            if (file_exists($this->rootPath.'/'.$this->config['enqueue']['manifest'])) {
-                $manifest = JSONParser::parse(file_get_contents($this->rootPath.'/'.$this->config['enqueue']['manifest']), true);
+        if (isset($this->enqueueConfig['manifest'])) {
+            if (file_exists($this->rootPath.'/'.$this->enqueueConfig['manifest'])) {
+                $manifest = JSONParser::parse(file_get_contents($this->rootPath.'/'.$this->enqueueConfig['manifest']), true);
                 if (isset($manifest['dependencies'])) {
                     foreach ($manifest['dependencies'] as $key => $info) {
                         $ext = pathinfo($key, PATHINFO_EXTENSION);
