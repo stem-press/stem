@@ -249,6 +249,10 @@ class UI
 
         // Enqueue scripts and css
         add_action('wp_enqueue_scripts', function () {
+	        ?>
+	        <script>var STEM_BUILD = "<?php echo $this->context->currentBuild ?>";</script>
+	        <?php
+
             if (!empty($this->enqueueConfig)) {
                 if (isset($this->enqueueConfig['use-manifest']) && $this->enqueueConfig['use-manifest']) {
                     $this->enqueueManifest();
@@ -256,13 +260,13 @@ class UI
 
                 if (isset($this->enqueueConfig['js'])) {
                     foreach ($this->enqueueConfig['js'] as $js) {
-                        wp_enqueue_script($js, $this->jsPath.$js, ['jquery'], false, true);
+                        wp_enqueue_script($js, $this->jsPath.$js, ['jquery'], $this->context->currentBuild, true);
                     }
                 }
 
                 if (isset($this->enqueueConfig['css'])) {
                     foreach ($this->enqueueConfig['css'] as $css) {
-                        wp_enqueue_style($css, $this->cssPath.$css);
+                        wp_enqueue_style($css, $this->cssPath.$css,[],$this->context->currentBuild);
                     }
                 }
             } else {
@@ -371,9 +375,9 @@ class UI
                     foreach ($manifest['dependencies'] as $key => $info) {
                         $ext = pathinfo($key, PATHINFO_EXTENSION);
                         if ($ext == 'js') {
-                            wp_enqueue_script($key, $this->jsPath.$key, ['jquery'], false, true);
+                            wp_enqueue_script($key, $this->jsPath.$key, ['jquery'], $this->context->currentBuild, true);
                         } elseif ($ext == 'css') {
-                            wp_enqueue_style($key, $this->cssPath.$key);
+                            wp_enqueue_style($key, $this->cssPath.$key,[],$this->context->currentBuild);
                         }
                     }
                 }
@@ -892,7 +896,7 @@ class UI
      */
     public function script($src)
     {
-        $output = $this->jsPath.$src;
+        $output = $this->jsPath.$src."?ver=".$this->context->currentBuild;
 
         return $output;
     }
@@ -906,7 +910,7 @@ class UI
      */
     public function css($src)
     {
-        $output = $this->cssPath.$src;
+        $output = $this->cssPath.$src."?ver=".$this->context->currentBuild;
 
         return $output;
     }

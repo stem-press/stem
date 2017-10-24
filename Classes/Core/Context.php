@@ -148,6 +148,13 @@ class Context
      */
     public $admin = null;
 
+	/**
+	 * The current build as defined the app.php config.
+	 *
+	 * @var int
+	 */
+    public $currentBuild = 1;
+
     /**
      * Constructor.
      *
@@ -175,6 +182,8 @@ class Context
         $this->request = Request::createFromGlobals();
         $this->environment = getenv('WP_ENV') ?: 'development';
         $this->debug = (defined(WP_DEBUG) || ($this->environment == 'development'));
+
+        $this->currentBuild = $this->setting('build',filectime(__FILE__));
 
         // Initialize logging
         $loggingConfig = null;
