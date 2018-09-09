@@ -60,6 +60,14 @@ class Attachment extends Post
     }
 
     /**
+     * Returns the attachment url
+     * @return The attachment's URL
+     */
+    public function url() {
+       return wp_get_attachment_url($this->id);
+    }
+
+    /**
      * Returns the url for an image using the requested size template.
      *
      * @param string $size The size template to use.

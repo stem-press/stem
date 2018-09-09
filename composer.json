@@ -2,7 +2,7 @@
   "name": "stem-press/stem",
   "description": "Theme building plug-in for WordPress",
   "type": "wordpress-muplugin",
-  "license": "LGPL",
+  "license": "LGPL-3.0-or-later",
   "keywords": ["stem", "wordpress", "bedrock"],
   "authors": [
     {
