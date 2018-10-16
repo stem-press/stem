@@ -21,16 +21,16 @@ abstract class Block {
         }
     }
 
-    abstract public function category();
-    abstract public function title();
     abstract public function description();
     abstract public function icon();
+    abstract public function keywords();
 
-
-    public function slug() {
+    abstract public function title();
+    public function name() {
         return sanitize_title($this->title());
     }
 
+    abstract public function category();
     public function categorySlug() {
         return sanitize_title($this->category());
     }
@@ -39,18 +39,7 @@ abstract class Block {
 
     }
 
-    public function render($post_id, $fields) {
-        $post = (empty($post_id)) ? null : $this->context->modelForPostID($post_id);
-        return $this->ui->render($this->template, array_merge(['post' => $post], $fields));
-    }
-
-    public function data() {
-        return [
-            'title' => $this->title(),
-            'description' => $this->description(),
-            'block_icon' => $this->icon(),
-            'block_category_slug' => $this->categorySlug(),
-            'block_name' => $this->slug()
-        ];
+    public function render($data) {
+        echo $this->ui->render($this->template, $data);
     }
 }
