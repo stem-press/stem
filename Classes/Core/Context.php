@@ -216,7 +216,7 @@ class Context
         if ($this->setting('options/disable-wp-json-api', false)) {
             add_filter('json_enabled', '__return_false', 10000);
             add_filter('json_jsonp_enabled', '__return_false', 10000);
-            add_filter('rest_enabled', '__return_false', 10000);
+//            add_filter('rest_enabled', '__return_false', 10000);
             add_filter('rest_jsonp_enabled', '__return_false', 10000);
             remove_action('xmlrpc_rsd_apis', 'rest_output_rsd');
             remove_action('wp_head', 'rest_output_link_wp_head', 10);
