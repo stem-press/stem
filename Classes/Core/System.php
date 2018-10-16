@@ -57,44 +57,29 @@ function unsetArrayPath(&$array, $path)
 }
 
 /**
- * Diffs two arrays and returns an array with elements that have changed or been added.  Handles
- * nested arrays and objects that can be serialized.
+ * Recursively deletes a directory
  *
- * @param $newArray
- * @param $originalArray
+ * @param $dir
  *
- * @return array
+ * @return bool
  */
-function diffArray($newArray, $originalArray) {
-	$result = [];
+function nukeDir($dir) {
+    if (empty($dir) || !is_dir($dir)) {
+        return false;
+    }
 
-	$keys = array_keys($newArray);
-	foreach($keys as $key) {
-		if (array_key_exists($key, $originalArray)) {
-			$lval = $newArray[$key];
-			$rval = $originalArray[$key];
-			if (!is_array($lval) && !is_array($rval) && !is_object($lval) && !is_object($rval)) {
-				if (((string)$lval) != ((string)$rval)) {
-					$result[$key] = $lval;
-				}
-			} else if (is_array($lval) && is_array($rval)) {
-				if (count($lval) != count($rval)) {
-					$result[$key] = $lval;
-				} else  if (count(diffArray($lval, $rval))>0) {
-					$result[$key] = $lval;
-				}
-			} else if (is_object($lval) && is_object($rval)) {
-				if (serialize($lval) != serialize($rval)) {
-					$result[$key] = $lval;
-				}
-			}
-		} else {
-			$result[$key] = $newArray[$key];
-		}
-	}
+    if (in_array($dir,['.', '..'])) {
+        return false;
+    }
 
-	return $result;
+    $files = array_diff(scandir($dir), array('.','..'));
+    foreach ($files as $file) {
+        (is_dir("$dir/$file") && !is_link($dir)) ? nukeDir("$dir/$file") : unlink("$dir/$file");
+    }
+
+    return rmdir($dir);
 }
+
 
 /*
  * Vomits a dump of data and optionally dies.
@@ -123,27 +108,14 @@ if (! function_exists('vd')) {
     }
 }
 
+if (!function_exists('keysExist')) {
+    function keysExist($array, $keys) {
+        foreach($keys as $key) {
+            if (!array_key_exists($key, $array)) {
+                return false;
+            }
+        }
 
-/**
- * Recursively deletes a directory
- *
- * @param $dir
- *
- * @return bool
- */
-function nukeDir($dir) {
-	if (empty($dir) || !is_dir($dir)) {
-		return false;
-	}
-
-	if (in_array($dir,['.', '..'])) {
-		return false;
-	}
-
-	$files = array_diff(scandir($dir), array('.','..'));
-	foreach ($files as $file) {
-		(is_dir("$dir/$file") && !is_link($dir)) ? nukeDir("$dir/$file") : unlink("$dir/$file");
-	}
-
-	return rmdir($dir);
+        return true;
+    }
 }

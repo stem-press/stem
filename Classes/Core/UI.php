@@ -140,6 +140,12 @@ class UI
     public $enqueueConfig = null;
 
     /**
+     * Blocks manager
+     * @var Blocks
+     */
+    public $blocks = null;
+
+    /**
      * Constructor.
      *
      * @param $context Context The current context
@@ -215,6 +221,8 @@ class UI
         });
 
         $this->theme = new Theme($this->context);
+
+        $this->blocks = new Blocks($context, $this);
     }
 
     protected function parseEnqueue() {
