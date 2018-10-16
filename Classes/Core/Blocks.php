@@ -4,6 +4,9 @@ namespace ILab\Stem\Core;
 
 use ILab\Stem\UI\Block;
 
+/**
+ * Manages the user defined blocks
+ */
 class Blocks {
     /** @var Block[]  */
     private $blocks = [];
@@ -31,11 +34,28 @@ class Blocks {
         });
     }
 
+    /**
+     * Loads the blocks from the config
+     * @throws \Exception
+     */
     private function loadBlocks() {
         $blocksArray = arrayPath($this->ui->config,'blocks', []);
-        foreach($blocksArray as $blockClass) {
+        foreach($blocksArray as $blockDataorClass) {
             /** @var Block $block */
-            $block = new $blockClass($this->context, $this->ui);
+            $block = null;
+
+            if (is_array($blockDataorClass)) {
+                if (isset($blockDataorClass['class'])) {
+                    $blockClass = $blockDataorClass['class'];
+                    $block = new $blockClass($this->context, $this->ui, $blockDataorClass);
+                } else {
+                    $block = new Block($this->context, $this->ui, $blockDataorClass);
+                }
+            } else {
+                /** @var Block $block */
+                $block = new $blockDataorClass($this->context, $this->ui, []);
+            }
+
             $this->blocks[$block->name()] = $block;
 
             acf_register_block([
@@ -52,10 +72,22 @@ class Blocks {
         }
     }
 
+    /**
+     * Returns the user defined block categories
+     *
+     * @param $block_categories
+     * @param $post
+     * @return array
+     * @throws \Exception
+     */
     private function blockCategories($block_categories, $post) {
         $slugs = [];
+        foreach($block_categories as $existing) {
+            $slugs[] = $existing['slug'];
+        }
+
         foreach($this->blocks as $key => $block) {
-            if (!key_exists($block->categorySlug(), $slugs)) {
+            if (!in_array($block->categorySlug(), $slugs)) {
                 $slugs[] = $block->categorySlug();
                 $block_categories[] = [
                     'title' => $block->category(),
@@ -67,6 +99,12 @@ class Blocks {
         return $block_categories;
     }
 
+    /**
+     * Maps the ACF field keys to their names for use in rendering the views
+     *
+     * @param $blockData
+     * @return array|object
+     */
     private function normalizeData($blockData) {
         $data = [];
 
@@ -102,8 +140,13 @@ class Blocks {
         return (object)$data;
     }
 
+    /**
+     * Renders the block
+     *
+     * @param $block
+     * @param $blockData
+     */
     private function renderBlock($block, $blockData) {
-//        acf_get_field
         $data = [];
         if (isset($blockData['data'])) {
             $data = $this->normalizeData($blockData['data']);

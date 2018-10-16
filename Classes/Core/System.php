@@ -82,3 +82,15 @@ if (! function_exists('vd')) {
         \ILab\Stem\Utilities\Debug\VarDumper::dump($data);
     }
 }
+
+if (!function_exists('keysExist')) {
+    function keysExist($array, $keys) {
+        foreach($keys as $key) {
+            if (!array_key_exists($key, $array)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+}
