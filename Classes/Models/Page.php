@@ -7,6 +7,6 @@ namespace ILab\Stem\Models;
  *
  * Represents a page
  */
-class Page extends Post
-{
+class Page extends Post {
+    protected $postType='page';
 }

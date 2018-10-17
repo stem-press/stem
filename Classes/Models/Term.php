@@ -4,11 +4,12 @@ namespace ILab\Stem\Models;
 
 use ILab\Stem\Core\Context;
 
-class Term extends WordPressModel
-{
+class Term implements \JsonSerializable {
     private static $termCache = [];
 
-    public $id;
+    public $context = null;
+
+    protected $id = null;
 
     protected $name = null;
     protected $slug = null;
@@ -76,6 +77,10 @@ class Term extends WordPressModel
         $this->permalink = get_term_link($this->id);
 
         return $this->permalink;
+    }
+
+    public function id() {
+        return $this->id;
     }
 
     public function name()

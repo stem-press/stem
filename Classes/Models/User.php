@@ -9,7 +9,7 @@ use ILab\Stem\Core\Context;
  *
  * Represents a WordPress User
  */
-class User extends WordPressModel
+class User implements \JsonSerializable
 {
     /**
      * The current context.
@@ -24,6 +24,9 @@ class User extends WordPressModel
      * @var \WP_User
      */
     protected $user;
+
+    /** @var number|null User's id */
+    protected $id;
 
     /**
      * First name.
@@ -69,6 +72,8 @@ class User extends WordPressModel
 
     public function __construct(Context $context, \WP_User $user)
     {
+        $this->id = $user->ID;
+
         $this->context = $context;
         $this->user = $user;
 
@@ -80,6 +85,10 @@ class User extends WordPressModel
         $this->email = $user->user_email;
 
         $this->permalink = get_author_posts_url($user->ID, $this->displayName);
+    }
+
+    public function id() {
+        return $this->id;
     }
 
     /**

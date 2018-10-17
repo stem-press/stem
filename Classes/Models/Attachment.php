@@ -7,9 +7,8 @@ namespace ILab\Stem\Models;
  *
  * Represents a media attachment
  */
-class Attachment extends Post
-{
-    protected $parentPost = null;
+class Attachment extends Post {
+    protected $postType = 'attachment';
     protected $attachmentInfo = null;
 
     /**
@@ -19,14 +18,17 @@ class Attachment extends Post
      * @param bool $attr Any additional attributes to add to the tag
      * @param bool $stripDimensions Strip dimensions from the tag
      *
-     * @return string
+     * @return string|null
      */
-    public function img($size = 'original', $attr = false, $stripDimensions = false)
-    {
+    public function img($size = 'original', $attr = false, $stripDimensions = false) {
+        if (empty($this->id)) {
+            return null;
+        }
+
         if (! $attr) {
-            $img = wp_get_attachment_image($this->post->ID, $size);
+            $img = wp_get_attachment_image($this->id, $size);
         } else {
-            $img = wp_get_attachment_image($this->post->ID, $size, false, $attr);
+            $img = wp_get_attachment_image($this->id, $size, false, $attr);
         }
 
         if ($stripDimensions) {
@@ -40,11 +42,16 @@ class Attachment extends Post
     /**
      * Generates an amp-img tag.
      * @param string $size
+     * @param bool $responsive
      * @param array|null $attr Any additional attributes to add to the tag
+     * @return string
      */
-    public function ampImg($size = 'thumbnail', $responsive = true, $attr = false)
-    {
-        if (! $attr) {
+    public function ampImg($size = 'thumbnail', $responsive = true, $attr = null) {
+        if (empty($this->id)) {
+            return null;
+        }
+
+        if (empty($attr)) {
             $attr = [];
         }
 
@@ -52,7 +59,7 @@ class Attachment extends Post
             $attr['layout'] = 'responsive';
         }
 
-        $img = wp_get_attachment_image($this->post->ID, $size, false, $attr);
+        $img = wp_get_attachment_image($this->id, $size, false, $attr);
 
         $img = str_replace('<img', '<amp-img', $img);
 
@@ -61,9 +68,13 @@ class Attachment extends Post
 
     /**
      * Returns the attachment url
-     * @return The attachment's URL
+     * @return string The attachment's URL
      */
     public function url() {
+        if (empty($this->id)) {
+            return null;
+        }
+
        return wp_get_attachment_url($this->id);
     }
 
@@ -74,69 +85,72 @@ class Attachment extends Post
      *
      * @return string|null
      */
-    public function src($size = 'original')
-    {
-        $result = wp_get_attachment_image_src($this->post->ID, $size);
+    public function src($size = 'original') {
+        if (empty($this->id)) {
+            return null;
+        }
+
+        $result = wp_get_attachment_image_src($this->id, $size);
         if ($result && is_array($result) && (count($result) > 0)) {
             return $result[0];
         }
+
+        return null;
     }
 
     /**
      * Gets the attachment URL for this attachment.
-     * @return false|string
+     * @return null|string
      */
-    public function attachmentUrl()
-    {
+    public function attachmentUrl() {
+        if (empty($this->id)) {
+            return null;
+        }
+
         return wp_get_attachment_url($this->id);
     }
 
     /**
-     * Returns the parent post this attachment is attached to, if any.
-     * @return Attachment|Page|Post|null
-     */
-    public function parentPost()
-    {
-        if ($this->parentPost) {
-            return $this->parentPost;
-        }
-
-        $parent_id = get_post_field('post_parent', $this->id);
-        if ($parent_id && ! empty($parent_id)) {
-            $this->parentPost = $this->context->modelForPost(\WP_Post::get_instance($parent_id));
-        }
-
-        return $this->parentPost;
-    }
-
-    /**
      * Loads attachment info.
+     * @return bool
      */
-    protected function loadAttachmentInfo()
-    {
-        if (! $this->attachmentInfo) {
+    protected function loadAttachmentInfo() {
+        if (empty($this->id)) {
+            return false;
+        }
+
+        if ($this->attachmentInfo == null) {
             $this->attachmentInfo = wp_prepare_attachment_for_js($this->post);
         }
+
+        return true;
     }
 
     /**
      * Returns the caption for the attachment, if any.
-     * @return mixed
+     * @return string|null
      */
-    public function caption()
-    {
+    public function caption() {
         $this->loadAttachmentInfo();
+
+        if ($this->attachmentInfo == null) {
+            return null;
+        }
 
         return (isset($this->attachmentInfo['caption'])) ? $this->attachmentInfo['caption'] : null;
     }
 
     /**
      * Returns the description of the attachment, if any.
-     * @return mixed
+     * @return string|null
      */
     public function description()
     {
         $this->loadAttachmentInfo();
+
+        if ($this->attachmentInfo == null) {
+            return null;
+        }
 
         return (isset($this->attachmentInfo['description'])) ? $this->attachmentInfo['description'] : null;
     }
@@ -149,13 +163,15 @@ class Attachment extends Post
         unset($json['excerpt']);
         unset($json['categories']);
         unset($json['thumbnail']);
-        $this->loadAttachmentInfo();
-        $json['sizes'] = $this->attachmentInfo['sizes'];
-        $json['width'] = $this->attachmentInfo['width'];
-        $json['height'] = $this->attachmentInfo['height'];
-        $json['orientation'] = $this->attachmentInfo['orientation'];
-        $json['caption'] = $this->caption();
-        $json['description'] = $this->description();
+
+        if ($this->loadAttachmentInfo()) {
+            $json['sizes'] = $this->attachmentInfo['sizes'];
+            $json['width'] = $this->attachmentInfo['width'];
+            $json['height'] = $this->attachmentInfo['height'];
+            $json['orientation'] = $this->attachmentInfo['orientation'];
+            $json['caption'] = $this->caption();
+            $json['description'] = $this->description();
+        }
 
         return $json;
     }

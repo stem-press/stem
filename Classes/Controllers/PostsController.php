@@ -24,7 +24,7 @@ class PostsController extends Controller
 
         if ($wp_query->post && ($wp_query->post->post_type == 'page')) {
             $this->page = $context->modelForPost($wp_query->post);
-            $context->cacheControl->setCacheControlHeadersForPage($this->page->id);
+            $context->cacheControl->setCacheControlHeadersForPage($this->page->id());
         }
 
         $this->totalPages = $wp_query->max_num_pages;
