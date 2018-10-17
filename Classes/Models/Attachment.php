@@ -8,7 +8,8 @@ namespace ILab\Stem\Models;
  * Represents a media attachment
  */
 class Attachment extends Post {
-    protected $postType = 'attachment';
+    protected static $postType = 'attachment';
+
     protected $attachmentInfo = null;
 
     /**

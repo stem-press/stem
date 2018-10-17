@@ -15,7 +15,7 @@ use ILab\Stem\Utilities\Text;
 class Post implements \JsonSerializable
 {
     /** @var string Type of post */
-    protected $postType = 'post';
+    protected static $postType = 'post';
 
     /** @var int|null ID of the post */
     protected $id;
@@ -130,8 +130,8 @@ class Post implements \JsonSerializable
      * The post's type
      * @return string
      */
-    public function type() {
-        return $this->postType;
+    public static function type() {
+        return self::$postType;
     }
 
     /**
@@ -702,7 +702,7 @@ class Post implements \JsonSerializable
         }
 
         if ($this->id == null) {
-            $this->changes->create($this->postType);
+            $this->changes->create(self::$postType);
         } else {
             $this->changes->update($this->id);
         }
@@ -1002,7 +1002,7 @@ QUERY;
 
     public function jsonSerialize() {
         return [
-            'type'=>$this->postType,
+            'type'=>self::$postType,
             'title'=>$this->title(),
             'slug'=>$this->slug(),
             'author'=>$this->author()->displayName(),
