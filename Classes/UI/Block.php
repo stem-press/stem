@@ -38,6 +38,9 @@ class Block {
     /** @var array */
     protected $keywords= [];
 
+    /** @var array|null */
+    protected $acfFields = null;
+
     public function __construct(Context $context, UI $ui, $data = null) {
         $this->context = $context;
         $this->ui = $ui;
@@ -50,6 +53,7 @@ class Block {
         }
 
         $this->configureBlock();
+        $this->acfFields = $this->configureFields();
 
         $this->title = arrayPath($data, 'title', $this->title);
         $this->name = arrayPath($data, 'name', $this->name);
@@ -62,6 +66,21 @@ class Block {
         $this->icon = arrayPath($data, 'icon', $this->icon);
         $this->template = arrayPath($data, 'template', $this->template);
         $this->keywords = arrayPath($data,'keywords', (!empty($this->category)) ? [$this->category] : $this->keywords);
+        $this->acfFields = arrayPath($data, 'fields', $this->acfFields);
+
+        if (is_array($this->acfFields)) {
+            if (!isset($this->acfFields['location'])) {
+                $this->acfFields['location'] = [
+                    [
+                        [
+                            'param' => 'block',
+                            'operator' => '==',
+                            'value' => 'acf/'.$this->name()
+                        ]
+                    ]
+                ];
+            }
+        }
 
         if (empty($this->template)) {
             $this->template = 'blocks/'.strtolower(class_basename($this));
@@ -72,6 +91,27 @@ class Block {
      * Allow subclasses to configure the block before any user supplied data is applied.
      */
     protected function configureBlock() {
+    }
+
+    /**
+     * Allows subclasses to configure their ACF fields in code.  Don't worry about specifying the location
+     * element, it will be added automatically if it is missing.
+     *
+     * Recommend to use `\StoutLogic\AcfBuilder\FieldsBuilder` and return the result from `build()`
+     *
+     * @return array|null
+     */
+    protected function configureFields() {
+        return null;
+    }
+
+    /**
+     * Register the block's fields with ACF.
+     */
+    public function registerFields() {
+        if (is_array($this->acfFields)) {
+            acf_add_local_field_group($this->acfFields);
+        }
     }
 
     /**

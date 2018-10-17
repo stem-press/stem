@@ -69,6 +69,8 @@ class Blocks {
                 'icon' => $block->icon(),
                 'keywords' => $block->keywords()
             ]);
+
+            $block->registerFields();
         }
     }
 
