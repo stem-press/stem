@@ -292,6 +292,10 @@ class Context
             return false;
         });
 
+        add_filter('do_parse_request', function($do, \WP $wp) {
+            return $this->parseRequest($do, $wp);
+        }, 100, 2);
+
         // Theme setup action hook
         add_action('after_setup_theme', function () {
             $this->setup();
@@ -993,5 +997,13 @@ class Context
                 return $controller;
             }
         }
+    }
+
+    private function parseRequest($do, \WP $wp) {
+        if (!$this->router->dispatch($this->request)) {
+            return true;
+        }
+
+        return false;
     }
 }
