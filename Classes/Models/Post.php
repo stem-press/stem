@@ -12,8 +12,7 @@ use ILab\Stem\Utilities\Text;
  *
  * Represents a WordPress post
  */
-class Post implements \JsonSerializable
-{
+class Post implements \JsonSerializable {
     /** @var string Type of post */
     protected static $postType = 'post';
 
@@ -130,7 +129,7 @@ class Post implements \JsonSerializable
      * The post's type
      * @return string
      */
-    public static function type() {
+    public static function postType() {
         return self::$postType;
     }
 

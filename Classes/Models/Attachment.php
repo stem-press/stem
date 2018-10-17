@@ -1,6 +1,7 @@
 <?php
 
 namespace ILab\Stem\Models;
+use ILab\Stem\Core\Context;
 
 /**
  * Class Attachment.
@@ -10,7 +11,256 @@ namespace ILab\Stem\Models;
 class Attachment extends Post {
     protected static $postType = 'attachment';
 
+    /** @var null|string The attachment's filename */
+    protected $filename = null;
+
+    /** @var null|string The attachment's url */
+    protected $url = null;
+
+    /** @var null|string The link to the attachment's page */
+    protected $link = null;
+
+    /** @var null|string The attachment's alt text */
+    protected $alt = null;
+
+    /** @var null|string The attachment's description */
+    protected $description = null;
+
+    /** @var null|string The attachment's caption */
+    protected $caption = null;
+
+    /** @var null|string The attachment's mime type */
+    protected $mime = null;
+
+    /** @var null|string The attachment's type */
+    protected $type = null;
+
+    /** @var null|string The attachment's subtype */
+    protected $subtype = null;
+
+    /** @var null|string The URL for the icon representing the attachment's mime type */
+    protected $icon = null;
+
+    /** @var null|array Extra information about the attachment */
     protected $attachmentInfo = null;
+
+    public function __construct(Context $context, \WP_Post $post = null) {
+        parent::__construct($context, $post);
+
+        $this->parseType();
+    }
+
+    //region Properties
+
+    /**
+     * The filename of the attachment
+     * @return null|string
+     */
+    public function filename() {
+        if ($this->filename != null) {
+            return $this->filename;
+        }
+
+        if (empty($this->id)) {
+            return null;
+        }
+
+        $this->filename = wp_basename(get_attached_file($this->id));
+        return $this->filename;
+    }
+
+    /**
+     * The URL for the attachment's original image
+     * @return null|string
+     */
+    public function url() {
+        if ($this->url != null) {
+            return $this->url;
+        }
+
+        if (empty($this->id)) {
+            return null;
+        }
+
+        $this->url = wp_get_attachment_url($this->id);
+        return $this->url;
+    }
+
+    /**
+     * Link to the attachment's page
+     * @return null|string
+     */
+    public function link() {
+        if ($this->link != null) {
+            return $this->link;
+        }
+
+        if (empty($this->id)) {
+            return null;
+        }
+
+        $this->link = get_attachment_link($this->id);
+        return $this->link;
+    }
+
+    /**
+     * Attachment's alt text
+     * @return null|string
+     */
+    public function alt() {
+        if ($this->alt != null) {
+            return $this->alt;
+        }
+
+        $this->alt = $this->meta('_wp_attachment_image_alt', null);
+        return $this->alt;
+    }
+
+    /**
+     * Sets the alt text for the attachment
+     * @param string $alt
+     */
+    public function setAlt($alt) {
+        $this->alt = $alt;
+        $this->updateMeta('_wp_attachment_image_alt', $alt);
+    }
+
+    /**
+     * Description of the attachment
+     *
+     * @return null|string
+     */
+    public function description() {
+        if ($this->description != null) {
+            return $this->description;
+        }
+
+        if (empty($this->id)) {
+            return null;
+        }
+
+        $this->description = $this->post->post_content;
+        return $this->description;
+    }
+
+    /**
+     * Sets the description for the attachment
+     * @param string $description
+     */
+    public function setDescription($description) {
+        $this->description = $description;
+        $this->changes->addChange('post_content', $description);
+    }
+
+    /**
+     * The caption for the attachment
+     * @return null|string
+     */
+    public function caption() {
+        if ($this->caption != null) {
+            return $this->caption;
+        }
+
+        if (empty($this->id)) {
+            return null;
+        }
+
+        $this->caption = $this->post->post_excerpt;
+        return $this->caption;
+    }
+
+    /**
+     * Sets the caption for the attachment
+     * @param string $caption
+     */
+    public function setCaption($caption) {
+        $this->caption = $caption;
+        $this->changes->addChange('post_excerpt', $caption);
+    }
+
+    /**
+     * The attachment's primary type
+     * @return null|string
+     */
+    public function type() {
+        return $this->type;
+    }
+
+    /**
+     * The attachment's sub type
+     * @return null|string
+     */
+    public function subType() {
+        return $this->subtype;
+    }
+
+    /**
+     * The attachment's mime type
+     * @return null|string
+     */
+    public function mime() {
+        if ($this->mime != null) {
+            return $this->mime;
+        }
+
+        if (empty($this->id)) {
+            return null;
+        }
+
+        $this->mime = $this->post->post_mime_type;
+        return $this->mime;
+    }
+
+    /**
+     * Sets the attachment's mime type
+     * @param string $mime
+     */
+    public function setMime($mime) {
+        $this->icon = null;
+        $this->mime = $mime;
+        $this->changes->addChange('post_mime_type', $mime);
+
+        $this->parseType();
+    }
+
+    /**
+     * URL for the icon representing the attachment's mime type
+     * @return null|string
+     */
+    public function icon() {
+        if ($this->icon != null) {
+            return $this->icon;
+        }
+
+        if (empty($this->id)) {
+            return null;
+        }
+
+        $this->icon = wp_mime_type_icon($this->mime ?: $this->id);
+        return $this->icon;
+    }
+
+    /**
+     * Parses the type/subtype from the mime type
+     */
+    private function parseType() {
+        $this->type = null;
+        $this->subtype = null;
+
+        $mime = $this->mime();
+        if (empty($mime)) {
+            return;
+        }
+
+        if ( false !== strpos($mime, '/' ) )
+            list($this->type, $this->subtype) = explode('/', $mime);
+        else
+            list($this->type, $this->subtype) = array($mime, '');
+    }
+
+    //endregion
+
+    //region Image Tags
 
     /**
      * Returns an img tag using the requested size template.
@@ -68,18 +318,6 @@ class Attachment extends Post {
     }
 
     /**
-     * Returns the attachment url
-     * @return string The attachment's URL
-     */
-    public function url() {
-        if (empty($this->id)) {
-            return null;
-        }
-
-       return wp_get_attachment_url($this->id);
-    }
-
-    /**
      * Returns the url for an image using the requested size template.
      *
      * @param string $size The size template to use.
@@ -99,79 +337,48 @@ class Attachment extends Post {
         return null;
     }
 
+    //endregion
+
+    //region Attachment Info
+
     /**
-     * Gets the attachment URL for this attachment.
-     * @return null|string
+     * Loads the attachment's extra info
+     * @param bool $forceReload
+     * @return array|null
      */
-    public function attachmentUrl() {
+    public function attachmentInfo($forceReload = false) {
+        if (!$forceReload && ($this->attachmentInfo != null)) {
+            return $this->attachmentInfo;
+        }
+
         if (empty($this->id)) {
             return null;
         }
 
-        return wp_get_attachment_url($this->id);
+        $this->attachmentInfo = wp_prepare_attachment_for_js($this->id);
+        return $this->attachmentInfo;
     }
 
-    /**
-     * Loads attachment info.
-     * @return bool
-     */
-    protected function loadAttachmentInfo() {
-        if (empty($this->id)) {
-            return false;
-        }
-
-        if ($this->attachmentInfo == null) {
-            $this->attachmentInfo = wp_prepare_attachment_for_js($this->post);
-        }
-
-        return true;
-    }
-
-    /**
-     * Returns the caption for the attachment, if any.
-     * @return string|null
-     */
-    public function caption() {
-        $this->loadAttachmentInfo();
-
-        if ($this->attachmentInfo == null) {
-            return null;
-        }
-
-        return (isset($this->attachmentInfo['caption'])) ? $this->attachmentInfo['caption'] : null;
-    }
-
-    /**
-     * Returns the description of the attachment, if any.
-     * @return string|null
-     */
-    public function description()
-    {
-        $this->loadAttachmentInfo();
-
-        if ($this->attachmentInfo == null) {
-            return null;
-        }
-
-        return (isset($this->attachmentInfo['description'])) ? $this->attachmentInfo['description'] : null;
-    }
+    //endregion
 
     public function jsonSerialize()
     {
         $json = parent::jsonSerialize();
+
         unset($json['author']);
         unset($json['content']);
         unset($json['excerpt']);
         unset($json['categories']);
         unset($json['thumbnail']);
 
-        if ($this->loadAttachmentInfo()) {
+        $json['caption'] = $this->caption();
+        $json['description'] = $this->description();
+
+        if ($this->attachmentInfo()) {
             $json['sizes'] = $this->attachmentInfo['sizes'];
             $json['width'] = $this->attachmentInfo['width'];
             $json['height'] = $this->attachmentInfo['height'];
             $json['orientation'] = $this->attachmentInfo['orientation'];
-            $json['caption'] = $this->caption();
-            $json['description'] = $this->description();
         }
 
         return $json;
