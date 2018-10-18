@@ -115,7 +115,7 @@ class Post implements \JsonSerializable {
      * @return string
      */
     public static function postType() {
-        return self::$postType;
+        return static::$postType;
     }
 
     /**
@@ -729,7 +729,7 @@ class Post implements \JsonSerializable {
         }
 
         if ($this->id == null) {
-            $this->changes->create(self::$postType);
+            $this->changes->create(static::$postType);
         } else {
             $this->changes->update($this->id);
         }
@@ -926,7 +926,57 @@ class Post implements \JsonSerializable {
 
     //endregion
 
-    //region ACF Fields
+    //region ACF Fields / Properties
+
+    /**
+     * Fetches an ACF field and assigns it to a class property
+     *
+     * @param string $property
+     * @param string|null $fieldName
+     * @param null|callable $transformer
+     * @return mixed|null
+     * @throws \Samrap\Acf\Exceptions\BuilderException
+     */
+    protected function getACFProperty($property, $fieldName = null, $transformer = null) {
+        if ($this->{$property} != null) {
+            return $this->{$property};
+        }
+
+        if (empty($this->id)) {
+            return null;
+        }
+
+        $fieldName = $fieldName ?: $property;
+
+        $val = Acf::field($fieldName, $this->id)->get();
+        if ($val != null) {
+            if ($transformer != null) {
+                $val = $transformer($val);
+            }
+
+            $this->{$property} = $val;
+        }
+
+        return $val;
+    }
+
+    /**
+     * Sets a property backed by ACF and signals a change
+     *
+     * @param string $property
+     * @param string $fieldName
+     * @param mixed|null $value
+     * @param null|callable $transformer
+     */
+    protected function setACFProperty($property, $fieldName, $value, $transformer = null) {
+        $this->{$property} = $value;
+
+        if ($transformer != null) {
+            $value = $transformer($value);
+        }
+
+        $this->changes->updateField($fieldName, $value);
+    }
 
     /**
      * Fetches the value for an ACF field
@@ -1029,7 +1079,7 @@ QUERY;
 
     public function jsonSerialize() {
         return [
-            'type'=>self::$postType,
+            'type'=>static::$postType,
             'title'=>$this->title(),
             'slug'=>$this->slug(),
             'author'=>$this->author()->displayName(),

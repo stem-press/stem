@@ -638,9 +638,27 @@ class CustomPostTypeBuilder {
             $def['title'] = $title;
         }
 
-        if (!empty($date_format)) {
+        if (!empty($dateFormat)) {
             $def['date_format'] = $dateFormat;
         }
+
+        if (!empty($cap)) {
+            $def['cap'] = $cap;
+        }
+
+        $this->adminColumns[$name] = $def;
+        return $this;
+    }
+
+    public function addAdminACFColumn($name, $field, $title, $cap = null) {
+        $def = [
+            'title' => $title,
+            'function' => function() use ($field) {
+                global $post;
+                $val = get_field($field, $post->ID);
+                return $val;
+            }
+        ];
 
         if (!empty($cap)) {
             $def['cap'] = $cap;
@@ -864,7 +882,11 @@ class CustomPostTypeBuilder {
             $args['site_sortables'] = $this->siteSortables;
         }
 
-        register_extended_post_type($this->postType, $this->postProperties, $this->names);
+        if (!empty($this->siteFilters)) {
+            $args['site_filters'] = $this->siteFilters;
+        }
+
+        register_extended_post_type($this->postType, $args, $this->names);
     }
 
     //endregion
