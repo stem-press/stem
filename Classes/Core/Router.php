@@ -26,12 +26,6 @@ class Router
     {
         $this->routes = new RouteCollection();
         $this->context = $context;
-
-        add_action('init', function () {
-            if ($this->routes->count() > 0) {
-                $this->dispatch();
-            }
-        }, 1000000);
     }
 
     public function addRoute($name, $routeStr, $destination, $defaults = [], $requirements = [], $methods = [])
@@ -49,9 +43,11 @@ class Router
         }
     }
 
-    private function dispatch()
-    {
-        $req = Request::createFromGlobals();
+    public function dispatch(Request $req) {
+        if ($this->routes->count() == 0) {
+            return false;
+        }
+
         $ctx = new RequestContext();
         $ctx->fromRequest($req);
 
@@ -110,8 +106,10 @@ class Router
             // let wordpress continue doing what it does.
             $response = new Response('Method not allowed', 405);
             $response->send();
+            return true;
         } catch (ResourceNotFoundException $ex) {
             // let wordpress continue doing what it does.
+            return false;
         }
     }
 }

@@ -23,7 +23,9 @@
     "nesbot/carbon": "^1.21",
     "symfony/var-dumper": "^3.1",
     "duncan3dc/blade": "^3.3",
-    "stoutlogic/acf-builder": "^1.8"
+    "stoutlogic/acf-builder": "^1.8",
+    "johnbillion/extended-cpts": "^4.2",
+    "samrap/acf-fluent": "^0.4.0"
   },
   "autoload": {
     "psr-4": {

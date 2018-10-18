@@ -155,6 +155,9 @@ class Context
 	 */
     public $currentBuild = 1;
 
+    /** @var array Map of post_types to model classes */
+    protected $modelMap = [];
+
     /**
      * Constructor.
      *
@@ -292,6 +295,10 @@ class Context
             return false;
         });
 
+        add_filter('do_parse_request', function($do, \WP $wp) {
+            return $this->parseRequest($do, $wp);
+        }, 100, 2);
+
         // Theme setup action hook
         add_action('after_setup_theme', function () {
             $this->setup();
@@ -358,6 +365,8 @@ class Context
         $this->ui = new UI($this);
 
         $this->admin = new Admin($this);
+
+        $this->loadModels();
     }
 
     /**
@@ -487,6 +496,27 @@ class Context
         }
     }
 
+    private function loadModels() {
+        // Register the default model map, which can be overridden ;)
+        $this->modelMap['post'] = '\\ILab\\Stem\\Models\\Post';
+        $this->modelMap['attachment'] = '\\ILab\\Stem\\Models\\Attachment';
+        $this->modelMap['page'] = '\\ILab\\Stem\\Models\\Page';
+
+        // DEPRECATED
+        $models = arrayPath($this->config, 'model-map', []);
+        foreach($models as $postType => $model) {
+            $this->modelMap[$postType] = $model;
+        }
+
+        // Load the user declared models
+        $models = arrayPath($this->config, 'models', []);
+        foreach($models as $modelClassname) {
+            if (class_exists($modelClassname)) {
+                $this->modelMap[$modelClassname::postType()] = $modelClassname;
+            }
+        }
+    }
+
     /**
      * Installs multiple custom post types from individual json files.
      */
@@ -601,6 +631,30 @@ class Context
      */
     public function installCustomPostTypes()
     {
+        foreach($this->modelMap as $postType => $modelClassname) {
+            $builder = $modelClassname::postTypeProperties();
+            if ($builder != null) {
+                $builder->register();
+            }
+
+            $fields = $modelClassname::registerFields();
+            if (!empty($fields)) {
+                if (!isset($fields['location'])) {
+                    $fields['location'] = [
+                        [
+                            [
+                                'param' => 'post_type',
+                                'operator' => '==',
+                                'value' => $modelClassname::postType()
+                            ]
+                        ]
+                    ];
+                }
+
+                acf_add_local_field_group($fields);
+            }
+        }
+
         $this->installCustomPostTypesFromJSON();
         $this->installCustomPostTypesFromPHP();
         $this->installMultipleCustomPostTypes();
@@ -834,20 +888,10 @@ class Context
 
         if (isset($this->modelFactories[$post->post_type])) {
             $result = call_user_func_array($this->modelFactories[$post->post_type], [$this, $post]);
-        } elseif (isset($this->config['model-map'][$post->post_type])) {
-            $className = $this->config['model-map'][$post->post_type];
+        } elseif (isset($this->modelMap[$post->post_type])) {
+            $className = $this->modelMap[$post->post_type];
             if (class_exists($className)) {
                 $result = new $className($this, $post);
-            }
-        }
-
-        if (! $result) {
-            if ($post->post_type == 'attachment') {
-                $result = new Attachment($this, $post);
-            } elseif ($post->post_type == 'page') {
-                $result = new Page($this, $post);
-            } else {
-                $result = new Post($this, $post);
             }
         }
 
@@ -993,5 +1037,13 @@ class Context
                 return $controller;
             }
         }
+    }
+
+    private function parseRequest($do, \WP $wp) {
+        if (!$this->router->dispatch($this->request)) {
+            return true;
+        }
+
+        return false;
     }
 }
