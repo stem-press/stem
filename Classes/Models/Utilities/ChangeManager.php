@@ -1,6 +1,6 @@
 <?php
 
-namespace ILab\Stem\Models;
+namespace ILab\Stem\Models\Utilities;
 
 /**
  * Manages changes to a post

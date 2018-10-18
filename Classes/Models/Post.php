@@ -5,6 +5,8 @@ namespace ILab\Stem\Models;
 
 use Carbon\Carbon;
 use ILab\Stem\Core\Context;
+use ILab\Stem\Models\Utilities\ChangeManager;
+use ILab\Stem\Models\Utilities\CustomPostTypeBuilder;
 use ILab\Stem\Utilities\Text;
 
 /**
@@ -117,9 +119,10 @@ class Post implements \JsonSerializable {
     }
 
     /**
-     * Subclasses should override to provide custom post type properties
+     * Subclasses should override to provide custom post type properties.  It's recommended to use `CustomPostTypeBuilder`
+     * to define your custom post type, but you can also return an array of arguments that work with `register_post_type()`.
      *
-     * @return array|null
+     * @return CustomPostTypeBuilder|array|null
      */
     public static function postTypeProperties() {
         return null;
