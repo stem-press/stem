@@ -106,6 +106,39 @@ class Post implements \JsonSerializable {
         }
     }
 
+    //region Custom Post Type
+
+    /**
+     * The post's type
+     * @return string
+     */
+    public static function postType() {
+        return self::$postType;
+    }
+
+    /**
+     * Subclasses should override to provide custom post type properties
+     *
+     * @return array|null
+     */
+    public static function postTypeProperties() {
+        return null;
+    }
+
+    /**
+     * Allows subclasses to configure their ACF fields in code.  Don't worry about specifying the location
+     * element, it will be added automatically if it is missing.
+     *
+     * Recommend to use `\StoutLogic\AcfBuilder\FieldsBuilder` and return the result from `build()`
+     *
+     * @return array|null
+     */
+    public static function registerFields() {
+        return null;
+    }
+
+    //endregion
+
     //region Properties
 
     /**
@@ -123,14 +156,6 @@ class Post implements \JsonSerializable {
      */
     public function wpPost() {
         return $this->post;
-    }
-
-    /**
-     * The post's type
-     * @return string
-     */
-    public static function postType() {
-        return self::$postType;
     }
 
     /**
