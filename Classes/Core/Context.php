@@ -19,141 +19,74 @@ use Symfony\Component\HttpFoundation\Request;
  *
  * This class represents the current request context and acts like the orchestrator for everything.
  */
-class Context
-{
-    /**
-     * Current context.
-     * @var Context
-     */
+class Context {
+    /** @var Context  Current context. */
     private static $currentContext;
 
-    /**
-     * Controller Map.
-     * @var array
-     */
+    /** @var array Controller Map. */
     private $controllerMap = [];
 
-    /**
-     * Model cache.
-     * @var array
-     */
+    /** @var array Model cache. */
     private $modelCache = [];
 
-    /**
-     * Collection of routes.
-     * @var Router
-     */
+    /** @var Router Collection of routes. */
     private $router;
 
-    /**
-     * Root path to the theme.
-     * @var string
-     */
+    /** @var string Root path to the theme. */
     public $rootPath;
 
-    /**
-     * Path to classes.
-     * @var string
-     */
+    /** @var string Path to classes. */
     public $classPath;
 
-    /**
-     * Classes namespace.
-     * @var string
-     */
+    /** @var string Classes namespace. */
     public $namespace;
 
-    /**
-     * App configuration.
-     * @var array
-     */
+    /** @var array App configuration. */
     public $config;
 
-    /**
-     * Callback for theme setup.
-     * @var callable
-     */
+    /** @var callable Callback for theme setup. */
     protected $setupCallback;
 
-    /**
-     * Callback for post deployment.  You need to set 'stem-new-deploy' option to true via WP-CLI to trigger this.
-     * @var callable
-     */
+    /** @var callable Callback for post deployment.  You need to set 'stem-new-deploy' option to true via WP-CLI to trigger this. */
     protected $deployCallback;
 
-    /**
-     * Callback for pre_get_posts hook.
-     * @var callable
-     */
+    /** @var callable Callback for pre_get_posts hook. */
     protected $preGetPostsCallback;
 
-    /**
-     * Dispatcher for requests.
-     * @var Dispatcher
-     */
+    /** @var Dispatcher Dispatcher for requests.  */
     protected $dispatcher;
 
-    /**
-     * Factory functions for creating models for a given post type.
-     * @var array
-     */
+    /** @var array Factory functions for creating models for a given post type. */
     protected $modelFactories = [];
 
-    /**
-     * Factory functions for creating controllers.
-     * @var array
-     */
+    /** @var array Factory functions for creating controllers. */
     protected $controllerFactories = [];
 
+    /** @var CacheControl|null CacheControl manager */
     public $cacheControl = null;
 
-    /**
-     * Determines if the context is running in debug mode.
-     * @var bool
-     */
+    /** @var bool Determines if the context is running in debug mode. */
     public $debug;
 
-    /**
-     * Site host.
-     * @var string
-     */
+    /** @var string Site host. */
     public $siteHost = '';
 
-    /**
-     * Http host.
-     * @var string
-     */
+    /** @var string Http host. */
     public $httpHost = '';
 
-    /**
-     * Current request.
-     * @var null|Request
-     */
+    /** @var null|Request Current request. */
     public $request = null;
 
-    /**
-     * The current environment.
-     * @var string
-     */
+    /** @var string The current environment.  */
     public $environment = 'development';
 
-    /**
-     * The UI context.
-     * @var UI
-     */
+    /** @var UI The UI context. */
     public $ui = null;
 
-    /**
-     * The Admin context.
-     * @var Admin
-     */
+    /** @var Admin The Admin context. */
     public $admin = null;
 
-	/**
-	 * The current build as defined the app.php config.
-	 *
-	 * @var int
-	 */
+	/** @var int The current build as defined the app.php config. */
     public $currentBuild = 1;
 
     /** @var array Map of post_types to model classes */
@@ -168,8 +101,7 @@ class Context
      *
      * @throws \Exception
      */
-    public function __construct($rootPath)
-    {
+    public function __construct($rootPath) {
         $this->siteHost = parse_url(site_url(), PHP_URL_HOST);
         $this->httpHost = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : null;
 
@@ -229,7 +161,6 @@ class Context
         if ($this->setting('options/disable-wp-json-api', false)) {
             add_filter('json_enabled', '__return_false', 10000);
             add_filter('json_jsonp_enabled', '__return_false', 10000);
-//            add_filter('rest_enabled', '__return_false', 10000);
             add_filter('rest_jsonp_enabled', '__return_false', 10000);
             remove_action('xmlrpc_rsd_apis', 'rest_output_rsd');
             remove_action('wp_head', 'rest_output_link_wp_head', 10);
@@ -296,6 +227,8 @@ class Context
             return false;
         });
 
+        // Handle routing for routes marked 'early'.  These routes will execute before WordPress is completely
+        // loaded so they should only be used for API style routes.
         add_filter('do_parse_request', function($do, \WP $wp) {
             if ($this->router->dispatch(true, $this->request)) {
                 return false;
@@ -368,12 +301,14 @@ class Context
         // Require our plugins
         $this->setupRequiredPlugins();
 
+        // Initialize cache control
         $this->cacheControl = new CacheControl($this);
 
+        // Initialize the UI and Admin managers
         $this->ui = new UI($this);
-
         $this->admin = new Admin($this);
 
+        // Load our models
         $this->loadModels();
     }
 
@@ -383,9 +318,9 @@ class Context
      * @param $rootPath string The root path to the theme
      *
      * @return Context The new context
+     * @throws \Exception
      */
-    public static function initialize($rootPath)
-    {
+    public static function initialize($rootPath) {
         $context = new self($rootPath);
         self::$currentContext = $context;
 
@@ -393,14 +328,11 @@ class Context
     }
 
     /**
-     * Returns the context for the theme's domain.
+     * Returns the current context.
      *
-     * @param $domain string The name of the theme's domain, eg the name of the theme
-     *
-     * @return Context The theme's context
+     * @return Context The current context
      */
-    public static function current()
-    {
+    public static function current() {
         return self::$currentContext;
     }
 
@@ -408,13 +340,12 @@ class Context
      * Returns a setting using a path string, eg 'options/views/engine'.  Consider this
      * a poor man's xpath.
      *
-     * @param $settingPath The "path" in the config settings to look up.
+     * @param string $settingPath The "path" in the config settings to look up.
      * @param bool|mixed $default The default value to return if the settings doesn't exist.
      *
      * @return bool|mixed The result
      */
-    public function setting($settingPath, $default = false)
-    {
+    public function setting($settingPath, $default = false) {
         return arrayPath($this->config, $settingPath, $default);
     }
 
@@ -423,8 +354,7 @@ class Context
      *
      * @deprecated
      */
-    private function parseRoutesJSON()
-    {
+    private function parseRoutesJSON() {
         $routesConfig = JSONParser::parse(file_get_contents($this->rootPath.'/config/routes.json'));
         foreach ($routesConfig as $routeName => $routeInfo) {
             $defaults = (isset($routeInfo['defaults']) && is_array($routeInfo['defaults'])) ? $routeInfo['defaults'] : [];
@@ -439,8 +369,7 @@ class Context
     /**
      * Parse routes from a PHP configuration file.
      */
-    private function parseRoutesPHP()
-    {
+    private function parseRoutesPHP() {
         $routesConfig = include $this->rootPath.'/config/routes.php';
         foreach ($routesConfig as $route => $routeInfo) {
             if (!is_array($routeInfo) && is_callable($routeInfo)) {
@@ -475,8 +404,7 @@ class Context
     /**
      * Additional setup.
      */
-    protected function setup()
-    {
+    protected function setup() {
         // configure routes
 
         if (file_exists($this->rootPath.'/config/routes.php')) {
@@ -506,6 +434,9 @@ class Context
         }
     }
 
+    /**
+     * Loads and configures the model map
+     */
     private function loadModels() {
         // Register the default model map, which can be overridden ;)
         $this->modelMap['post'] = '\\ILab\\Stem\\Models\\Post';
@@ -530,8 +461,7 @@ class Context
     /**
      * Installs multiple custom post types from individual json files.
      */
-    private function installMultipleCustomPostTypes()
-    {
+    private function installMultipleCustomPostTypes() {
         if (! file_exists($this->rootPath.'/config/types/')) {
             return;
         }
@@ -551,6 +481,9 @@ class Context
         }
     }
 
+    /**
+     * Configure the "suggested" plugin manager for the app's suggested plugins
+     */
     private function setupRequiredPlugins() {
         add_action('after_setup_theme', function(){
             $args = array(
@@ -572,8 +505,7 @@ class Context
      * Installs types from a single JSON file.
      * @deprecated
      */
-    private function installCustomPostTypesFromJSON()
-    {
+    private function installCustomPostTypesFromJSON() {
         if (! file_exists($this->rootPath.'/config/types.json')) {
             return;
         }
@@ -588,8 +520,7 @@ class Context
     /**
      * Installs custom post types from a PHP config.
      */
-    private function installCustomPostTypesFromPHP()
-    {
+    private function installCustomPostTypesFromPHP() {
         if (! file_exists($this->rootPath.'/config/types.php')) {
             return;
         }
@@ -603,8 +534,7 @@ class Context
     /**
      * Install custom post types.
      */
-    public function installCustomPostTypes()
-    {
+    public function installCustomPostTypes() {
         foreach($this->modelMap as $postType => $modelClassname) {
             $builder = $modelClassname::postTypeProperties();
             if ($builder != null) {
@@ -639,8 +569,7 @@ class Context
      *
      * @param $callable callable
      */
-    public function onPreGetPosts($callable)
-    {
+    public function onPreGetPosts($callable) {
         $this->preGetPostsCallback = $callable;
     }
 
@@ -648,8 +577,7 @@ class Context
      * Sets up post filtering, enabling options for searching by tag and including custom post types in
      * query results automatically.
      */
-    private function setupPostFilter()
-    {
+    private function setupPostFilter() {
         if (! is_admin()) {
             $post_types = $this->setting('search-options/post-types');
             if (! $post_types) {
@@ -764,8 +692,7 @@ class Context
     /**
      * Dispatches the current request.
      */
-    protected function dispatch()
-    {
+    protected function dispatch() {
         try {
             $this->dispatcher->dispatch();
         } catch (\Exception $ex) {
@@ -784,8 +711,7 @@ class Context
      *
      * @param $callback callable
      */
-    public function onSetup($callback)
-    {
+    public function onSetup($callback) {
         $this->setupCallback = $callback;
     }
 
@@ -795,8 +721,7 @@ class Context
      *
      * @param $callback callable
      */
-    public function onDeploy($callback)
-    {
+    public function onDeploy($callback) {
         $this->deployCallback = $callback;
     }
 
@@ -806,8 +731,7 @@ class Context
      * @param $post_type string
      * @param $callable callable
      */
-    public function setCustomPostTypeModelFactory($post_type, $callable)
-    {
+    public function setCustomPostTypeModelFactory($post_type, $callable) {
         $this->modelFactories[$post_type] = $callable;
     }
 
@@ -816,8 +740,7 @@ class Context
      *
      * @param $callable callable
      */
-    public function setPostModelFactory($callable)
-    {
+    public function setPostModelFactory($callable) {
         $this->setCustomPostTypeModelFactory('post', $callable);
     }
 
@@ -826,8 +749,7 @@ class Context
      *
      * @param $callable callable
      */
-    public function setPageModelFactory($callable)
-    {
+    public function setPageModelFactory($callable) {
         $this->setCustomPostTypeModelFactory('page', $callable);
     }
 
@@ -836,8 +758,7 @@ class Context
      *
      * @param $callable callable
      */
-    public function setAttachmentModelFactory($callable)
-    {
+    public function setAttachmentModelFactory($callable) {
         $this->setCustomPostTypeModelFactory('attachment', $callable);
     }
 
@@ -846,12 +767,11 @@ class Context
      *
      * @param \WP_Post $post
      *
-     * @return Attachment|Page|Post
+     * @return Attachment|Page|Post|null
      */
-    public function modelForPost(\WP_Post $post)
-    {
-        if (! $post) {
-            return;
+    public function modelForPost(\WP_Post $post) {
+        if (empty($post)) {
+            return null;
         }
 
         $result = null;
@@ -881,12 +801,12 @@ class Context
      *
      * @param int $postId
      *
-     * @return Attachment|Page|Post
+     * @return Attachment|Page|Post|null
      */
     public function modelForPostID($postId)
     {
-        if (! $postId) {
-            return;
+        if (empty($postId)) {
+            return null;
         }
 
         $result = null;
@@ -896,8 +816,8 @@ class Context
         }
 
         $post = \WP_Post::get_instance($postId);
-        if (! $post) {
-            return false;
+        if ($post === false) {
+            return null;
         }
 
         return $this->modelForPost($post);
@@ -909,8 +829,7 @@ class Context
      * @param $args
      * @return array
      */
-    public function findPosts($args)
-    {
+    public function findPosts($args) {
         $query = new \WP_Query($args);
         $posts = [];
         foreach ($query->posts as $post) {
@@ -926,8 +845,7 @@ class Context
      * @param $type
      * @param $callable
      */
-    public function setControllerFactory($type, $callable)
-    {
+    public function setControllerFactory($type, $callable) {
         $this->controllerFactories[$type] = $callable;
     }
 
@@ -939,8 +857,7 @@ class Context
      *
      * @return PageController|PostController|PostsController|null
      */
-    public function createController($pageType, $template)
-    {
+    public function createController($pageType, $template) {
         $controller = null;
 
         // Use factories first
@@ -994,8 +911,7 @@ class Context
      *
      * @return null
      */
-    public function mapController($wpTemplateName)
-    {
+    public function mapController($wpTemplateName) {
         if (isset($this->controllerMap[$wpTemplateName])) {
             $class = $this->controllerMap[$wpTemplateName];
             $template = null;
@@ -1011,13 +927,5 @@ class Context
                 return $controller;
             }
         }
-    }
-
-    private function parseRequest($do, \WP $wp) {
-        if (!$this->router->dispatch(true, $this->request)) {
-            return true;
-        }
-
-        return false;
     }
 }
