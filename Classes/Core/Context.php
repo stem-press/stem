@@ -44,6 +44,9 @@ class Context {
     /** @var array App configuration. */
     public $config;
 
+    /** @var string|null The text domain for the app */
+    public $textdomain;
+
     /** @var callable Callback for theme setup. */
     protected $setupCallback;
 
@@ -102,17 +105,16 @@ class Context {
         // Load the config
         if (file_exists($rootPath.'/config/app.php')) {
             $this->config = include $rootPath.'/config/app.php';
-        } elseif (file_exists($rootPath.'/config/app.json')) {
-            $this->config = JSONParser::parse(file_get_contents($rootPath.'/config/app.json'));
         } else {
-            throw new \Exception('Missing app.json or app.php configuration for theme.');
+            throw new \Exception('Missing `app.php` configuration.');
         }
 
         // Create the request object
         $this->request = Request::createFromGlobals();
+
+        // Configure environment
         $this->environment = getenv('WP_ENV') ?: 'development';
         $this->debug = (defined(WP_DEBUG) || ($this->environment == 'development'));
-
         $this->currentBuild = $this->setting('build',filectime(__FILE__));
 
         // Initialize logging
@@ -128,24 +130,138 @@ class Context {
         }
         Log::initialize($loggingConfig);
 
-        // Set our text domain, not really used though.
-        $this->textdomain = $this->config['text-domain'];
-
         // Setup our paths
         $this->rootPath = $rootPath;
         $this->classPath = $rootPath.'/classes/';
         if (! file_exists($this->classPath)) {
             $this->classPath = $rootPath.'/Classes/';
             if (! file_exists($this->classPath)) {
-                throw new \xception("Missing 'classes' directory in Stem application directory: {$rootPath}");
+                throw new \Exception("Missing 'classes' directory in Stem application directory: {$rootPath}");
             }
         }
 
-        // Create the router for extra routes
-        $this->router = new Router($this);
+        // Set our text domain, not really used though.
+        $this->textdomain = $this->config['text-domain'];
 
+        // Set the app's namespace for autoloading
         $this->namespace = $this->config['namespace'];
 
+        // Process Options
+        $this->processOptions();
+
+        // Setup autoloading
+        $this->setupAutoloading();
+
+        // Configure ACF
+        $this->setupACF();
+
+        // Load our custom post types
+        add_action('init', function() {
+            $this->setupCustomPostTypes();
+        }, 10000);
+
+        // Initialize the UI, CacheControl and Admin managers
+        $this->ui = new UI($this);
+        $this->admin = new Admin($this);
+        $this->cacheControl = new CacheControl($this);
+
+        // Load our models and controllers
+        $this->setupControllers();
+        $this->setupModels();
+
+        // Create the router and controller/template dispatcher
+        $this->router = new Router($this);
+        $this->dispatcher = new Dispatcher($this);
+
+        // Handle routing for routes marked 'early'.  These routes will execute before WordPress is completely
+        // loaded so they should only be used for API style routes.
+        add_filter('do_parse_request', function($do, \WP $wp) {
+            if ($this->router->dispatch(true, $this->request)) {
+                return false;
+            }
+
+            return $do;
+        }, 100, 2);
+
+        // This does the actual dispatching to Stem controllers
+        // and templates.
+        add_filter('template_include', function ($template) {
+            if (!$this->router->dispatch(false, $this->request)) {
+                $this->dispatch();
+            }
+        });
+
+        // Theme setup action hook
+        add_action('after_setup_theme', function () {
+            $this->setup();
+            $this->setupRequiredPlugins();
+        });
+    }
+
+    //region Static Methods
+
+    /**
+     * Creates the context for this theme.  Should be called in functions.php of the theme.
+     *
+     * @param $rootPath string The root path to the theme
+     *
+     * @return Context The new context
+     * @throws \Exception
+     */
+    public static function initialize($rootPath) {
+        $context = new self($rootPath);
+        self::$currentContext = $context;
+
+        return $context;
+    }
+
+    /**
+     * Returns the current context.
+     *
+     * @return Context The current context
+     */
+    public static function current() {
+        return self::$currentContext;
+    }
+
+    //endregion
+
+    //region Setup
+
+    /**
+     * Configure ACF
+     */
+    private function setupACF() {
+        // Load/save ACF Pro JSON fields to our config directory
+        add_filter('acf/settings/save_json', function ($path) {
+            $newpath = $this->rootPath.'/config/fields';
+            if (file_exists($newpath)) {
+                return $newpath;
+            }
+
+            Log::error("Saving ACF fields, missing $newpath directory.");
+
+            return $path;
+        });
+        add_filter('acf/settings/load_json', function ($paths) {
+            $newpath = $this->rootPath.'/config/fields';
+            if (! file_exists($newpath)) {
+                Log::error("Loading ACF fields, missing $newpath directory.");
+
+                return $paths;
+            }
+
+            unset($paths[0]);
+            $paths[] = $newpath;
+
+            return $paths;
+        });
+    }
+
+    /**
+     * Process additional configuration options
+     */
+    private function processOptions() {
         // Enable/disable XML RPC
         if ($this->setting('options/disable-xml-rpc', false)) {
             add_filter('xmlrpc_enabled', '__return_false', 10000);
@@ -189,11 +305,178 @@ class Context {
                 remove_action('wp_head', 'feed_links_extra', 3);
             });
         }
+    }
 
-        // Create the controller/template dispatcher
-        $this->dispatcher = new Dispatcher($this);
+    /**
+     * Parse routes from a PHP configuration file.
+     */
+    private function parseRoutes() {
+        $routesConfig = include $this->rootPath.'/config/routes.php';
+        foreach ($routesConfig as $route => $routeInfo) {
+            if (!is_array($routeInfo) && is_callable($routeInfo)) {
+                $this->router->addRoute(false, $route, $route, $routeInfo);
+            }
+            else {
+                $early = arrayPath($routeInfo,'early', false);
+                $defaults = (isset($routeInfo['defaults']) && is_array($routeInfo['defaults'])) ? $routeInfo['defaults'] : [];
+                $requirements = (isset($routeInfo['requirements']) && is_array($routeInfo['requirements'])) ? $routeInfo['requirements'] : [];
+                $methods = (isset($routeInfo['methods']) && is_array($routeInfo['methods'])) ? $routeInfo['methods'] : [];
+                $destination = arrayPath($routeInfo, 'controller', null);
+                if (! $destination) {
+                    $template = arrayPath($routeInfo, 'template', null);
+                    if ($template) {
+                        $destination = function () use ($template) {
+                            return new Response($template, ['request' => $this->request]);
+                        };
+                    } else {
+                        $destination = arrayPath($routeInfo, 'function', null);
+                    }
+                }
 
-        // Autoload function for theme classes
+                if ($destination) {
+                    $this->router->addRoute($early, $route, $route, $destination, $defaults, $requirements, $methods);
+                } else {
+                    Log::error("Invalid destination for route '$route'.");
+                }
+            }
+        }
+    }
+
+    /**
+     * Final setup step
+     */
+    protected function setup() {
+        // configure routes
+
+        if (file_exists($this->rootPath.'/config/routes.php')) {
+            $this->parseRoutes();
+        }
+
+        $this->ui->setup();
+
+        // call the user supplied setup callback
+        if ($this->setupCallback) {
+            call_user_func($this->setupCallback);
+        }
+
+        $this->setupPostFilter();
+    }
+
+    /**
+     * Build the controller map that maps the templates that wordpress is trying to "include" to Controller
+     * classes in the stem app.  Additionally, we surface these as "page templates" in the wordpress admin UI.
+     */
+    private function setupControllers() {
+
+        if (isset($this->config['page-controllers'])) {
+            foreach ($this->config['page-controllers'] as $key => $controller) {
+                $this->controllerMap[strtolower(preg_replace('|[^aA-zZ0-9_]+|', '-', $key))] = $controller;
+            }
+
+            add_filter('theme_page_templates', function ($page_templates, $theme, $post) {
+                foreach ($this->config['page-controllers'] as $key => $controller) {
+                    $page_templates[preg_replace('/\\s+/', '-', $key).'.php'] = $key;
+                }
+
+                return $page_templates;
+            }, 10, 3);
+        }
+    }
+
+    /**
+     * Loads and configures the model map
+     */
+    private function setupModels() {
+        // Register the default model map, which can be overridden ;)
+        $this->modelMap['post'] = '\\ILab\\Stem\\Models\\Post';
+        $this->modelMap['attachment'] = '\\ILab\\Stem\\Models\\Attachment';
+        $this->modelMap['page'] = '\\ILab\\Stem\\Models\\Page';
+
+        // DEPRECATED
+        $models = arrayPath($this->config, 'model-map', []);
+        foreach($models as $postType => $model) {
+            $this->modelMap[$postType] = $model;
+        }
+
+        // Load the user declared models
+        $models = arrayPath($this->config, 'models', []);
+        foreach($models as $modelClassname) {
+            if (class_exists($modelClassname)) {
+                $this->modelMap[$modelClassname::postType()] = $modelClassname;
+            }
+        }
+    }
+
+    /**
+     * Configure the "suggested" plugin manager for the app's suggested plugins
+     */
+    private function setupRequiredPlugins() {
+        $args = array(
+            'page_title'  => __( 'Suggested by Stem', 'stem' ),
+            'menu_title'  => __( 'Suggested', 'stem' ),
+            'menu_slug'   => 'stem-suggested-plugins',
+            'parent_slug' => 'plugins.php',
+            'plugin_file' => ILAB_STEM, // Required for use in plugins.
+        );
+
+        $plugins = $this->setting('plugins');
+        if (is_array($plugins) && !empty($plugins)) {
+            new PluginManager( $plugins, $args );
+        }
+    }
+
+    /**
+     * Install custom post types.
+     */
+    private function setupCustomPostTypes() {
+        foreach($this->modelMap as $postType => $modelClassname) {
+            $builder = $modelClassname::postTypeProperties();
+            if ($builder != null) {
+                $builder->register();
+            }
+
+            $fields = $modelClassname::registerFields();
+            if (!empty($fields)) {
+                if (!isset($fields['location'])) {
+                    $fields['location'] = [
+                        [
+                            [
+                                'param' => 'post_type',
+                                'operator' => '==',
+                                'value' => $modelClassname::postType()
+                            ]
+                        ]
+                    ];
+                }
+
+                acf_add_local_field_group($fields);
+            }
+        }
+
+        // Install CPTs from one giant PHP file
+        if (file_exists($this->rootPath.'/config/types.php')) {
+            $types = include $this->rootPath.'/config/types.php';
+            foreach ($types as $cpt => $details) {
+                register_post_type($cpt, $details);
+            }
+        }
+
+        // Install individual PHP CPTs
+        if (file_exists($this->rootPath.'/config/types/')) {
+            $files = glob($this->rootPath.'/config/types/*.php');
+            foreach ($files as $file) {
+                $type = include $file;
+                $name = (isset($type['name'])) ? $type['name'] : null;
+                register_post_type($name, $type);
+            }
+        }
+    }
+
+    /**
+     * Configures autoloading for the app
+     */
+    private function setupAutoloading() {
+        // Autoload function for app classes
         spl_autoload_register(function ($class) {
             if ('\\' == $class[0]) {
                 $class = substr($class, 1);
@@ -220,351 +503,6 @@ class Context {
 
             return false;
         });
-
-        // Handle routing for routes marked 'early'.  These routes will execute before WordPress is completely
-        // loaded so they should only be used for API style routes.
-        add_filter('do_parse_request', function($do, \WP $wp) {
-            if ($this->router->dispatch(true, $this->request)) {
-                return false;
-            }
-
-            return $do;
-        }, 100, 2);
-
-        // Theme setup action hook
-        add_action('after_setup_theme', function () {
-            $this->setup();
-        });
-
-        // This does the actual dispatching to Stem controllers
-        // and templates.
-        add_filter('template_include', function ($template) {
-            if (!$this->router->dispatch(false, $this->request)) {
-                $this->dispatch();
-            }
-        });
-
-        // Build the controller map that maps the templates that
-        // wordpress is trying to "include" to Controller classes
-        // in the stem app/theme.  Additionally, we surface these
-        // as "page templates" in the wordpress admin UI.
-        if (isset($this->config['page-controllers'])) {
-            $this->templates = $this->config['page-controllers'];
-            foreach ($this->config['page-controllers'] as $key => $controller) {
-                $this->controllerMap[strtolower(preg_replace('|[^aA-zZ0-9_]+|', '-', $key))] = $controller;
-            }
-
-            add_filter('theme_page_templates', function ($page_templates, $theme, $post) {
-                foreach ($this->config['page-controllers'] as $key => $controller) {
-                    $page_templates[preg_replace('/\\s+/', '-', $key).'.php'] = $key;
-                }
-
-                return $page_templates;
-            }, 10, 3);
-        }
-
-        // Load/save ACF Pro JSON fields to our config directory
-        add_filter('acf/settings/save_json', function ($path) use ($rootPath) {
-            $newpath = $rootPath.'/config/fields';
-            if (file_exists($newpath)) {
-                return $newpath;
-            }
-
-            Log::error("Saving ACF fields, missing $newpath directory.");
-
-            return $path;
-        });
-        add_filter('acf/settings/load_json', function ($paths) use ($rootPath) {
-            $newpath = $rootPath.'/config/fields';
-            if (! file_exists($newpath)) {
-                Log::error("Loading ACF fields, missing $newpath directory.");
-
-                return $paths;
-            }
-
-            unset($paths[0]);
-            $paths[] = $newpath;
-
-            return $paths;
-        });
-
-        // Load our custom post types
-        add_action('init', [$this, 'installCustomPostTypes'], 10000);
-
-
-        // Require our plugins
-        $this->setupRequiredPlugins();
-
-        // Initialize cache control
-        $this->cacheControl = new CacheControl($this);
-
-        // Initialize the UI and Admin managers
-        $this->ui = new UI($this);
-        $this->admin = new Admin($this);
-
-        // Load our models
-        $this->loadModels();
-    }
-
-    /**
-     * Creates the context for this theme.  Should be called in functions.php of the theme.
-     *
-     * @param $rootPath string The root path to the theme
-     *
-     * @return Context The new context
-     * @throws \Exception
-     */
-    public static function initialize($rootPath) {
-        $context = new self($rootPath);
-        self::$currentContext = $context;
-
-        return $context;
-    }
-
-    /**
-     * Returns the current context.
-     *
-     * @return Context The current context
-     */
-    public static function current() {
-        return self::$currentContext;
-    }
-
-    /**
-     * Returns a setting using a path string, eg 'options/views/engine'.  Consider this
-     * a poor man's xpath.
-     *
-     * @param string $settingPath The "path" in the config settings to look up.
-     * @param bool|mixed $default The default value to return if the settings doesn't exist.
-     *
-     * @return bool|mixed The result
-     */
-    public function setting($settingPath, $default = false) {
-        return arrayPath($this->config, $settingPath, $default);
-    }
-
-    /**
-     * Parse routes from a JSON configuration file.
-     *
-     * @deprecated
-     */
-    private function parseRoutesJSON() {
-        $routesConfig = JSONParser::parse(file_get_contents($this->rootPath.'/config/routes.json'));
-        foreach ($routesConfig as $routeName => $routeInfo) {
-            $defaults = (isset($routeInfo['defaults']) && is_array($routeInfo['defaults'])) ? $routeInfo['defaults'] : [];
-            $requirements = (isset($routeInfo['requirements']) && is_array($routeInfo['requirements'])) ? $routeInfo['requirements'] : [];
-            $methods = (isset($routeInfo['methods']) && is_array($routeInfo['methods'])) ? $routeInfo['methods'] : [];
-            $early = arrayPath($routeInfo,'early', false);
-
-            $this->router->addRoute($early, $routeName, $routeInfo['endPoint'], $routeInfo['controller'], $defaults, $requirements, $methods);
-        }
-    }
-
-    /**
-     * Parse routes from a PHP configuration file.
-     */
-    private function parseRoutesPHP() {
-        $routesConfig = include $this->rootPath.'/config/routes.php';
-        foreach ($routesConfig as $route => $routeInfo) {
-            if (!is_array($routeInfo) && is_callable($routeInfo)) {
-				$this->router->addRoute(false, $route, $route, $routeInfo);
-	        }
-	        else {
-                $early = arrayPath($routeInfo,'early', false);
-                $defaults = (isset($routeInfo['defaults']) && is_array($routeInfo['defaults'])) ? $routeInfo['defaults'] : [];
-	            $requirements = (isset($routeInfo['requirements']) && is_array($routeInfo['requirements'])) ? $routeInfo['requirements'] : [];
-	            $methods = (isset($routeInfo['methods']) && is_array($routeInfo['methods'])) ? $routeInfo['methods'] : [];
-	            $destination = arrayPath($routeInfo, 'controller', null);
-	            if (! $destination) {
-	                $template = arrayPath($routeInfo, 'template', null);
-	                if ($template) {
-	                    $destination = function () use ($template) {
-	                        return new Response($template, ['request' => $this->request]);
-	                    };
-	                } else {
-	                    $destination = arrayPath($routeInfo, 'function', null);
-	                }
-	            }
-
-	            if ($destination) {
-	                $this->router->addRoute($early, $route, $route, $destination, $defaults, $requirements, $methods);
-	            } else {
-	                Log::error("Invalid destination for route '$route'.");
-	            }
-	        }
-        }
-    }
-
-    /**
-     * Additional setup.
-     */
-    protected function setup() {
-        // configure routes
-
-        if (file_exists($this->rootPath.'/config/routes.php')) {
-            $this->parseRoutesPHP();
-        } elseif (file_exists($this->rootPath.'/config/routes.json')) {
-            $this->parseRoutesJSON();
-        }
-
-        $this->ui->setup();
-
-        // call the user supplied setup callback
-        if ($this->setupCallback) {
-            call_user_func($this->setupCallback);
-        }
-
-        $this->setupPostFilter();
-
-        if ($this->setting('options/flush-on-deploy', false)) {
-            if (get_option('stem-new-deploy', false)) {
-                update_option('stem-new-deploy', false);
-                flush_rewrite_rules();
-                // call the user supplied deploy callback
-                if ($this->deployCallback) {
-                    call_user_func($this->deployCallback);
-                }
-            }
-        }
-    }
-
-    /**
-     * Loads and configures the model map
-     */
-    private function loadModels() {
-        // Register the default model map, which can be overridden ;)
-        $this->modelMap['post'] = '\\ILab\\Stem\\Models\\Post';
-        $this->modelMap['attachment'] = '\\ILab\\Stem\\Models\\Attachment';
-        $this->modelMap['page'] = '\\ILab\\Stem\\Models\\Page';
-
-        // DEPRECATED
-        $models = arrayPath($this->config, 'model-map', []);
-        foreach($models as $postType => $model) {
-            $this->modelMap[$postType] = $model;
-        }
-
-        // Load the user declared models
-        $models = arrayPath($this->config, 'models', []);
-        foreach($models as $modelClassname) {
-            if (class_exists($modelClassname)) {
-                $this->modelMap[$modelClassname::postType()] = $modelClassname;
-            }
-        }
-    }
-
-    /**
-     * Installs multiple custom post types from individual json files.
-     */
-    private function installMultipleCustomPostTypes() {
-        if (! file_exists($this->rootPath.'/config/types/')) {
-            return;
-        }
-
-        $files = glob($this->rootPath.'/config/types/*.json');
-        foreach ($files as $file) {
-            $type = JSONParser::parse(file_get_contents($file));
-            $name = (isset($type['name'])) ? $type['name'] : null;
-            register_post_type($name, $type);
-        }
-
-        $files = glob($this->rootPath.'/config/types/*.php');
-        foreach ($files as $file) {
-            $type = include $file;
-            $name = (isset($type['name'])) ? $type['name'] : null;
-            register_post_type($name, $type);
-        }
-    }
-
-    /**
-     * Configure the "suggested" plugin manager for the app's suggested plugins
-     */
-    private function setupRequiredPlugins() {
-        add_action('after_setup_theme', function(){
-            $args = array(
-                'page_title'  => __( 'Suggested by Stem', 'stem' ),
-                'menu_title'  => __( 'Suggested', 'stem' ),
-                'menu_slug'   => 'stem-suggested-plugins',
-                'parent_slug' => 'plugins.php',
-                'plugin_file' => ILAB_STEM, // Required for use in plugins.
-            );
-
-            $plugins = $this->setting('plugins');
-            if (is_array($plugins) && !empty($plugins)) {
-                new PluginManager( $plugins, $args );
-            }
-        });
-    }
-
-    /**
-     * Installs types from a single JSON file.
-     * @deprecated
-     */
-    private function installCustomPostTypesFromJSON() {
-        if (! file_exists($this->rootPath.'/config/types.json')) {
-            return;
-        }
-
-        $types = JSONParser::parse(file_get_contents($this->rootPath.'/config/types.json'));
-
-        foreach ($types as $cpt => $details) {
-            register_post_type($cpt, $details);
-        }
-    }
-
-    /**
-     * Installs custom post types from a PHP config.
-     */
-    private function installCustomPostTypesFromPHP() {
-        if (! file_exists($this->rootPath.'/config/types.php')) {
-            return;
-        }
-
-        $types = include $this->rootPath.'/config/types.php';
-        foreach ($types as $cpt => $details) {
-            register_post_type($cpt, $details);
-        }
-    }
-
-    /**
-     * Install custom post types.
-     */
-    public function installCustomPostTypes() {
-        foreach($this->modelMap as $postType => $modelClassname) {
-            $builder = $modelClassname::postTypeProperties();
-            if ($builder != null) {
-                $builder->register();
-            }
-
-            $fields = $modelClassname::registerFields();
-            if (!empty($fields)) {
-                if (!isset($fields['location'])) {
-                    $fields['location'] = [
-                        [
-                            [
-                                'param' => 'post_type',
-                                'operator' => '==',
-                                'value' => $modelClassname::postType()
-                            ]
-                        ]
-                    ];
-                }
-
-                acf_add_local_field_group($fields);
-            }
-        }
-
-        $this->installCustomPostTypesFromJSON();
-        $this->installCustomPostTypesFromPHP();
-        $this->installMultipleCustomPostTypes();
-    }
-
-    /**
-     * Sets a callable for pre_get_posts filter.
-     *
-     * @param $callable callable
-     */
-    public function onPreGetPosts($callable) {
-        $this->preGetPostsCallback = $callable;
     }
 
     /**
@@ -600,29 +538,29 @@ class Context {
         }
 
         if ($this->setting('search-options/fulltext-search')) {
-	        add_filter('posts_search', function($search, $query){
-		        if ($query->is_main_query() && $query->is_search()) {
-			        if (empty($query->get('s'))) {
-				        return ' ';
-			        }
+            add_filter('posts_search', function($search, $query){
+                if ($query->is_main_query() && $query->is_search()) {
+                    if (empty($query->get('s'))) {
+                        return ' ';
+                    }
 
-			        global $wpdb;
-			        return $wpdb->prepare(" AND MATCH($wpdb->posts.post_title, $wpdb->posts.post_content) AGAINST(%s)", '*' . $query->get('s') . '*');
-		        } else {
-			        return $search;
-		        }
-	        }, 10000, 2);
+                    global $wpdb;
+                    return $wpdb->prepare(" AND MATCH($wpdb->posts.post_title, $wpdb->posts.post_content) AGAINST(%s)", '*' . $query->get('s') . '*');
+                } else {
+                    return $search;
+                }
+            }, 10000, 2);
 
 
-	        add_filter('posts_orderby', function($orderby, $query){
-		        if ($query->is_main_query() && $query->is_search()) {
-			        global $wpdb;
+            add_filter('posts_orderby', function($orderby, $query){
+                if ($query->is_main_query() && $query->is_search()) {
+                    global $wpdb;
 
-			        return " $wpdb->posts.post_date DESC";
-		        } else {
-			        return $orderby;
-		        }
-	        }, 10000, 2);
+                    return " $wpdb->posts.post_date DESC";
+                } else {
+                    return $orderby;
+                }
+            }, 10000, 2);
         }
 
         // Below alter the way wordpress searches
@@ -683,21 +621,17 @@ class Context {
         }
     }
 
+    //endregion
+
+    //region Callbacks
+
     /**
-     * Dispatches the current request.
+     * Sets a callable for pre_get_posts filter.
+     *
+     * @param $callable callable
      */
-    protected function dispatch() {
-        try {
-            $this->dispatcher->dispatch();
-        } catch (\Exception $ex) {
-            if (env('WP_ENV') != 'production') {
-                $res = new \Symfony\Component\HttpFoundation\Response($this->ui->render('stem-system.error', ['ex'=>$ex, 'data' => \ILab\Stem\Core\Response::$lastData]), 500);
-                $res->send();
-                die;
-            } else {
-                $this->dispatcher->dispatchError(500, $ex);
-            }
-        }
+    public function onPreGetPosts($callable) {
+        $this->preGetPostsCallback = $callable;
     }
 
     /**
@@ -718,6 +652,48 @@ class Context {
     public function onDeploy($callback) {
         $this->deployCallback = $callback;
     }
+
+    //endregion
+
+    //region Config
+
+    /**
+     * Returns a setting using a path string, eg 'options/views/engine'.  Consider this
+     * a poor man's xpath.
+     *
+     * @param string $settingPath The "path" in the config settings to look up.
+     * @param bool|mixed $default The default value to return if the settings doesn't exist.
+     *
+     * @return bool|mixed The result
+     */
+    public function setting($settingPath, $default = false) {
+        return arrayPath($this->config, $settingPath, $default);
+    }
+
+    //endregion
+
+    //region Dispatch
+
+    /**
+     * Dispatches the current request.
+     */
+    protected function dispatch() {
+        try {
+            $this->dispatcher->dispatch();
+        } catch (\Exception $ex) {
+            if (env('WP_ENV') != 'production') {
+                $res = new \Symfony\Component\HttpFoundation\Response($this->ui->render('stem-system.error', ['ex'=>$ex, 'data' => \ILab\Stem\Core\Response::$lastData]), 500);
+                $res->send();
+                die;
+            } else {
+                $this->dispatcher->dispatchError(500, $ex);
+            }
+        }
+    }
+
+    //endregion
+
+    //region Model Mapping/Filtering
 
     /**
      * Creates a model instance for the supplied WP_Post object.
@@ -794,6 +770,10 @@ class Context {
         return $posts;
     }
 
+    //endregion
+
+    //region Controllers
+
     /**
      * Creates a controller for the given page type.
      *
@@ -863,4 +843,6 @@ class Context {
             }
         }
     }
+
+    //endregion
 }
