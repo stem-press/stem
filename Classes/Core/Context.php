@@ -56,9 +56,6 @@ class Context {
     /** @var Dispatcher Dispatcher for requests.  */
     protected $dispatcher;
 
-    /** @var array Factory functions for creating models for a given post type. */
-    protected $modelFactories = [];
-
     /** @var CacheControl|null CacheControl manager */
     public $cacheControl = null;
 
@@ -723,43 +720,6 @@ class Context {
     }
 
     /**
-     * Set the factory function for creating this model for this post type.
-     *
-     * @param $post_type string
-     * @param $callable callable
-     */
-    public function setCustomPostTypeModelFactory($post_type, $callable) {
-        $this->modelFactories[$post_type] = $callable;
-    }
-
-    /**
-     * Sets the function for creating models for Posts.
-     *
-     * @param $callable callable
-     */
-    public function setPostModelFactory($callable) {
-        $this->setCustomPostTypeModelFactory('post', $callable);
-    }
-
-    /**
-     * Sets the function for creating models for Pages.
-     *
-     * @param $callable callable
-     */
-    public function setPageModelFactory($callable) {
-        $this->setCustomPostTypeModelFactory('page', $callable);
-    }
-
-    /**
-     * Sets the function for creating models for Attachments.
-     *
-     * @param $callable callable
-     */
-    public function setAttachmentModelFactory($callable) {
-        $this->setCustomPostTypeModelFactory('attachment', $callable);
-    }
-
-    /**
      * Creates a model instance for the supplied WP_Post object.
      *
      * @param \WP_Post $post
@@ -777,9 +737,7 @@ class Context {
             return $this->modelCache["m-$post->ID"];
         }
 
-        if (isset($this->modelFactories[$post->post_type])) {
-            $result = call_user_func_array($this->modelFactories[$post->post_type], [$this, $post]);
-        } elseif (isset($this->modelMap[$post->post_type])) {
+        if (isset($this->modelMap[$post->post_type])) {
             $className = $this->modelMap[$post->post_type];
             if (class_exists($className)) {
                 $result = new $className($this, $post);
