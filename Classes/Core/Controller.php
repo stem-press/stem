@@ -31,6 +31,8 @@ abstract class Controller
 {
     public $context;
     public $template = null;
+    protected $title = null;
+    protected $description = null;
 
     /**
      * @param $context
@@ -39,5 +41,13 @@ abstract class Controller
     {
         $this->context = $context;
         $this->template = $template;
+
+        add_filter( 'the_seo_framework_title_from_custom_field', function( $title ) {
+            return $this->title ?: $title;
+        } );
+
+        add_filter( 'the_seo_framework_custom_field_description', function( $description ) {
+            return $this->description ?: $description;
+        } );
     }
 }
