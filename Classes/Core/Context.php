@@ -296,7 +296,11 @@ class Context
         });
 
         add_filter('do_parse_request', function($do, \WP $wp) {
-            return $this->parseRequest($do, $wp);
+            if ($this->router->dispatch(true, $this->request)) {
+                return false;
+            }
+
+            return $do;
         }, 100, 2);
 
         // Theme setup action hook
@@ -307,7 +311,9 @@ class Context
         // This does the actual dispatching to Stem controllers
         // and templates.
         add_filter('template_include', function ($template) {
-            $this->dispatch();
+            if (!$this->router->dispatch(false, $this->request)) {
+                $this->dispatch();
+            }
         });
 
         // Build the controller map that maps the templates that
@@ -422,8 +428,9 @@ class Context
             $defaults = (isset($routeInfo['defaults']) && is_array($routeInfo['defaults'])) ? $routeInfo['defaults'] : [];
             $requirements = (isset($routeInfo['requirements']) && is_array($routeInfo['requirements'])) ? $routeInfo['requirements'] : [];
             $methods = (isset($routeInfo['methods']) && is_array($routeInfo['methods'])) ? $routeInfo['methods'] : [];
+            $early = arrayPath($routeInfo,'early', false);
 
-            $this->router->addRoute($routeName, $routeInfo['endPoint'], $routeInfo['controller'], $defaults, $requirements, $methods);
+            $this->router->addRoute($early, $routeName, $routeInfo['endPoint'], $routeInfo['controller'], $defaults, $requirements, $methods);
         }
     }
 
@@ -434,11 +441,12 @@ class Context
     {
         $routesConfig = include $this->rootPath.'/config/routes.php';
         foreach ($routesConfig as $route => $routeInfo) {
-	        if (!is_array($routeInfo) && is_callable($routeInfo)) {
-				$this->router->addRoute($route, $route, $routeInfo);
+            if (!is_array($routeInfo) && is_callable($routeInfo)) {
+				$this->router->addRoute(false, $route, $route, $routeInfo);
 	        }
 	        else {
-	            $defaults = (isset($routeInfo['defaults']) && is_array($routeInfo['defaults'])) ? $routeInfo['defaults'] : [];
+                $early = arrayPath($routeInfo,'early', false);
+                $defaults = (isset($routeInfo['defaults']) && is_array($routeInfo['defaults'])) ? $routeInfo['defaults'] : [];
 	            $requirements = (isset($routeInfo['requirements']) && is_array($routeInfo['requirements'])) ? $routeInfo['requirements'] : [];
 	            $methods = (isset($routeInfo['methods']) && is_array($routeInfo['methods'])) ? $routeInfo['methods'] : [];
 	            $destination = arrayPath($routeInfo, 'controller', null);
@@ -454,7 +462,7 @@ class Context
 	            }
 
 	            if ($destination) {
-	                $this->router->addRoute($route, $route, $destination, $defaults, $requirements, $methods);
+	                $this->router->addRoute($early, $route, $route, $destination, $defaults, $requirements, $methods);
 	            } else {
 	                Log::error("Invalid destination for route '$route'.");
 	            }
@@ -1040,7 +1048,7 @@ class Context
     }
 
     private function parseRequest($do, \WP $wp) {
-        if (!$this->router->dispatch($this->request)) {
+        if (!$this->router->dispatch(true, $this->request)) {
             return true;
         }
 

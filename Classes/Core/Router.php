@@ -21,37 +21,58 @@ class Router
 {
     private $context;
     private $routes;
+    private $earlyRoutes;
 
-    public function __construct(Context $context)
-    {
+    public function __construct(Context $context) {
         $this->routes = new RouteCollection();
+        $this->earlyRoutes = new RouteCollection();
         $this->context = $context;
     }
 
-    public function addRoute($name, $routeStr, $destination, $defaults = [], $requirements = [], $methods = [])
-    {
+    public function addRoute($early, $name, $routeStr, $destination, $defaults = [], $requirements = [], $methods = []) {
         if (is_callable($destination)) {
             $defaults['callable'] = $destination;
             $route = new Route($routeStr, $defaults, $requirements, [], '', [], $methods);
-            $this->routes->add($name, $route);
+
+            if ($early) {
+                $this->earlyRoutes->add($name, $route);
+            } else {
+                $this->routes->add($name, $route);
+            }
         } elseif (is_string($destination)) {
             $destination = explode('@', $destination);
             $defaults['controller'] = $destination[0];
             $defaults['method'] = $destination[1];
             $route = new Route($routeStr, $defaults, $requirements, [], '', [], $methods);
-            $this->routes->add($name, $route);
+
+            if ($early) {
+                $this->earlyRoutes->add($name, $route);
+            } else {
+                $this->routes->add($name, $route);
+            }
         }
     }
 
-    public function dispatch(Request $req) {
-        if ($this->routes->count() == 0) {
+    /**
+     * Dispatches the request.  Returns true if dispatched, false if no routes match
+     *
+     * @param bool $early For matching routes that should happen before WordPress loads completely
+     * @param Request $req
+     * @return bool
+     * @throws \Invoker\Exception\InvocationException
+     * @throws \Invoker\Exception\NotCallableException
+     * @throws \Invoker\Exception\NotEnoughParametersException
+     */
+    public function dispatch($early, Request $req) {
+        $routeCount = ($early) ? $this->earlyRoutes->count() : $this->routes->count();
+        if ($routeCount == 0) {
             return false;
         }
 
         $ctx = new RequestContext();
         $ctx->fromRequest($req);
 
-        $matcher = new UrlMatcher($this->routes, $ctx);
+        $matcher = new UrlMatcher(($early) ? $this->earlyRoutes : $this->routes, $ctx);
         $pi = $req->getPathInfo();
 
         try {
