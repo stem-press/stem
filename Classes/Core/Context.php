@@ -59,9 +59,6 @@ class Context {
     /** @var array Factory functions for creating models for a given post type. */
     protected $modelFactories = [];
 
-    /** @var array Factory functions for creating controllers. */
-    protected $controllerFactories = [];
-
     /** @var CacheControl|null CacheControl manager */
     public $cacheControl = null;
 
@@ -840,16 +837,6 @@ class Context {
     }
 
     /**
-     * Set the factory for creating a controller for a given post type.
-     *
-     * @param $type
-     * @param $callable
-     */
-    public function setControllerFactory($type, $callable) {
-        $this->controllerFactories[$type] = $callable;
-    }
-
-    /**
      * Creates a controller for the given page type.
      *
      * @param $pageType string
@@ -859,16 +846,6 @@ class Context {
      */
     public function createController($pageType, $template) {
         $controller = null;
-
-        // Use factories first
-        if (isset($this->controllerFactories[$pageType])) {
-            $callable = $this->controllerFactories[$pageType];
-            $controller = $callable($this, 'templates/'.$template);
-
-            if ($controller) {
-                return $controller;
-            }
-        }
 
         // See if a default controller exists in the theme namespace
         $class = null;
