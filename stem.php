@@ -8,6 +8,7 @@ Version: 0.2.4
 Author URI: http://interfacelab.com
 */
 
+define('ILAB_STEM', __FILE__);
 define('ILAB_STEM_DIR', dirname(__FILE__));
 define('ILAB_STEM_VIEW_DIR', ILAB_STEM_DIR.'/views');
 
