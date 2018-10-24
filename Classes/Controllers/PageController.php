@@ -14,12 +14,10 @@ use ILab\Stem\Core\Response;
 use ILab\Stem\Core\Controller;
 use Symfony\Component\HttpFoundation\Request;
 
-class PageController extends Controller
-{
+class PageController extends Controller {
     public $page = null;
 
-    public function __construct(Context $context, $template = null)
-    {
+    public function __construct(Context $context, $template = null) {
         parent::__construct($context, $template);
 
         global $wp_query;
@@ -33,8 +31,7 @@ class PageController extends Controller
         }
     }
 
-    public function getIndex(Request $request)
-    {
+    public function getIndex(Request $request) {
         if ($this->template) {
             return new Response($this->template, ['page'=>$this->page]);
         }

@@ -97,7 +97,7 @@ class Context {
      *
      * @throws \Exception
      */
-    public function __construct($rootPath) {
+    private function __construct($rootPath) {
         $this->siteHost = parse_url(site_url(), PHP_URL_HOST);
         $this->httpHost = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : null;
 
@@ -189,12 +189,6 @@ class Context {
                 $this->dispatch();
             }
         });
-
-        // Theme setup action hook
-        add_action('after_setup_theme', function () {
-            $this->setup();
-            $this->setupRequiredPlugins();
-        });
     }
 
     //region Static Methods
@@ -210,6 +204,8 @@ class Context {
     public static function initialize($rootPath) {
         $context = new self($rootPath);
         self::$currentContext = $context;
+
+        $context->addSetupHook();
 
         return $context;
     }
@@ -339,6 +335,14 @@ class Context {
                 }
             }
         }
+    }
+
+    protected function addSetupHook() {
+        // Theme setup action hook
+        add_action('after_setup_theme', function () {
+            $this->setup();
+            $this->setupRequiredPlugins();
+        });
     }
 
     /**

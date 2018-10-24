@@ -5,6 +5,7 @@ namespace ILab\Stem\Models;
 
 use Carbon\Carbon;
 use ILab\Stem\Core\Context;
+use ILab\Stem\Models\Query\Query;
 use ILab\Stem\Models\Utilities\ChangeManager;
 use ILab\Stem\Models\Utilities\CustomPostTypeBuilder;
 use ILab\Stem\Utilities\Text;
@@ -1093,6 +1094,57 @@ QUERY;
             'categories'=>$this->categories(),
             'tags'=>$this->tags(),
         ];
+    }
+
+    //endregion
+
+    //region Queries
+
+    /**
+     * Creates a Query object for this post model
+     * @return Query
+     */
+    public static function query() {
+        return new Query(Context::current(), static::$postType);
+    }
+
+    /**
+     * Returns the post with the given id, or null if not found
+     * @param $id
+     * @return Post|null
+     * @throws \Exception
+     */
+    public static function find($id) {
+        return Context::current()->modelForPostID($id);
+    }
+
+    /**
+     * Returns the first post of this type
+     * @return Post|null
+     */
+    public static function first() {
+        return static::query()->first();
+    }
+
+    /**
+     * Returns the number of posts in the database.  Note this incurs a DB call every time
+     * this is called.
+     *
+     * @return int
+     */
+    public static function count() {
+        return static::query()->limit(1)->get()->total();
+    }
+
+    /**
+     * Creates a query with the initial with clause
+     *
+     * @param mixed ...$args
+     * @return Query
+     * @throws \Exception
+     */
+    public static function where(...$args) {
+        return static::query()->whereWithArgs($args);
     }
 
     //endregion

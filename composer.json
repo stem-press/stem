@@ -11,6 +11,7 @@
     }
   ],
   "require": {
+    "php": ">=7.0",
     "symfony/http-foundation": "^2.7",
     "masterminds/html5": "^2.1",
     "symfony/dom-crawler": "^2.7",

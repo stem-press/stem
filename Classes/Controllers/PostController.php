@@ -17,8 +17,7 @@ class PostController extends Controller
 {
     public $post = null;
 
-    public function __construct(Context $context, $template = null)
-    {
+    public function __construct(Context $context, $template = null) {
         parent::__construct($context, $template);
 
         global $wp_query;
