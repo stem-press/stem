@@ -2,7 +2,8 @@
 
 namespace ILab\Stem\Core;
 
-use ILab\Stem\Models\Theme;
+use ILab\Stem\UI\Theme;
+use ILab\Stem\UI\Widget;
 
 /**
  * Class Theme.
@@ -144,6 +145,9 @@ class UI
      * @var Blocks
      */
     public $blocks = null;
+
+    /** @var Widget[] Array of widget instances */
+    private $widgets = [];
 
     /**
      * Constructor.
@@ -601,6 +605,11 @@ class UI
                     register_sidebar($settings);
                 }
             });
+        }
+
+        $widgets = $this->setting('widgets', []);
+        foreach($widgets as $widget) {
+            $this->widgets[] = new $widget($this->context, $this);
         }
 
         // Configure customizer

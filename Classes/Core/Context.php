@@ -4,7 +4,6 @@ namespace ILab\Stem\Core;
 
 use ILab\Stem\Models\Page;
 use ILab\Stem\Models\Post;
-use ILab\Stem\Models\Theme;
 use ILab\Stem\Models\Attachment;
 use ILab\Stem\Controllers\PageController;
 use ILab\Stem\Controllers\PostController;

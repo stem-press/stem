@@ -1,6 +1,6 @@
 <?php
 
-namespace ILab\Stem\Models;
+namespace ILab\Stem\UI;
 
 use ILab\Stem\Core\Context;
 

@@ -81,7 +81,8 @@ class BladeView extends View
             'file' => '\\ILab\\Stem\\External\\Blade\\Directives\\FileDirective',
             'theme' => '\\ILab\\Stem\\External\\Blade\\Directives\\ThemeDirective',
             "flatmenu" => "\\ILab\\Stem\\External\\Blade\\Directives\\FlatMenuDirective",
-            "svg" => "\\ILab\\Stem\\External\\Blade\\Directives\\InlineSVGDirective"
+            "svg" => "\\ILab\\Stem\\External\\Blade\\Directives\\InlineSVGDirective",
+            "widgets" => "\\ILab\\Stem\\External\\Blade\\Directives\\WidgetsDirective"
         ];
 
         $directives = $this->context->ui->setting('options/views/directives', []);
