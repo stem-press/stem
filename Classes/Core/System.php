@@ -81,12 +81,12 @@ function nukeDir($dir) {
 }
 
 
-/*
- * Vomits a dump of data and optionally dies.
- * @param $data
- * @param bool $die
- */
 if (! function_exists('vomit')) {
+    /*
+     * Vomits a dump of data and optionally dies.
+     * @param $data
+     * @param bool $die
+     */
     function vomit($data, $die = true)
     {
         \ILab\Stem\Utilities\Debug\VarDumper::dump($data);
@@ -97,11 +97,11 @@ if (! function_exists('vomit')) {
     }
 }
 
-/*
- * Vomits a dump of data
- * @param $data
- */
 if (! function_exists('vd')) {
+    /*
+     * Vomits a dump of data
+     * @param $data
+     */
     function vd($data)
     {
         \ILab\Stem\Utilities\Debug\VarDumper::dump($data);
