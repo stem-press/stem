@@ -1,8 +1,8 @@
 <?php
 
-namespace ILab\Stem\UI;
+namespace Stem\UI;
 
-use ILab\Stem\Core\Context;
+use Stem\Core\Context;
 
 /**
  * Class EditorPlugin.

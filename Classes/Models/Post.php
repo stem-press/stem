@@ -1,14 +1,14 @@
 <?php
 
 
-namespace ILab\Stem\Models;
+namespace Stem\Models;
 
 use Carbon\Carbon;
-use ILab\Stem\Core\Context;
-use ILab\Stem\Models\Query\Query;
-use ILab\Stem\Models\Utilities\ChangeManager;
-use ILab\Stem\Models\Utilities\CustomPostTypeBuilder;
-use ILab\Stem\Utilities\Text;
+use Stem\Core\Context;
+use Stem\Models\Query\Query;
+use Stem\Models\Utilities\ChangeManager;
+use Stem\Models\Utilities\CustomPostTypeBuilder;
+use Stem\Utilities\Text;
 
 /**
  * Class Post.

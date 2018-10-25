@@ -1,9 +1,9 @@
 <?php
 
-namespace ILab\Stem\Core;
+namespace Stem\Core;
 
-use ILab\Stem\UI\Theme;
-use ILab\Stem\UI\Widget;
+use Stem\UI\Theme;
+use Stem\UI\Widget;
 
 /**
  * Class Theme.
@@ -124,7 +124,7 @@ class UI
      * View class.
      * @var string
      */
-    protected $viewClass = '\ILab\Stem\External\Blade\BladeView';
+    protected $viewClass = '\Stem\External\Blade\BladeView';
 
     /**
      * Amp manager.
@@ -195,7 +195,7 @@ class UI
 
         $viewEngine = $this->setting('options/views/engine');
         if ($viewEngine == 'twig') {
-            $this->viewClass = '\ILab\Stem\External\Twig\TwigView';
+            $this->viewClass = '\Stem\External\Twig\TwigView';
         }
 
         $resetCache = $this->setting('options/views/reset-cache',false);

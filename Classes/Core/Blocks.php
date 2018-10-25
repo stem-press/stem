@@ -1,8 +1,8 @@
 <?php
 
-namespace ILab\Stem\Core;
+namespace Stem\Core;
 
-use ILab\Stem\UI\Block;
+use Stem\UI\Block;
 
 /**
  * Manages the user defined blocks

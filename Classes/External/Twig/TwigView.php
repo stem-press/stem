@@ -1,13 +1,13 @@
 <?php
 
-namespace ILab\Stem\External\Twig;
+namespace Stem\External\Twig;
 
-use ILab\Stem\Core\UI;
-use ILab\Stem\Core\View;
-use ILab\Stem\Core\Context;
-use ILab\Stem\External\Twig\Extensions\EnqueueTokenParser;
-use ILab\Stem\External\Twig\Extensions\WordPressExtension;
-use ILab\Stem\External\Twig\Extensions\HeaderFooterTokenParser;
+use Stem\Core\UI;
+use Stem\Core\View;
+use Stem\Core\Context;
+use Stem\External\Twig\Extensions\EnqueueTokenParser;
+use Stem\External\Twig\Extensions\WordPressExtension;
+use Stem\External\Twig\Extensions\HeaderFooterTokenParser;
 
 /**
  * Class TwigView.

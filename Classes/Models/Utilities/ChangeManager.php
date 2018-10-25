@@ -1,11 +1,11 @@
 <?php
 
-namespace ILab\Stem\Models\Utilities;
+namespace Stem\Models\Utilities;
 
 /**
  * Manages changes to a post
  *
- * @package ILab\Stem\Models
+ * @package Stem\Models
  */
 class ChangeManager {
     protected $changes = [];

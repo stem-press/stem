@@ -1,12 +1,12 @@
 <?php
 
-namespace ILab\Stem\Controllers;
+namespace Stem\Controllers;
 
-use ILab\Stem\Models\Post;
-use ILab\Stem\Core\Context;
-use ILab\Stem\Core\Response;
-use ILab\Stem\Core\Controller;
-use ILab\Stem\Models\Query\PostCollection;
+use Stem\Models\Post;
+use Stem\Core\Context;
+use Stem\Core\Response;
+use Stem\Core\Controller;
+use Stem\Models\Query\PostCollection;
 use Symfony\Component\HttpFoundation\Request;
 
 class PostsController extends Controller {

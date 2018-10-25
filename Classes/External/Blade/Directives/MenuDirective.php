@@ -1,8 +1,8 @@
 <?php
 
-namespace ILab\Stem\External\Blade\Directives;
+namespace Stem\External\Blade\Directives;
 
-use ILab\Stem\Core\ViewDirective;
+use Stem\Core\ViewDirective;
 
 /**
  * Class MenuDirective.
@@ -40,7 +40,7 @@ class MenuDirective extends ViewDirective
         $removeText = var_export($removeText,true);
         $array = var_export($array,true);
 
-        $result = "<?php echo ILab\\Stem\\Core\\Context::current()->ui->menu('{$slug}',{$stripUL},{$removeText},'{$insertGap}',{$array}); ?>";
+        $result = "<?php echo Stem\\Core\\Context::current()->ui->menu('{$slug}',{$stripUL},{$removeText},'{$insertGap}',{$array}); ?>";
 
         return $result;
     }

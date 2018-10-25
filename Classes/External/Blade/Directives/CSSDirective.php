@@ -1,8 +1,8 @@
 <?php
 
-namespace ILab\Stem\External\Blade\Directives;
+namespace Stem\External\Blade\Directives;
 
-use ILab\Stem\Core\ViewDirective;
+use Stem\Core\ViewDirective;
 
 /**
  * Class CSSDirective.
@@ -25,6 +25,6 @@ class CSSDirective extends ViewDirective
         }
         $file = $args[0];
 
-        return "<?php echo ILab\\Stem\\Core\\Context::current()->ui->css('{$file}'); ?>";
+        return "<?php echo Stem\\Core\\Context::current()->ui->css('{$file}'); ?>";
     }
 }

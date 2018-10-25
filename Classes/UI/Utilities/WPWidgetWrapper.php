@@ -1,8 +1,8 @@
 <?php
 
-namespace ILab\Stem\UI\Utilities;
+namespace Stem\UI\Utilities;
 
-use ILab\Stem\UI\Widget;
+use Stem\UI\Widget;
 
 class WPWidgetWrapper extends \WP_Widget {
     /** @var Widget The wrapped widget */

@@ -1,6 +1,6 @@
 <?php
 
-namespace ILab\Stem\Models;
+namespace Stem\Models;
 
 /**
  * Class Page.

@@ -1,6 +1,6 @@
 <?php
 
-namespace ILab\Stem\Models\Utilities;
+namespace Stem\Models\Utilities;
 
 class CustomPostTypeBuilder {
     protected $adminColumns = [];

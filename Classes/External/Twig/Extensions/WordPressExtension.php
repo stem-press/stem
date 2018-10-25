@@ -1,6 +1,6 @@
 <?php
 
-namespace ILab\Stem\External\Twig\Extensions;
+namespace Stem\External\Twig\Extensions;
 
 class WordPressExtension extends \Twig_Extension
 {

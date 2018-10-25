@@ -1,16 +1,16 @@
 <?php
 
-namespace ILab\Stem\Core;
+namespace Stem\Core;
 
-use ILab\Stem\Models\Page;
-use ILab\Stem\Models\Post;
-use ILab\Stem\Models\Attachment;
-use ILab\Stem\Controllers\PageController;
-use ILab\Stem\Controllers\PostController;
-use ILab\Stem\Controllers\TermController;
-use ILab\Stem\Controllers\PostsController;
-use ILab\Stem\Controllers\SearchController;
-use ILab\Stem\Utilities\Plugins\PluginManager;
+use Stem\Models\Page;
+use Stem\Models\Post;
+use Stem\Models\Attachment;
+use Stem\Controllers\PageController;
+use Stem\Controllers\PostController;
+use Stem\Controllers\TermController;
+use Stem\Controllers\PostsController;
+use Stem\Controllers\SearchController;
+use Stem\Utilities\Plugins\PluginManager;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -391,9 +391,9 @@ class Context {
      */
     private function setupModels() {
         // Register the default model map, which can be overridden ;)
-        $this->modelMap['post'] = '\\ILab\\Stem\\Models\\Post';
-        $this->modelMap['attachment'] = '\\ILab\\Stem\\Models\\Attachment';
-        $this->modelMap['page'] = '\\ILab\\Stem\\Models\\Page';
+        $this->modelMap['post'] = '\\Stem\\Models\\Post';
+        $this->modelMap['attachment'] = '\\Stem\\Models\\Attachment';
+        $this->modelMap['page'] = '\\Stem\\Models\\Page';
 
         // DEPRECATED
         $models = arrayPath($this->config, 'model-map', []);
@@ -685,7 +685,7 @@ class Context {
             $this->dispatcher->dispatch();
         } catch (\Exception $ex) {
             if (env('WP_ENV') != 'production') {
-                $res = new \Symfony\Component\HttpFoundation\Response($this->ui->render('stem-system.error', ['ex'=>$ex, 'data' => \ILab\Stem\Core\Response::$lastData]), 500);
+                $res = new \Symfony\Component\HttpFoundation\Response($this->ui->render('stem-system.error', ['ex'=>$ex, 'data' => \Stem\Core\Response::$lastData]), 500);
                 $res->send();
                 die;
             } else {

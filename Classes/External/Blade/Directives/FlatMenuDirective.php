@@ -1,9 +1,9 @@
 <?php
 
-namespace ILab\Stem\External\Blade\Directives;
+namespace Stem\External\Blade\Directives;
 
-use ILab\Stem\Core\Context;
-use ILab\Stem\Core\ViewDirective;
+use Stem\Core\Context;
+use Stem\Core\ViewDirective;
 
 /**
  * Class FlatMenuDirective
@@ -109,6 +109,6 @@ class FlatMenuDirective extends ViewDirective  {
 			throw new \Exception('Missing menu slug argument for @menu directive.');
 		}
 
-		return "<?php echo ILab\\Stem\\External\\Blade\\Directives\\FlatMenuDirective::OutputFlatMenu('{$args[0]}'); ?>";
+		return "<?php echo Stem\\External\\Blade\\Directives\\FlatMenuDirective::OutputFlatMenu('{$args[0]}'); ?>";
 	}
 }

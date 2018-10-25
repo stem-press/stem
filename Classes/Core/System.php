@@ -89,7 +89,7 @@ if (! function_exists('vomit')) {
      */
     function vomit($data, $die = true)
     {
-        \ILab\Stem\Utilities\Debug\VarDumper::dump($data);
+        \Stem\Utilities\Debug\VarDumper::dump($data);
 
         if ($die) {
             die;
@@ -104,7 +104,7 @@ if (! function_exists('vd')) {
      */
     function vd($data)
     {
-        \ILab\Stem\Utilities\Debug\VarDumper::dump($data);
+        \Stem\Utilities\Debug\VarDumper::dump($data);
     }
 }
 

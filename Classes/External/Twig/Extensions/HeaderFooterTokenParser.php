@@ -1,8 +1,8 @@
 <?php
 
-namespace ILab\Stem\External\Twig\Extensions;
+namespace Stem\External\Twig\Extensions;
 
-use ILab\Stem\Core\Context;
+use Stem\Core\Context;
 
 class HeaderFooterTokenParser extends \Twig_TokenParser
 {

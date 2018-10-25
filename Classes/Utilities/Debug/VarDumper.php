@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace ILab\Stem\Utilities\Debug;
+namespace Stem\Utilities\Debug;
 
 use Symfony\Component\VarDumper\Cloner\VarCloner;
 use Symfony\Component\VarDumper\Dumper\CliDumper;

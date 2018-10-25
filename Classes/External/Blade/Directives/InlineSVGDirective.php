@@ -1,9 +1,9 @@
 <?php
 
-namespace ILab\Stem\External\Blade\Directives;
+namespace Stem\External\Blade\Directives;
 
-use ILab\Stem\Core\Context;
-use ILab\Stem\Core\ViewDirective;
+use Stem\Core\Context;
+use Stem\Core\ViewDirective;
 
 /**
  * Class InlineSVGDirective.

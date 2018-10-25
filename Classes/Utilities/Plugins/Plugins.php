@@ -12,7 +12,7 @@
  * @license    GPL-2.0+
  */
 
-namespace ILab\Stem\Utilities\Plugins;
+namespace Stem\Utilities\Plugins;
 
 
 /**
