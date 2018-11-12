@@ -1,7 +1,7 @@
 <?php
 
-namespace ILab\Stem\Models;
-use ILab\Stem\Core\Context;
+namespace Stem\Models;
+use Stem\Core\Context;
 
 /**
  * Class Attachment.

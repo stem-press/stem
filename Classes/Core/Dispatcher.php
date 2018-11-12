@@ -1,8 +1,8 @@
 <?php
 
-namespace ILab\Stem\Core;
+namespace Stem\Core;
 
-use ILab\Stem\Controllers\ErrorController;
+use Stem\Controllers\ErrorController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 

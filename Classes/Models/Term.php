@@ -1,8 +1,8 @@
 <?php
 
-namespace ILab\Stem\Models;
+namespace Stem\Models;
 
-use ILab\Stem\Core\Context;
+use Stem\Core\Context;
 
 class Term implements \JsonSerializable {
     private static $termCache = [];

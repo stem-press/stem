@@ -1,11 +1,11 @@
 <?php
 
-namespace ILab\Stem\Models\Query;
+namespace Stem\Models\Query;
 
 /**
  * Represents a "fluent" field in a query.
  *
- * @package ILab\Stem\Models\Query
+ * @package Stem\Models\Query
  *
  * @method Query equals(mixed|null $value)
  * @method Query notEquals(mixed|null $value)

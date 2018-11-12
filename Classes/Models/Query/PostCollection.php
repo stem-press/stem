@@ -1,13 +1,13 @@
 <?php
 
-namespace ILab\Stem\Models\Query;
+namespace Stem\Models\Query;
 
-use ILab\Stem\Core\Context;
+use Stem\Core\Context;
 
 /**
  * Represents the results from a query or \WP_Query
  *
- * @package ILab\Stem\Models
+ * @package Stem\Models
  */
 class PostCollection implements \ArrayAccess, \Iterator, \Countable {
     /** @var Context|null The context */

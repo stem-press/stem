@@ -1,9 +1,9 @@
 <?php
 
-namespace ILab\Stem\Controllers;
+namespace Stem\Controllers;
 
-use ILab\Stem\Core\Response;
-use ILab\Stem\Core\Controller;
+use Stem\Core\Response;
+use Stem\Core\Controller;
 use Symfony\Component\HttpFoundation\Request;
 
 class ErrorController extends Controller {

@@ -1,10 +1,10 @@
 <?php
 
-namespace ILab\Stem\UI;
+namespace Stem\UI;
 
-use ILab\Stem\Core\Context;
-use ILab\Stem\Core\UI;
-use ILab\Stem\UI\Utilities\WPWidgetWrapper;
+use Stem\Core\Context;
+use Stem\Core\UI;
+use Stem\UI\Utilities\WPWidgetWrapper;
 
 abstract class Widget {
     /** @var WPWidgetWrapper The underlying WordPress widget */

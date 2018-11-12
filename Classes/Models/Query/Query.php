@@ -1,10 +1,10 @@
 <?php
 
-namespace ILab\Stem\Models\Query;
+namespace Stem\Models\Query;
 
-use ILab\Stem\Core\Context;
-use ILab\Stem\Models\Post;
-use ILab\Stem\Models\User;
+use Stem\Core\Context;
+use Stem\Models\Post;
+use Stem\Models\User;
 
 /**
  * Fluent interface for the horrible WP_Query
@@ -28,7 +28,7 @@ use ILab\Stem\Models\User;
  * @property-read Query $or Sets metaquery relation to OR
  * @property-read Query $and Sets metaquery relation to AND
  *
- * @package ILab\Stem\Models\Query
+ * @package Stem\Models\Query
  */
 final class Query {
     /** @var Context|null The context */

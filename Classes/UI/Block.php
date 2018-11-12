@@ -1,14 +1,14 @@
 <?php
 
-namespace ILab\Stem\UI;
+namespace Stem\UI;
 
-use ILab\Stem\Core\Context;
-use ILab\Stem\Core\UI;
+use Stem\Core\Context;
+use Stem\Core\UI;
 
 /**
  * Block class for user defined blocks
  *
- * @package ILab\Stem\UI
+ * @package Stem\UI
  */
 class Block {
     /** @var Context|null  */
@@ -45,7 +45,7 @@ class Block {
         $this->context = $context;
         $this->ui = $ui;
 
-        if (get_class($this) == 'ILab\\Stem\\UI\\Block') {
+        if (get_class($this) == 'Stem\\UI\\Block') {
             $requiredKeys = ['title', 'description', 'category', 'icon', 'template'];
             if (!keysExist($data, $requiredKeys)) {
                 throw new \Exception('Block definition is missing one or more of these required keys: '.implode(', ', $requiredKeys));

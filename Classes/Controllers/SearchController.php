@@ -1,9 +1,9 @@
 <?php
 
-namespace ILab\Stem\Controllers;
+namespace Stem\Controllers;
 
-use ILab\Stem\Core\Context;
-use ILab\Stem\Core\Response;
+use Stem\Core\Context;
+use Stem\Core\Response;
 use Symfony\Component\HttpFoundation\Request;
 
 class SearchController extends PostsController {

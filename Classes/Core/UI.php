@@ -1,9 +1,9 @@
 <?php
 
-namespace ILab\Stem\Core;
+namespace Stem\Core;
 
-use ILab\Stem\UI\Theme;
-use ILab\Stem\UI\Widget;
+use Stem\UI\Theme;
+use Stem\UI\Widget;
 
 /**
  * Class Theme.
@@ -124,7 +124,7 @@ class UI
      * View class.
      * @var string
      */
-    protected $viewClass = '\ILab\Stem\External\Blade\BladeView';
+    protected $viewClass = '\Stem\External\Blade\BladeView';
 
     /**
      * Amp manager.
@@ -195,7 +195,7 @@ class UI
 
         $viewEngine = $this->setting('options/views/engine');
         if ($viewEngine == 'twig') {
-            $this->viewClass = '\ILab\Stem\External\Twig\TwigView';
+            $this->viewClass = '\Stem\External\Twig\TwigView';
         }
 
         $resetCache = $this->setting('options/views/reset-cache',false);
@@ -428,7 +428,11 @@ class UI
                 if ($key == 'post-thumbnail') {
                     set_post_thumbnail_size($info['width'], $info['height'], $info['crop']);
                 } else {
-                    add_image_size($key, $info['width'], $info['height'], $info['crop']);
+                    if (function_exists('addImgixImageSize')) {
+                        addImgixImageSize($key, $info['width'], $info['height'], !empty($info['crop']) ? $info['crop'] : false, !empty($info['imgix']) ? $info['imgix'] : null);
+                    } else {
+                        add_image_size($key, $info['width'], $info['height'], !empty($info['crop']) ? $info['crop'] : false);
+                    }
                 }
 
                 $display = arrayPath($info, 'display', false);
@@ -1045,8 +1049,10 @@ class UI
             $is_crop = (strpos($image_src, 'fit=crop') > 0);
             foreach ($sources as $key => $source) {
                 $src = apply_filters('imgix_build_srcset_url', $attachment_id, [$source['value'], ($is_crop) ? $source['value'] : 15000, ($is_crop) ? 'crop' : 'fit'], null);
-                $source['url'] = $src[0];
-                $sources[$key] = $source;
+                if (!empty($src) && is_array($src) && isset($src[0])) {
+                    $source['url'] = $src[0];
+                    $sources[$key] = $source;
+                }
             }
 
             return $sources;

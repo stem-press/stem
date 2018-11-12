@@ -1,8 +1,8 @@
 <?php
 
-namespace ILab\Stem\External\Blade\Directives;
+namespace Stem\External\Blade\Directives;
 
-use ILab\Stem\Core\ViewDirective;
+use Stem\Core\ViewDirective;
 
 /**
  * Class ThemeDirective.
@@ -25,6 +25,6 @@ class ThemeDirective extends ViewDirective
         }
         $setting = $args[0];
 
-        return "<?php echo ILab\\Stem\\Core\\Context::current()->ui->theme->{$setting}; ?>";
+        return "<?php echo Stem\\Core\\Context::current()->ui->theme->{$setting}; ?>";
     }
 }

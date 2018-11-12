@@ -1,6 +1,6 @@
 <?php
 
-namespace ILab\Stem\Core;
+namespace Stem\Core;
 
 use Invoker\Invoker;
 use Symfony\Component\Routing\Route;

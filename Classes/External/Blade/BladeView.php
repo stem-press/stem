@@ -1,14 +1,14 @@
 <?php
 
-namespace ILab\Stem\External\Blade;
+namespace Stem\External\Blade;
 
-use ILab\Stem\Core\UI;
-use ILab\Stem\Core\View;
-use ILab\Stem\Core\Context;
-use ILab\Stem\Models\Theme;
+use Stem\Core\UI;
+use Stem\Core\View;
+use Stem\Core\Context;
+use Stem\Models\Theme;
 use duncan3dc\Laravel\Blade;
 use duncan3dc\Laravel\BladeInstance;
-use ILab\Stem\Utilities\ArgumentParser;
+use Stem\Utilities\ArgumentParser;
 
 /**
  * Class BladeView.
@@ -70,19 +70,19 @@ class BladeView extends View
     protected function registerDirectives()
     {
         $defaultDirectives = [
-            'menu' => '\\ILab\\Stem\\External\\Blade\\Directives\\MenuDirective',
-            'enqueue' => '\\ILab\\Stem\\External\\Blade\\Directives\\EnqueueDirective',
-            'cacheControl' => '\\ILab\\Stem\\External\\Blade\\Directives\\CacheControlDirective',
-            'header' => '\\ILab\\Stem\\External\\Blade\\Directives\\HeaderDirective',
-            'footer' => '\\ILab\\Stem\\External\\Blade\\Directives\\FooterDirective',
-            'css' => '\\ILab\\Stem\\External\\Blade\\Directives\\CSSDirective',
-            'image' => '\\ILab\\Stem\\External\\Blade\\Directives\\ImageDirective',
-            'script' => '\\ILab\\Stem\\External\\Blade\\Directives\\ScriptDirective',
-            'file' => '\\ILab\\Stem\\External\\Blade\\Directives\\FileDirective',
-            'theme' => '\\ILab\\Stem\\External\\Blade\\Directives\\ThemeDirective',
-            "flatmenu" => "\\ILab\\Stem\\External\\Blade\\Directives\\FlatMenuDirective",
-            "svg" => "\\ILab\\Stem\\External\\Blade\\Directives\\InlineSVGDirective",
-            "widgets" => "\\ILab\\Stem\\External\\Blade\\Directives\\WidgetsDirective"
+            'menu' => '\\Stem\\External\\Blade\\Directives\\MenuDirective',
+            'enqueue' => '\\Stem\\External\\Blade\\Directives\\EnqueueDirective',
+            'cacheControl' => '\\Stem\\External\\Blade\\Directives\\CacheControlDirective',
+            'header' => '\\Stem\\External\\Blade\\Directives\\HeaderDirective',
+            'footer' => '\\Stem\\External\\Blade\\Directives\\FooterDirective',
+            'css' => '\\Stem\\External\\Blade\\Directives\\CSSDirective',
+            'image' => '\\Stem\\External\\Blade\\Directives\\ImageDirective',
+            'script' => '\\Stem\\External\\Blade\\Directives\\ScriptDirective',
+            'file' => '\\Stem\\External\\Blade\\Directives\\FileDirective',
+            'theme' => '\\Stem\\External\\Blade\\Directives\\ThemeDirective',
+            "flatmenu" => "\\Stem\\External\\Blade\\Directives\\FlatMenuDirective",
+            "svg" => "\\Stem\\External\\Blade\\Directives\\InlineSVGDirective",
+            "widgets" => "\\Stem\\External\\Blade\\Directives\\WidgetsDirective"
         ];
 
         $directives = $this->context->ui->setting('options/views/directives', []);

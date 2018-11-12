@@ -6,12 +6,12 @@
  * Time: 5:16 AM.
  */
 
-namespace ILab\Stem\Controllers;
+namespace Stem\Controllers;
 
-use ILab\Stem\Models\Page;
-use ILab\Stem\Core\Context;
-use ILab\Stem\Core\Response;
-use ILab\Stem\Core\Controller;
+use Stem\Models\Page;
+use Stem\Core\Context;
+use Stem\Core\Response;
+use Stem\Core\Controller;
 use Symfony\Component\HttpFoundation\Request;
 
 class PageController extends Controller {

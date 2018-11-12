@@ -1,6 +1,6 @@
 <?php
 
-namespace ILab\Stem\Utilities\Debug;
+namespace Stem\Utilities\Debug;
 
 class HtmlDumper extends \Symfony\Component\VarDumper\Dumper\HtmlDumper
 {

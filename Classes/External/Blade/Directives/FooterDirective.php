@@ -1,8 +1,8 @@
 <?php
 
-namespace ILab\Stem\External\Blade\Directives;
+namespace Stem\External\Blade\Directives;
 
-use ILab\Stem\Core\ViewDirective;
+use Stem\Core\ViewDirective;
 
 /**
  * Class FooterDirective.
@@ -18,6 +18,6 @@ class FooterDirective extends ViewDirective
 {
     public function execute($args)
     {
-        return '<?php echo ILab\\Stem\\Core\\Context::current()->ui->footer(); ?>';
+        return '<?php echo Stem\\Core\\Context::current()->ui->footer(); ?>';
     }
 }

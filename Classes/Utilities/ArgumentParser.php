@@ -6,7 +6,7 @@
  * Time: 3:48 PM.
  */
 
-namespace ILab\Stem\Utilities;
+namespace Stem\Utilities;
 
 class ArgumentParser
 {
