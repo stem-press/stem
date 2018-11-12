@@ -438,21 +438,23 @@ class Context {
                 $builder->register();
             }
 
-            $fields = $modelClassname::registerFields();
-            if (!empty($fields)) {
-                if (!isset($fields['location'])) {
-                    $fields['location'] = [
-                        [
+            if (function_exists('acf_add_local_field_group')) {
+                $fields = $modelClassname::registerFields();
+                if (!empty($fields)) {
+                    if (!isset($fields['location'])) {
+                        $fields['location'] = [
                             [
-                                'param' => 'post_type',
-                                'operator' => '==',
-                                'value' => $modelClassname::postType()
+                                [
+                                    'param' => 'post_type',
+                                    'operator' => '==',
+                                    'value' => $modelClassname::postType()
+                                ]
                             ]
-                        ]
-                    ];
-                }
+                        ];
+                    }
 
-                acf_add_local_field_group($fields);
+                    acf_add_local_field_group($fields);
+                }
             }
         }
 
