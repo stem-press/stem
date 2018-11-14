@@ -142,6 +142,28 @@ class ChangeManager {
     }
 
     /**
+     * Updates metadata for an attachment
+     * @param $meta
+     */
+    public function updateAttachmentMeta($meta) {
+        // remove previous attachment meta changes
+        $changes = [];
+        foreach($this->changes as $change) {
+            if ($change['type'] == 'attachmentMeta') {
+                continue;
+            }
+
+            $changes[] = $change;
+        }
+        $this->changes = $changes;
+
+        $this->changes[] = [
+            'type' => 'attachmentMeta',
+            'meta' => $meta
+        ];
+    }
+
+    /**
      * Deletes metadata for a post
      * @param $key
      */
@@ -248,6 +270,7 @@ class ChangeManager {
         $this->applyThumbnailChanges($post_id);
         $this->applyCategoryChanges($post_id);
         $this->applyTagChanges($post_id);
+        $this->applyAttachmentMetaChanges($post_id);
     }
 
     /**
@@ -301,6 +324,21 @@ class ChangeManager {
             } else if ($change['action'] == 'delete') {
                 delete_post_meta($post_id, $change['key']);
             }
+        }
+    }
+
+
+    /**
+     * Applies any metaadata changes
+     * @param $post_id
+     */
+    private function applyAttachmentMetaChanges($post_id) {
+        foreach($this->changes as $change) {
+            if ($change['type'] != 'attachmentMeta') {
+                continue;
+            }
+
+            wp_update_attachment_metadata($post_id, $change['meta']);
         }
     }
 

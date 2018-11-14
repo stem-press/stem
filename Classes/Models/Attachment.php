@@ -44,6 +44,9 @@ class Attachment extends Post {
     /** @var null|array Extra information about the attachment */
     protected $attachmentInfo = null;
 
+    /** @var null|array Attachment metadata */
+    protected $attachmentMeta = null;
+
     public function __construct(Context $context, \WP_Post $post = null) {
         parent::__construct($context, $post);
 
@@ -335,6 +338,65 @@ class Attachment extends Post {
         }
 
         return null;
+    }
+
+    //endregion
+
+    //region Attachment Metadata
+
+    /**
+     * Returns the post's attachment metadata
+     *
+     * @param null|string $keyPath The key path into the attachment metadata
+     * @param null|mixed $defaultValue The default value to return if the key doesn't exist
+     * @return array|mixed|null
+     */
+    public function attachmentMeta($keyPath=null, $defaultValue=null) {
+        $this->insureAttachmentMeta();
+
+        if (empty($keyPath)) {
+            return $this->attachmentMeta;
+        } else {
+            return arrayPath($this->attachmentMeta, $keyPath, $defaultValue);
+        }
+    }
+
+    /**
+     * Updates metadata value
+     * @param $keyPath
+     * @param $value
+     */
+    public function updateAttachmentMeta($keyPath, $value) {
+        $this->insureAttachmentMeta();
+
+        updateArrayPath($this->attachmentMeta, $keyPath, $value);
+
+        $this->changes->updateAttachmentMeta($this->attachmentMeta);
+    }
+
+    /**
+     * Deletes a metadata item
+     * @param $keyPath
+     */
+    public function deleteAttachmentMeta($keyPath) {
+        $this->insureAttachmentMeta();
+
+        unsetArrayPath($this->attachmentMeta, $keyPath);
+
+        $this->changes->updateAttachmentMeta($this->attachmentMeta);
+    }
+
+    /**
+     * Insures metadata is loaded for this post
+     */
+    private function insureAttachmentMeta() {
+        if ($this->attachmentMeta == null) {
+            if (empty($this->id)) {
+                $this->attachmentMeta = [];
+            } else {
+                $this->attachmentMeta = wp_get_attachment_metadata($this->id);
+            }
+        }
     }
 
     //endregion
