@@ -62,6 +62,9 @@ class Post implements \JsonSerializable {
     /** @var null|Term[] All terms assigned to this post */
     protected $tags = null;
 
+    /** @var null|array All terms assigned to this post for a given taxonomy */
+    protected $taxes = null;
+
     /** @var null|string The permalink for this post  */
     protected $permalink = null;
 
@@ -566,6 +569,34 @@ class Post implements \JsonSerializable {
         }
 
         return $this->categories;
+    }
+
+    /**
+     * Returns the list of categories this post belongs to
+     * @return Term[]|null
+     */
+    public function tax($taxonomy) {
+        if ($this->taxes[$taxonomy] != null) {
+            return $this->taxes[$taxonomy];
+        }
+
+        if (empty($this->id)) {
+            $this->taxes[$taxonomy] = [];
+        } else {
+            $taxes = wp_get_object_terms($this->id, $taxonomy);
+            if (is_array($taxes) && (count($taxes) > 0)) {
+                $this->taxes[$taxonomy] = [];
+                foreach ($taxes as $termID) {
+                    if ($termID instanceof \WP_Term) {
+                        $this->taxes[$taxonomy][] = Term::termFromTermData($this->context, $termID);
+                    } else if (is_numeric($termID)) {
+                        $this->taxes[$taxonomy][] = Term::term($this->context, $termID, $taxonomy);
+                    }
+                }
+            }
+        }
+
+        return $this->taxes[$taxonomy];
     }
 
     /**
