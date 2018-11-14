@@ -4,6 +4,7 @@
 namespace Stem\Models;
 
 use Carbon\Carbon;
+use Samrap\Acf\Acf;
 use Stem\Core\Context;
 use Stem\Models\Query\Query;
 use Stem\Models\Utilities\ChangeManager;
@@ -935,16 +936,17 @@ class Post implements \JsonSerializable {
      * @param string $property
      * @param string|null $fieldName
      * @param null|callable $transformer
+     * @param null|mixed $defaultValue
      * @return mixed|null
      * @throws \Samrap\Acf\Exceptions\BuilderException
      */
-    protected function getACFProperty($property, $fieldName = null, $transformer = null) {
+    protected function getACFProperty($property, $fieldName = null, $transformer = null, $defaultValue = null) {
         if ($this->{$property} != null) {
             return $this->{$property};
         }
 
         if (empty($this->id)) {
-            return null;
+            return $defaultValue;
         }
 
         $fieldName = $fieldName ?: $property;
@@ -956,6 +958,8 @@ class Post implements \JsonSerializable {
             }
 
             $this->{$property} = $val;
+        } else {
+            $val = $defaultValue;
         }
 
         return $val;
