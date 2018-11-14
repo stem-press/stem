@@ -394,6 +394,7 @@ class Context {
         $this->modelMap['post'] = '\\Stem\\Models\\Post';
         $this->modelMap['attachment'] = '\\Stem\\Models\\Attachment';
         $this->modelMap['page'] = '\\Stem\\Models\\Page';
+        $this->modelMap['nav_menu_item'] = '\\Stem\\Models\\MenuItem';
 
         // DEPRECATED
         $models = arrayPath($this->config, 'model-map', []);
