@@ -53,6 +53,14 @@ class PostCollection implements \ArrayAccess, \Iterator, \Countable {
     //region Properties
 
     /**
+     * Returns all of the posts this collection contains
+     * @return Post[]
+     */
+    public function posts() {
+        return $this->posts;
+    }
+
+    /**
      * Count elements of an object
      * @link http://php.net/manual/en/countable.count.php
      * @return int The custom count as an integer.
