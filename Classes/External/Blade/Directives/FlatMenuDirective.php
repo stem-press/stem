@@ -13,7 +13,7 @@ use Stem\Core\ViewDirective;
  * @package StemPress\Directives
  */
 class FlatMenuDirective extends ViewDirective  {
-	private static function renderMenuItem($menuItem) {
+	public static function renderMenuItem($menuItem) {
 		$target = (!empty($menuItem['target'])) ? "target='{$menuItem['target']}'" : '';
 		$attrs = implode(" ", $menuItem['attrs']);
 		$classes = implode(" ", $menuItem['classes']);
@@ -43,6 +43,7 @@ class FlatMenuDirective extends ViewDirective  {
 			if ($menu instanceof \WP_Post) {
 				$anchor = get_field('anchor', $menu) ?: '';
 				$menuItem = [
+				    'id' => $menu->ID,
 					'title' => $menu->title,
 					'url' => ($menu->url ?: get_permalink($menu->object_id)).$anchor,
 					'target' => $menu->target,
@@ -93,10 +94,10 @@ class FlatMenuDirective extends ViewDirective  {
 
 		$output = '';
 		foreach($menuItems as $menuItem) {
-			$output .= self::renderMenuItem($menuItem);
+			$output .= static::renderMenuItem($menuItem);
 
 			foreach($menuItem['children'] as $child) {
-				$output .= self::renderMenuItem($child);
+				$output .= static::renderMenuItem($child);
 			}
 		}
 
