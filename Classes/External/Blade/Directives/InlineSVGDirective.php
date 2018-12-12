@@ -27,7 +27,10 @@ class InlineSVGDirective extends ViewDirective
         $file = get_template_directory().'/public/img/'.$args[0];
 
         if (file_exists($file)) {
-            return file_get_contents($file);
+        	$svg = file_get_contents($file);
+	        $svg = str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', $svg);
+	        $svg = str_replace("<?xml version='1.0' encoding='UTF-8'?>", '', $svg);
+            return $svg;
         } else {
             return '';
         }
