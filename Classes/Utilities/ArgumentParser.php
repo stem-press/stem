@@ -43,7 +43,7 @@ class ArgumentParser
                 $currentVal = '';
                 $currentArray = [];
                 $inArray = false;
-            } elseif (preg_match('#[aA-zZ0-9._-]#', $string[$index])) {
+            } elseif (preg_match('#[\/aA-zZ0-9._-]#', $string[$index])) {
                 $currentVal .= $string[$index];
             } elseif ($string[$index] == ',') {
                 if (! empty($currentVal)) {
