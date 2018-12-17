@@ -18,13 +18,9 @@ use Stem\Core\ViewDirective;
  */
 class InlineSVGDirective extends ViewDirective
 {
-    public function execute($args)
+    public static function InlineSVG($svgFile)
     {
-        if (count($args) == 0) {
-            throw new \Exception('Missing image file name for @image directive.');
-        }
-
-        $file = get_template_directory().'/public/img/'.$args[0];
+        $file = get_template_directory().'/public/img/'.$svgFile;
 
         if (file_exists($file)) {
         	$svg = file_get_contents($file);
@@ -35,4 +31,12 @@ class InlineSVGDirective extends ViewDirective
             return '';
         }
     }
+
+	public function execute($args) {
+		if (count($args) == 0) {
+			throw new \Exception('Missing menu svg filename argument for @svg directive.');
+		}
+
+		return "<?php echo Stem\\External\\Blade\\Directives\\InlineSVGDirective::InlineSVG('{$args[0]}'); ?>";
+	}
 }
