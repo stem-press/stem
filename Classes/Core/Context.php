@@ -189,6 +189,18 @@ class Context {
                 $this->dispatch();
             }
         });
+
+        // Register any command line commands
+	    if (defined( 'WP_CLI' ) && class_exists('\WP_CLI')) {
+	    	$commands = arrayPath($this->config, 'commands', []);
+	    	if (!empty($commands)) {
+	    		foreach($commands as $commandClass) {
+	    			if (class_exists($commandClass)) {
+	    				call_user_func([$commandClass, 'Register']);
+				    }
+			    }
+		    }
+	    }
     }
 
     //region Static Methods
