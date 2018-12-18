@@ -461,7 +461,7 @@ class CustomPostTypeBuilder {
                 $this->postProperties['supports'][] = $item;
             }
         } else {
-            $this->postProperties['supports'] = array_diff($this->postProperties['support'], [$item]);
+            $this->postProperties['supports'] = array_diff($this->postProperties['supports'], [$item]);
         }
     }
 
