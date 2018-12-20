@@ -227,6 +227,16 @@ class UI
         $this->theme = new Theme($this->context);
 
         $this->blocks = new Blocks($context, $this);
+
+        // Load custom fields
+	    add_action('acf/include_field_types', function($version = false) {
+	        $fields = arrayPath($this->config, 'content/fields', []);
+	        if (!empty($fields) && is_array($fields)) {
+	            foreach($fields as $fieldClass) {
+	                new $fieldClass();
+                }
+            }
+        });
     }
 
     protected function parseEnqueue() {
