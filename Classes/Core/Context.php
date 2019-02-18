@@ -324,10 +324,21 @@ class Context {
                 $this->router->addRoute(false, $route, $route, $routeInfo);
             }
             else {
+            	$routeName = $route;
+
+            	$methods = [];
+            	if (preg_match('/^(post|get|put|delete|patch):/m', $route, $matches)) {
+            		$route = str_replace($matches[0], '', $route);
+            		$methods = [$matches[1]];
+	            }
+
                 $early = arrayPath($routeInfo,'early', false);
                 $defaults = (isset($routeInfo['defaults']) && is_array($routeInfo['defaults'])) ? $routeInfo['defaults'] : [];
                 $requirements = (isset($routeInfo['requirements']) && is_array($routeInfo['requirements'])) ? $routeInfo['requirements'] : [];
-                $methods = (isset($routeInfo['methods']) && is_array($routeInfo['methods'])) ? $routeInfo['methods'] : [];
+                if (empty($methods)) {
+	                $methods = (isset($routeInfo['methods']) && is_array($routeInfo['methods'])) ? $routeInfo['methods'] : [];
+                }
+
                 $destination = arrayPath($routeInfo, 'controller', null);
                 if (! $destination) {
                     $template = arrayPath($routeInfo, 'template', null);
@@ -341,7 +352,7 @@ class Context {
                 }
 
                 if ($destination) {
-                    $this->router->addRoute($early, $route, $route, $destination, $defaults, $requirements, $methods);
+                    $this->router->addRoute($early, $routeName, $route, $destination, $defaults, $requirements, $methods);
                 } else {
                     Log::error("Invalid destination for route '$route'.");
                 }
