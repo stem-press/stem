@@ -95,6 +95,9 @@ class Post implements \JsonSerializable {
     /** @var null|array Cached metadata */
     protected $meta = null;
 
+    /** @var array Field validators for properties */
+    protected $propertyValidators = [];
+
     /**
      * Post constructor.
      *
@@ -762,7 +765,7 @@ class Post implements \JsonSerializable {
         }
 
         if ($this->id == null) {
-            $this->changes->create(static::$postType);
+            $this->id = $this->changes->create(static::$postType);
         } else {
             $this->changes->update($this->id);
         }
@@ -972,9 +975,11 @@ class Post implements \JsonSerializable {
      * @throws \Samrap\Acf\Exceptions\BuilderException
      */
     protected function getACFProperty($property, $fieldName = null, $transformer = null, $defaultValue = null) {
-        if ($this->{$property} != null) {
-            return $this->{$property};
-        }
+    	if (property_exists($this, $property)) {
+		    if ($this->{$property} != null) {
+			    return $this->{$property};
+		    }
+	    }
 
         if (empty($this->id)) {
             return $defaultValue;
@@ -988,7 +993,9 @@ class Post implements \JsonSerializable {
                 $val = $transformer($val);
             }
 
-            $this->{$property} = $val;
+	        if (property_exists($this, $property)) {
+		        $this->{$property} = $val;
+	        }
         } else {
             $val = $defaultValue;
         }
@@ -1005,7 +1012,9 @@ class Post implements \JsonSerializable {
      * @param null|callable $transformer
      */
     protected function setACFProperty($property, $fieldName, $value, $transformer = null) {
-        $this->{$property} = $value;
+	    if (property_exists($this, $property)) {
+		    $this->{$property} = $value;
+	    }
 
         if ($transformer != null) {
             $value = $transformer($value);
@@ -1183,4 +1192,29 @@ QUERY;
     }
 
     //endregion
+
+	//region Mass assignment
+
+	/**
+	 * Assigns form values to ACF properties.  Properties must be defined in `propertyValidators`.
+	 *
+	 * @param $formValues
+	 *
+	 * @throws InvalidPropertiesException
+	 */
+	public function assign($formValues) {
+    	$invalids = validateArray($formValues, $this->propertyValidators);
+    	if (!empty($invalids)) {
+			throw new InvalidPropertiesException("Invalid form values: ".implode(', ', $invalids), $invalids);
+		}
+
+		foreach($this->propertyValidators as $key => $validator) {
+			if (!isset($formValues[$key])) {
+				continue;
+			}
+
+			$this->setACFProperty($key, $key, arrayPath($formValues, $key, null));
+		}
+	}
+	//endregion
 }

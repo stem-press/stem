@@ -31,6 +31,30 @@ function arrayPath($array, $path, $defaultValue = null)
 }
 
 /**
+ * Validates the values in an associative array, returning the fields that don't validate
+ *
+ * @param $array
+ * @param $validators
+ *
+ * @return array
+ */
+function validateArray($array, $validators) {
+	$invalid = [];
+
+	foreach($validators as $key => $filterValidator) {
+		if (empty($filterValidator)) {
+			continue;
+		}
+
+		if (!isset($array[$key]) || !filter_var($array[$key], $filterValidator)) {
+			$invalid[] = $key;
+		}
+	}
+
+	return $invalid;
+}
+
+/**
  * Updates a value in an array using a path string, eg 'some/setting/here'.
  * @param $array
  * @param $path
