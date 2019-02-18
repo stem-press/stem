@@ -215,14 +215,14 @@ class UI
         // For AMP pages
         $this->amp = new AMP($this->context, $this);
 
-        // Image related
-        add_filter('image_downsize', [$this, 'imageDownsize'], 3, 3);
-        add_filter('wp_calculate_image_srcset', [$this, 'calculateSrcSet'], 9999, 5);
-        add_filter('wp_calculate_image_sizes', [$this, 'calculateImageSizes'], 3, 5);
-
-        add_filter('ilab_s3_can_calculate_srcset', function () {
-            return ! $this->imgixEnabled;
-        });
+//        // Image related
+//        add_filter('image_downsize', [$this, 'imageDownsize'], 3, 3);
+//        add_filter('wp_calculate_image_srcset', [$this, 'calculateSrcSet'], 9999, 5);
+//        add_filter('wp_calculate_image_sizes', [$this, 'calculateImageSizes'], 3, 5);
+//
+//        add_filter('ilab_s3_can_calculate_srcset', function () {
+//            return ! $this->imgixEnabled;
+//        });
 
         $this->theme = new Theme($this->context);
 
@@ -234,6 +234,17 @@ class UI
 	        if (!empty($fields) && is_array($fields)) {
 	            foreach($fields as $fieldClass) {
 	                new $fieldClass();
+                }
+            }
+        });
+
+	    // Load Custom Columns
+        add_action('ac/column_types', function(\AC\ListScreen $listScreen) {
+	        $columns = arrayPath($this->config, 'content/columns', []);
+	        foreach($columns as $columnClass => $validPostTypes) {
+	            $validPostType = (empty($validPostTypes) || in_array($listScreen->get_key(), $validPostTypes));
+	            if ($validPostType) {
+	                $listScreen->register_column_type(new $columnClass());
                 }
             }
         });
