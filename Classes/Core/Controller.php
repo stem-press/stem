@@ -49,5 +49,13 @@ abstract class Controller
         add_filter( 'the_seo_framework_custom_field_description', function( $description ) {
             return $this->description ?: $description;
         } );
+
+	    add_filter('document_title_parts', function($title_parts) {
+	    	if (!empty($this->title)) {
+	    		$title_parts['title'] = $this->title;
+		    }
+
+		    return $title_parts;
+	    }, 9999, 1);
     }
 }

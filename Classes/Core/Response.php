@@ -8,7 +8,7 @@ class Response extends \Symfony\Component\HttpFoundation\Response
 {
     public static $lastData = [];
 
-    public function __construct($view, $data = [], $status = 200, $headers = [])
+    public function __construct($view, $data = [], $status = 200, $headers = [], $title = null, $subtitle = null)
     {
         self::$lastData = $data;
 
@@ -20,6 +20,18 @@ class Response extends \Symfony\Component\HttpFoundation\Response
             $headers['Content-Type'] = $accept;
             $content = json_encode($data);
         } else {
+        	if (!empty($title)) {
+        		add_filter('document_title_parts', function($title_parts) use ($title, $subtitle) {
+        			if (!empty($subtitle)) {
+        				$title_parts['tagline'] = $subtitle;
+			        }
+
+			        $title_parts['title'] = $title;
+
+        			return $title_parts;
+		        }, 10000, 1);
+	        }
+
             $content = Context::current()->ui->render($view, $data);
         }
 
