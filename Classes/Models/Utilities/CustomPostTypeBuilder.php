@@ -462,6 +462,9 @@ class CustomPostTypeBuilder {
             }
         } else {
             $this->postProperties['supports'] = array_diff($this->postProperties['supports'], [$item]);
+            if (empty($this->postProperties['supports'])) {
+	            $this->postProperties['supports'] = [];
+            }
         }
     }
 
@@ -884,6 +887,10 @@ class CustomPostTypeBuilder {
 
         if (!empty($this->siteFilters)) {
             $args['site_filters'] = $this->siteFilters;
+        }
+
+        if (empty($args['supports'])) {
+        	$args['supports'] = false;
         }
 
         register_extended_post_type($this->postType, $args, $this->names);
