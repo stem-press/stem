@@ -148,6 +148,13 @@ class Post implements \JsonSerializable {
         return null;
     }
 
+	/**
+	 * Called when a custom post type model is added to the context.
+	 */
+    public static function initialize() {
+
+    }
+
     //endregion
 
     //region Properties

@@ -457,6 +457,7 @@ class Context {
      */
     private function setupCustomPostTypes() {
         foreach($this->modelMap as $postType => $modelClassname) {
+        	$modelClassname::initialize();
             $builder = $modelClassname::postTypeProperties();
             if ($builder != null) {
                 $builder->register();
