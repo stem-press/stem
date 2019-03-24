@@ -465,6 +465,8 @@ class Context {
 
             if (function_exists('acf_add_local_field_group')) {
                 $fields = $modelClassname::registerFields();
+                $modelClassname::updatePropertyMap($fields);
+
                 if (!empty($fields)) {
                     if (!isset($fields['location'])) {
                         $fields['location'] = [

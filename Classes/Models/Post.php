@@ -6,9 +6,11 @@ namespace Stem\Models;
 use Carbon\Carbon;
 use Samrap\Acf\Acf;
 use Stem\Core\Context;
+use Stem\Models\Query\PostCollection;
 use Stem\Models\Query\Query;
 use Stem\Models\Utilities\ChangeManager;
 use Stem\Models\Utilities\CustomPostTypeBuilder;
+use Stem\Models\Utilities\PropertiesProxy;
 use Stem\Utilities\Text;
 
 /**
@@ -17,8 +19,20 @@ use Stem\Utilities\Text;
  * Represents a WordPress post
  */
 class Post implements \JsonSerializable {
+	/** @var bool Determines if the model is read-only. */
+	protected static $isReadOnly = false;
+
     /** @var string Type of post */
     protected static $postType = 'post';
+
+	/** @var string[] ACF Fields  */
+	protected static $propertyMap = [];
+
+	/** @var string[] ACF Fields  */
+	protected static $readOnlyProps = [];
+
+	/** @var null|PropertiesProxy  */
+	protected $propertiesProxy = null;
 
     /** @var int|null ID of the post */
     protected $id;
@@ -148,6 +162,38 @@ class Post implements \JsonSerializable {
         return null;
     }
 
+	private static function parseFields($prefix, $fields) {
+		$result = [];
+
+		foreach($fields as $field) {
+			$fieldName = camelCaseString($field['name']);
+			if (!in_array($field['type'], ['group', 'repeater'])) {
+				$result[$fieldName] = [
+					'field' => $prefix.$field['name'],
+					'type' => $field['type']
+				];
+			} else {
+				$newPrefix = ($field['type'] == 'repeater') ? $prefix.$field['name'].'_'.'{INDEX}_' : $prefix.$field['name'].'_';
+				$result[$fieldName] = [
+					'field' => $prefix.$field['name'],
+					'type' => $field['type'],
+					'fields' => static::parseFields($newPrefix,  $field['sub_fields'])
+				];
+			}
+		}
+
+		return $result;
+	}
+
+    public static function updatePropertyMap($acfFieldsDef) {
+    	if (empty($acfFieldsDef)) {
+    		return;
+	    }
+
+    	$fields = arrayPath($acfFieldsDef, 'fields', []);
+	    static::$propertyMap[static::class] = static::parseFields('', $fields);
+    }
+
 	/**
 	 * Called when a custom post type model is added to the context.
 	 */
@@ -156,6 +202,32 @@ class Post implements \JsonSerializable {
     }
 
     //endregion
+
+	//region Dynamic Properties
+	public function __get($name) {
+    	if (empty($this->propertiesProxy)) {
+    		$this->propertiesProxy = new PropertiesProxy($this, static::$propertyMap[static::class], static::$isReadOnly, static::$readOnlyProps);
+	    }
+
+    	return $this->propertiesProxy->__get($name);
+	}
+
+	public function __set($name, $value) {
+		if (empty($this->propertiesProxy)) {
+			$this->propertiesProxy = new PropertiesProxy($this, static::$propertyMap[static::class], static::$isReadOnly, static::$readOnlyProps);
+		}
+
+		$this->propertiesProxy->__set($name, $value);
+	}
+
+	public function __call($name, $arguments) {
+		if (empty($this->propertiesProxy)) {
+			$this->propertiesProxy = new PropertiesProxy($this, static::$propertyMap[static::class], static::$isReadOnly, static::$readOnlyProps);
+		}
+
+		$this->propertiesProxy->__call($name, $arguments);
+	}
+	//endregion
 
     //region Properties
 
@@ -981,11 +1053,15 @@ class Post implements \JsonSerializable {
      * @return mixed|null
      * @throws \Samrap\Acf\Exceptions\BuilderException
      */
-    protected function getACFProperty($property, $fieldName = null, $transformer = null, $defaultValue = null) {
+	public function getField($fieldName, $transformer = null, $defaultValue = null) {
+    	$property = camelCaseString($fieldName);
+
     	if (property_exists($this, $property)) {
 		    if ($this->{$property} != null) {
 			    return $this->{$property};
 		    }
+	    } else if (isset($this->fieldsCache[$fieldName])) {
+    		return $this->fieldsCache[$fieldName];
 	    }
 
         if (empty($this->id)) {
@@ -1002,6 +1078,8 @@ class Post implements \JsonSerializable {
 
 	        if (property_exists($this, $property)) {
 		        $this->{$property} = $val;
+	        } else {
+	        	$this->fieldsCache[$fieldName] = $val;
 	        }
         } else {
             $val = $defaultValue;
@@ -1018,62 +1096,20 @@ class Post implements \JsonSerializable {
      * @param mixed|null $value
      * @param null|callable $transformer
      */
-    protected function setACFProperty($property, $fieldName, $value, $transformer = null) {
-	    if (property_exists($this, $property)) {
-		    $this->{$property} = $value;
-	    }
+    public function updateField($fieldName, $value, $transformer = null) {
+	    $property = camelCaseString($fieldName);
 
         if ($transformer != null) {
             $value = $transformer($value);
         }
 
+	    if (property_exists($this, $property)) {
+		    $this->{$property} = $value;
+	    } else {
+	    	$this->fieldsCache[$fieldName] = $value;
+	    }
+
         $this->changes->updateField($fieldName, $value);
-    }
-
-    /**
-     * Fetches the value for an ACF field
-     * @param $field
-     * @param mixed|null $defaultValue
-     * @return mixed|null
-     */
-    public function field($field, $defaultValue = null) {
-        if (isset($this->fieldsCache[$field])) {
-            return $this->fieldsCache[$field];
-        }
-
-        if (empty($this->id)) {
-            return $defaultValue;
-        }
-
-        $value = get_field($field, $this->id);
-        if ($value === null) {
-            return $defaultValue;
-        }
-
-        $this->fieldsCache[$field] = $value;
-        return $value;
-    }
-
-    /**
-     * Updates an ACF field
-     * @param $field
-     * @param $value
-     */
-    public function updateField($field, $value) {
-        $this->fieldsCache[$field] = $value;
-        $this->changes->updateField($field, $value);
-    }
-
-    /**
-     * Deletes the value for an ACF field associated with this post
-     * @param $field
-     */
-    public function deleteField($field) {
-        if (isset($this->fieldsCache[$field])) {
-            unset($this->fieldsCache[$field]);
-        }
-
-        $this->changes->deleteField($field);
     }
 
     //endregion
@@ -1159,15 +1195,26 @@ QUERY;
         return new Query(Context::current(), static::$postType);
     }
 
-    /**
-     * Returns the post with the given id, or null if not found
-     * @param $id
-     * @return Post|null
-     * @throws \Exception
-     */
-    public static function find($id) {
-        return Context::current()->modelForPostID($id);
-    }
+	/**
+	 * Returns the post with the given id, or null if not found
+	 * @param $id
+	 * @return Post|null
+	 * @throws \Exception
+	 */
+	public static function find($id) {
+		return Context::current()->modelForPostID($id);
+	}
+
+	/**
+	 * Returns all of the posts of this type
+	 * @return PostCollection|null
+	 * @throws \Exception
+	 */
+	public static function all() {
+		$query = static::query();
+		$query->limit(-1);
+		return $query->get();
+	}
 
     /**
      * Returns the first post of this type

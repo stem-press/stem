@@ -696,14 +696,14 @@ final class Query {
         return $result[0];
     }
 
-    /**
-     * Executes the query and returns the result
-     *
-     * @return PostCollection
-     */
-    public function get() {
-        return new PostCollection($this->context, $this);
-    }
+	/**
+	 * Executes the query and returns the result
+	 *
+	 * @return PostCollection
+	 */
+	public function get() {
+		return new PostCollection($this->context, $this);
+	}
 
     /**
      * Builds the arguments that will be used with WP_Query

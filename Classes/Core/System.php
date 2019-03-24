@@ -171,3 +171,7 @@ if (!function_exists('keysExist')) {
         return true;
     }
 }
+
+function camelCaseString($string) {
+	return lcfirst(preg_replace('#[-_]+#', '', ucwords($string, "-_")));
+}
