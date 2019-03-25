@@ -19,6 +19,7 @@ use Stem\Utilities\Text;
  * Represents a WordPress post
  *
  * @property-read int|null $id
+ * @property string|null $title
  */
 class Post implements \JsonSerializable {
 	/** @var bool Determines if the model is read-only. */
@@ -61,7 +62,7 @@ class Post implements \JsonSerializable {
     protected $slug = null;
 
     /** @var null|string Title for the post */
-    protected $title = null;
+    protected $_title = null;
 
     /** @var null|User The author of the post  */
     protected $author = null;
@@ -113,6 +114,10 @@ class Post implements \JsonSerializable {
 
     /** @var array Field validators for properties */
     protected $propertyValidators = [];
+
+    protected $wordPressPropertyMap = [
+    	'title' => 'post_title'
+    ];
 
     /**
      * Post constructor.
@@ -206,11 +211,41 @@ class Post implements \JsonSerializable {
     //endregion
 
 	//region Dynamic Properties
+	private function doGetProperty($name, $postProperty) {
+    	$privateName = '_'.$name;
+    	if (!property_exists($this, $privateName)) {
+    		return null;
+	    }
+
+    	if ($this->{$privateName} != null) {
+    		return $this->{$privateName};
+	    }
+
+    	if (empty($this->_id)) {
+    		return null;
+	    }
+
+    	$this->{$privateName} = $this->post->{$postProperty};
+    	return $this->{$privateName};
+	}
+
+	private function doSetProperty($name, $postProperty, $value) {
+		$privateName = '_'.$name;
+		if (!property_exists($this, $privateName)) {
+			return;
+		}
+
+		$this->{$privateName} = $value;
+		$this->changes->addChange($postProperty, $value);
+	}
+
 	public function __get($name) {
-    	if (in_array($name, ['id'])) {
-    		if ($name == 'id') {
-    			return $this->_id;
-		    }
+    	if ($name == 'id') {
+    		return $this->id;
+	    }
+
+    	if (isset($this->wordPressPropertyMap[$name])) {
+            return $this->doGetProperty($name, $this->wordPressPropertyMap[$name]);
 	    }
 
     	if (empty($this->propertiesProxy)) {
@@ -221,6 +256,11 @@ class Post implements \JsonSerializable {
 	}
 
 	public function __set($name, $value) {
+    	if (isset($this->wordPressPropertyMap[$name])) {
+			$this->doSetProperty($name, $this->wordPressPropertyMap[$name], $value);
+			return;
+	    }
+
 		if (empty($this->propertiesProxy)) {
 			$this->propertiesProxy = new PropertiesProxy($this, static::$propertyMap[static::class], static::$isReadOnly, static::$readOnlyProps);
 		}
@@ -238,14 +278,6 @@ class Post implements \JsonSerializable {
 	//endregion
 
     //region Properties
-
-    /**
-     * The post's ID
-     * @return int|null
-     */
-    public function PostID() {
-        return $this->_id;
-    }
 
     /**
      * Returns the underlying Wordpress post
@@ -273,33 +305,6 @@ class Post implements \JsonSerializable {
         $result = get_post_class($class, $this->_id);
         return implode(' ', $result);
     }
-
-    /**
-     * Title of the post
-     * @return null|string
-     */
-    public function title() {
-        if ($this->title != null) {
-            return $this->title;
-        }
-
-        if (empty($this->_id)) {
-            return null;
-        }
-
-        $this->title = $this->post->post_title;
-        return $this->title;
-    }
-
-    /**
-     * Sets the title of the post
-     * @param $title
-     */
-    public function setTitle($title) {
-        $this->title = $title;
-        $this->changes->addChange( 'post_title', $title);
-    }
-
 
     /**
      * Author of the post
@@ -1176,7 +1181,7 @@ QUERY;
     public function jsonSerialize() {
         return [
             'type'=>static::$postType,
-            'title'=>$this->title(),
+            'title'=>$this->title,
             'slug'=>$this->slug(),
             'author'=>$this->author()->displayName(),
             'date'=>$this->date()->toIso8601String(),
