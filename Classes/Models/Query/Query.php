@@ -495,7 +495,7 @@ final class Query {
 
         if ($operator == '=') {
             $add = '';
-        } else if ($operator = '!=') {
+        } else if ($operator == '!=') {
             $add = '-';
         } else {
             throw new \Exception("Invalid operator for authors.  Only '=' and '!=' supported, '$operator' used.");
@@ -555,7 +555,7 @@ final class Query {
                 } else if ($post instanceof \WP_Post) {
                     $ids[] = $post->ID;
                 } else if ($post instanceof Post) {
-                    $ids[] = $post->id();
+                    $ids[] = $post->id;
                 }
             }
         }

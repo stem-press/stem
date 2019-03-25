@@ -2,6 +2,7 @@
 
 namespace Stem\Core;
 
+use Kint\Kint;
 use Stem\Models\Page;
 use Stem\Models\Post;
 use Stem\Models\Attachment;
@@ -12,6 +13,8 @@ use Stem\Controllers\PostsController;
 use Stem\Controllers\SearchController;
 use Stem\Utilities\Plugins\PluginManager;
 use Symfony\Component\HttpFoundation\Request;
+use Whoops\Handler\PrettyPageHandler;
+use Whoops\Run;
 
 /**
  * Class Context.
@@ -115,6 +118,14 @@ class Context {
         $this->environment = getenv('WP_ENV') ?: 'development';
         $this->debug = (defined(WP_DEBUG) || ($this->environment == 'development'));
         $this->currentBuild = $this->setting('build',filectime(__FILE__));
+
+        if ($this->debug) {
+        	$whoops = new Run();
+        	$whoops->pushHandler(new PrettyPageHandler());
+        	$whoops->register();
+        }
+
+        Kint::$enabled_mode = $this->debug;
 
         // Initialize logging
         $loggingConfig = null;
@@ -438,13 +449,13 @@ class Context {
      * Configure the "suggested" plugin manager for the app's suggested plugins
      */
     private function setupRequiredPlugins() {
-        $args = array(
+        $args = [
             'page_title'  => __( 'Suggested by Stem', 'stem' ),
             'menu_title'  => __( 'Suggested', 'stem' ),
             'menu_slug'   => 'stem-suggested-plugins',
             'parent_slug' => 'plugins.php',
             'plugin_file' => ILAB_STEM, // Required for use in plugins.
-        );
+        ];
 
         $plugins = $this->setting('plugins');
         if (is_array($plugins) && !empty($plugins)) {
@@ -874,6 +885,8 @@ class Context {
                 return $controller;
             }
         }
+
+        return null;
     }
 
     //endregion

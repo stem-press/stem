@@ -3,6 +3,7 @@
 namespace Stem\External\Twig\Extensions;
 
 use Stem\Core\Context;
+use Twig\Token;
 
 class EnqueueTokenParser extends \Twig_TokenParser
 {
@@ -13,7 +14,7 @@ class EnqueueTokenParser extends \Twig_TokenParser
         $this->context = $context;
     }
 
-    public function parse(\Twig_Token $token)
+    public function parse(Token $token)
     {
         $parser = $this->parser;
         $stream = $parser->getStream();

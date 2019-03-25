@@ -65,7 +65,7 @@ class PluginManager {
      * @see set_args()
      * @var array
      */
-    private $args = array();
+    private $args = [];
 
     /**
      * Information for package where drop-in is contained.
@@ -82,7 +82,7 @@ class PluginManager {
      * @since 1.0.0
      * @var   Plugins
      */
-    private $plugins = array();
+    private $plugins = [];
 
     /**
      * Admin screen base ID to match against
@@ -111,7 +111,7 @@ class PluginManager {
      *     @type string $capability     User capability for accessing admin page.
      * }
      */
-    public function __construct( $plugins, $args = array() ) {
+    public function __construct( $plugins, $args = [] ) {
 
         /*
          * Temporarily store $args before set_args().
@@ -140,22 +140,22 @@ class PluginManager {
         $this->set_notices();
 
         // Add the admin page to manage plugins.
-        add_action( 'admin_menu', array( $this, 'add_page' ) );
+        add_action('admin_menu', [$this, 'add_page']);
 
         // Add the admin page to manage plugins.
-        add_action( 'admin_enqueue_scripts', array( $this, 'add_assets' ) );
+        add_action('admin_enqueue_scripts', [$this, 'add_assets']);
 
         // Adds a link to our admin page, from the Installed Plugins screen.
-        add_filter( 'views_plugins', array( $this, 'add_plugins_view' ) );
+        add_filter('views_plugins', [$this, 'add_plugins_view']);
 
         // Adds a link to our admin page, from Plugin Install screen.
-        add_filter( 'views_plugin-install', array( $this, 'add_install_view' ) );
+        add_filter('views_plugin-install', [$this, 'add_install_view']);
 
         // Hook Ajax requests.
-        add_action( 'wp_ajax_plugin-manager-row-refresh', array( $this, 'row_refresh' ) );
+        add_action('wp_ajax_plugin-manager-row-refresh', [$this, 'row_refresh']);
 
         // Hook non-Ajax requests.
-        add_action( 'current_screen', array( $this, 'request' ) );
+        add_action('current_screen', [$this, 'request']);
 
     }
 
@@ -284,7 +284,7 @@ class PluginManager {
      *     @type string $plugin_file          Absolute path to project plugin's main file. Required if implementing from a plugin.
      * }
      */
-    private function set_args( $args = array() ) {
+    private function set_args( $args = [] ) {
 
         $this->args = wp_parse_args( $args, array(
             'page_title'           => __( 'Suggested Plugins', 'stem' ),
@@ -659,7 +659,7 @@ class PluginManager {
 
         $is_wp = false !== strpos( $plugin['url'], 'wordpress.org' );
 
-        $actions = array();
+        $actions = [];
 
         /*
          * Add "Details" link.
@@ -853,7 +853,7 @@ class PluginManager {
         }
 
         // Build $output from $actions array data.
-        $output = array();
+        $output = [];
 
         foreach ( $actions as $key => $action ) {
 
@@ -1272,7 +1272,7 @@ class PluginManager {
 
             if ( $do_bulk ) {
 
-                $plugins = array();
+                $plugins = [];
 
                 foreach ( $_REQUEST['checked'] as $slug ) {
 
@@ -1321,7 +1321,7 @@ class PluginManager {
                 }
             } elseif ( 'deactivate' === $_REQUEST['action'] || 'deactivate-selected' === $_REQUEST['action'] ) {
 
-                $deactivate = array();
+                $deactivate = [];
 
                 if ( $do_bulk ) {
 

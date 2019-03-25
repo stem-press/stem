@@ -17,6 +17,8 @@ use Stem\Utilities\Text;
  * Class Post.
  *
  * Represents a WordPress post
+ *
+ * @property-read int|null $id
  */
 class Post implements \JsonSerializable {
 	/** @var bool Determines if the model is read-only. */
@@ -35,7 +37,7 @@ class Post implements \JsonSerializable {
 	protected $propertiesProxy = null;
 
     /** @var int|null ID of the post */
-    protected $id;
+    protected $_id;
 
     /** @var Context  */
     public $context;
@@ -124,7 +126,7 @@ class Post implements \JsonSerializable {
         $this->context = $context;
 
         if (!empty($post)) {
-            $this->id = $post->ID;
+            $this->_id = $post->ID;
             $this->post = $post;
             $this->menuOrder = $post->menu_order;
         }
@@ -205,6 +207,12 @@ class Post implements \JsonSerializable {
 
 	//region Dynamic Properties
 	public function __get($name) {
+    	if (in_array($name, ['id'])) {
+    		if ($name == 'id') {
+    			return $this->_id;
+		    }
+	    }
+
     	if (empty($this->propertiesProxy)) {
     		$this->propertiesProxy = new PropertiesProxy($this, static::$propertyMap[static::class], static::$isReadOnly, static::$readOnlyProps);
 	    }
@@ -235,8 +243,8 @@ class Post implements \JsonSerializable {
      * The post's ID
      * @return int|null
      */
-    public function id() {
-        return $this->id;
+    public function PostID() {
+        return $this->_id;
     }
 
     /**
@@ -254,7 +262,7 @@ class Post implements \JsonSerializable {
      * @return string
      */
     public function cssClass($class = '') {
-        if (empty($this->id)) {
+        if (empty($this->_id)) {
             if (is_array($class)) {
                 return implode(' ', $class);
             } else {
@@ -262,7 +270,7 @@ class Post implements \JsonSerializable {
             }
         }
 
-        $result = get_post_class($class, $this->id);
+        $result = get_post_class($class, $this->_id);
         return implode(' ', $result);
     }
 
@@ -275,7 +283,7 @@ class Post implements \JsonSerializable {
             return $this->title;
         }
 
-        if (empty($this->id)) {
+        if (empty($this->_id)) {
             return null;
         }
 
@@ -303,7 +311,7 @@ class Post implements \JsonSerializable {
             return $this->author;
         }
 
-        if (empty($this->id)) {
+        if (empty($this->_id)) {
             return null;
         }
 
@@ -335,7 +343,7 @@ class Post implements \JsonSerializable {
             return $this->slug;
         }
 
-        if (empty($this->id)) {
+        if (empty($this->_id)) {
             return null;
         }
 
@@ -361,7 +369,7 @@ class Post implements \JsonSerializable {
             return $this->date;
         }
 
-        if (empty($this->id)) {
+        if (empty($this->_id)) {
             return null;
         }
 
@@ -378,7 +386,7 @@ class Post implements \JsonSerializable {
             return $this->updated;
         }
 
-        if (empty($this->id)) {
+        if (empty($this->_id)) {
             return null;
         }
 
@@ -395,7 +403,7 @@ class Post implements \JsonSerializable {
             return $this->thumbnail;
         }
 
-        if (empty($this->id)) {
+        if (empty($this->_id)) {
             return null;
         }
 
@@ -424,7 +432,7 @@ class Post implements \JsonSerializable {
             }
 
             $this->thumbnail = $attachmentOrId;
-            $this->changes->setThumbnail($attachmentOrId->id());
+            $this->changes->setThumbnail($attachmentOrId->id);
         }
     }
 
@@ -437,7 +445,7 @@ class Post implements \JsonSerializable {
             return $this->status;
         }
 
-        if (empty($this->id)) {
+        if (empty($this->_id)) {
             return 'draft';
         }
 
@@ -463,7 +471,7 @@ class Post implements \JsonSerializable {
             return $this->parent;
         }
 
-        if (empty($this->id)) {
+        if (empty($this->_id)) {
             return null;
         }
 
@@ -498,7 +506,7 @@ class Post implements \JsonSerializable {
             }
         } else {
             $this->parent = $parent;
-            $this->changes->addChange('post_parent', $parent->id());
+            $this->changes->addChange('post_parent', $parent->id);
         }
     }
 
@@ -574,10 +582,10 @@ class Post implements \JsonSerializable {
      */
     private function insureMeta() {
         if ($this->meta == null) {
-            if (empty($this->id)) {
+            if (empty($this->_id)) {
                 $this->meta = [];
             } else {
-                $this->meta = get_post_meta($this->id);
+                $this->meta = get_post_meta($this->_id);
             }
         }
     }
@@ -591,7 +599,7 @@ class Post implements \JsonSerializable {
      * @return null|string
      */
     public function editLink() {
-        return (empty($this->id)) ? null : get_edit_post_link($this->id);
+        return (empty($this->_id)) ? null : get_edit_post_link($this->_id);
     }
 
     /**
@@ -603,11 +611,11 @@ class Post implements \JsonSerializable {
             return $this->permalink;
         }
 
-        if (empty($this->id)) {
+        if (empty($this->_id)) {
             return null;
         }
 
-        $permalink = get_permalink($this->id);
+        $permalink = get_permalink($this->_id);
 
         if ($this->context->ui->useRelative) {
             if ($permalink && ! empty($permalink)) {
@@ -638,7 +646,7 @@ class Post implements \JsonSerializable {
             return $this->categories;
         }
 
-        if (empty($this->id)) {
+        if (empty($this->_id)) {
             $this->categories = [];
         } else {
             $categories = wp_get_post_categories($this->post->ID);
@@ -662,10 +670,10 @@ class Post implements \JsonSerializable {
             return $this->taxes[$taxonomy];
         }
 
-        if (empty($this->id)) {
+        if (empty($this->_id)) {
             $this->taxes[$taxonomy] = [];
         } else {
-            $taxes = wp_get_object_terms($this->id, $taxonomy);
+            $taxes = wp_get_object_terms($this->_id, $taxonomy);
             if (is_array($taxes) && (count($taxes) > 0)) {
                 $this->taxes[$taxonomy] = [];
                 foreach ($taxes as $termID) {
@@ -772,8 +780,8 @@ class Post implements \JsonSerializable {
         }
 
         $this->tags = [];
-        if (!empty($this->id)) {
-            $tags = wp_get_post_tags($this->id);
+        if (!empty($this->_id)) {
+            $tags = wp_get_post_tags($this->_id);
             if ($tags && (count($tags) > 0)) {
                 foreach ($tags as $tag) {
                     $this->tags[] = Term::termFromTermData($this->context, $tag);
@@ -843,10 +851,10 @@ class Post implements \JsonSerializable {
             throw new \Exception("Attempting to save a deleted model.");
         }
 
-        if ($this->id == null) {
-            $this->id = $this->changes->create(static::$postType);
+        if ($this->_id == null) {
+            $this->_id = $this->changes->create(static::$postType);
         } else {
-            $this->changes->update($this->id);
+            $this->changes->update($this->_id);
         }
     }
 
@@ -855,15 +863,15 @@ class Post implements \JsonSerializable {
      * @param bool $force_delete
      */
     public function delete($force_delete = false) {
-        if ($this->deleted || ($this->id == null)) {
+        if ($this->deleted || ($this->_id == null)) {
             return;
         }
 
         $this->deleted = true;
 
-        wp_delete_post($this->id, $force_delete);
+        wp_delete_post($this->_id, $force_delete);
 
-        $this->id = null;
+        $this->_id = null;
         $this->post->ID = null;
     }
 
@@ -882,7 +890,7 @@ class Post implements \JsonSerializable {
             return $this->content;
         }
 
-        if (empty($this->id)) {
+        if (empty($this->_id)) {
             return null;
         }
 
@@ -961,7 +969,7 @@ class Post implements \JsonSerializable {
      * @return null|string
      */
     public function excerpt($len = 50, $force = false, $readmore = 'Read More', $strip = true, $allowed_tags = 'p a span b i br h1 h2 h3 h4 h5 ul li img blockquote') {
-        if (($this->excerpt == null) && (!empty($this->id))) {
+        if (($this->excerpt == null) && (!empty($this->_id))) {
             $this->excerpt = $this->post->post_excerpt;
         }
 
@@ -1064,13 +1072,13 @@ class Post implements \JsonSerializable {
     		return $this->fieldsCache[$fieldName];
 	    }
 
-        if (empty($this->id)) {
+        if (empty($this->_id)) {
             return $defaultValue;
         }
 
         $fieldName = $fieldName ?: $property;
 
-        $val = Acf::field($fieldName, $this->id)->get();
+        $val = Acf::field($fieldName, $this->_id)->get();
         if ($val != null) {
             if ($transformer != null) {
                 $val = $transformer($val);
@@ -1141,7 +1149,7 @@ JOIN
 ON
 	T2.object_id = WP.ID
 WHERE
-	T1.object_id = {$this->id}
+	T1.object_id = {$this->_id}
     AND WP.post_status='publish'
     and WP.post_type in ($postTypes)
 GROUP BY

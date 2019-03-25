@@ -26,7 +26,7 @@ class PageController extends Controller {
             $post = $context->modelForPost($wp_query->post);
             if ($post instanceof Page) {
                 $this->page = $post;
-                $context->cacheControl->setCacheControlHeadersForPage($this->page->id());
+                $context->cacheControl->setCacheControlHeadersForPage($this->page->id);
             }
         }
     }
@@ -35,5 +35,7 @@ class PageController extends Controller {
         if ($this->template) {
             return new Response($this->template, ['page'=>$this->page]);
         }
+
+        return null;
     }
 }

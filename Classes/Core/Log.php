@@ -103,7 +103,6 @@ final class Log
      *
      * @param string $message
      * @param array $context
-     * @return null
      */
     public static function emergency($message, array $context = [])
     {
@@ -118,7 +117,6 @@ final class Log
      *
      * @param string $message
      * @param array $context
-     * @return null
      */
     public static function alert($message, array $context = [])
     {
@@ -132,7 +130,6 @@ final class Log
      *
      * @param string $message
      * @param array $context
-     * @return null
      */
     public static function critical($message, array $context = [])
     {
@@ -145,7 +142,6 @@ final class Log
      *
      * @param string $message
      * @param array $context
-     * @return null
      */
     public static function error($message, array $context = [])
     {
@@ -160,7 +156,6 @@ final class Log
      *
      * @param string $message
      * @param array $context
-     * @return null
      */
     public static function warning($message, array $context = [])
     {
@@ -172,7 +167,6 @@ final class Log
      *
      * @param string $message
      * @param array $context
-     * @return null
      */
     public static function notice($message, array $context = [])
     {
@@ -186,7 +180,6 @@ final class Log
      *
      * @param string $message
      * @param array $context
-     * @return null
      */
     public static function info($message, array $context = [])
     {
@@ -198,7 +191,6 @@ final class Log
      *
      * @param string $message
      * @param array $context
-     * @return null
      */
     public static function debug($message, array $context = [])
     {
@@ -211,7 +203,6 @@ final class Log
      * @param mixed $level
      * @param string $message
      * @param array $context
-     * @return null
      */
     public static function log($level, $message, array $context = [])
     {

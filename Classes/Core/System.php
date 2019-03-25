@@ -124,7 +124,7 @@ function nukeDir($dir) {
         return false;
     }
 
-    $files = array_diff(scandir($dir), array('.','..'));
+    $files = array_diff(scandir($dir), ['.','..']);
     foreach ($files as $file) {
         (is_dir("$dir/$file") && !is_link($dir)) ? nukeDir("$dir/$file") : unlink("$dir/$file");
     }

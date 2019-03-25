@@ -32,5 +32,7 @@ class TermController extends PostsController {
                 'result_count'=>$this->result_count,
             ]);
         }
+
+	    return null;
     }
 }

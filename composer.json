@@ -26,7 +26,9 @@
     "duncan3dc/blade": "^3.3",
     "stoutlogic/acf-builder": "^1.8",
     "johnbillion/extended-cpts": "^4.2",
-    "samrap/acf-fluent": "^0.4.0"
+    "samrap/acf-fluent": "^0.4.0",
+    "filp/whoops": "^2.3",
+    "kint-php/kint": "^3.2"
   },
   "autoload": {
     "psr-4": {

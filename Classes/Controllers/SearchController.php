@@ -22,5 +22,7 @@ class SearchController extends PostsController {
                 'terms'=>$this->search_terms,
             ]);
         }
+
+	    return null;
     }
 }

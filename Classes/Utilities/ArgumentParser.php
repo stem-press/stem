@@ -55,7 +55,6 @@ class ArgumentParser
 
                     $currentVal = '';
                 }
-            } else {
             }
 
             $index++;

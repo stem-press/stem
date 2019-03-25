@@ -32,5 +32,7 @@ class PostController extends Controller
         if ($this->template) {
             return new Response($this->template, ['post'=>$this->post]);
         }
+
+        return null;
     }
 }

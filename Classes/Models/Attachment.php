@@ -64,11 +64,11 @@ class Attachment extends Post {
             return $this->filename;
         }
 
-        if (empty($this->id)) {
+        if (empty($this->_id)) {
             return null;
         }
 
-        $this->filename = wp_basename(get_attached_file($this->id));
+        $this->filename = wp_basename(get_attached_file($this->_id));
         return $this->filename;
     }
 
@@ -81,11 +81,11 @@ class Attachment extends Post {
             return $this->url;
         }
 
-        if (empty($this->id)) {
+        if (empty($this->_id)) {
             return null;
         }
 
-        $this->url = wp_get_attachment_url($this->id);
+        $this->url = wp_get_attachment_url($this->_id);
         return $this->url;
     }
 
@@ -98,11 +98,11 @@ class Attachment extends Post {
             return $this->link;
         }
 
-        if (empty($this->id)) {
+        if (empty($this->_id)) {
             return null;
         }
 
-        $this->link = get_attachment_link($this->id);
+        $this->link = get_attachment_link($this->_id);
         return $this->link;
     }
 
@@ -138,7 +138,7 @@ class Attachment extends Post {
             return $this->description;
         }
 
-        if (empty($this->id)) {
+        if (empty($this->_id)) {
             return null;
         }
 
@@ -164,7 +164,7 @@ class Attachment extends Post {
             return $this->caption;
         }
 
-        if (empty($this->id)) {
+        if (empty($this->_id)) {
             return null;
         }
 
@@ -206,7 +206,7 @@ class Attachment extends Post {
             return $this->mime;
         }
 
-        if (empty($this->id)) {
+        if (empty($this->_id)) {
             return null;
         }
 
@@ -235,11 +235,11 @@ class Attachment extends Post {
             return $this->icon;
         }
 
-        if (empty($this->id)) {
+        if (empty($this->_id)) {
             return null;
         }
 
-        $this->icon = wp_mime_type_icon($this->mime ?: $this->id);
+        $this->icon = wp_mime_type_icon($this->mime ?: $this->_id);
         return $this->icon;
     }
 
@@ -255,10 +255,11 @@ class Attachment extends Post {
             return;
         }
 
-        if ( false !== strpos($mime, '/' ) )
+        if (false !== strpos($mime, '/' )) {
             list($this->type, $this->subtype) = explode('/', $mime);
-        else
-            list($this->type, $this->subtype) = array($mime, '');
+        } else {
+            list($this->type, $this->subtype) = [$mime, ''];
+        }
     }
 
     //endregion
@@ -275,14 +276,14 @@ class Attachment extends Post {
      * @return string|null
      */
     public function img($size = 'original', $attr = false, $stripDimensions = false) {
-        if (empty($this->id)) {
+        if (empty($this->_id)) {
             return null;
         }
 
         if (! $attr) {
-            $img = wp_get_attachment_image($this->id, $size);
+            $img = wp_get_attachment_image($this->_id, $size);
         } else {
-            $img = wp_get_attachment_image($this->id, $size, false, $attr);
+            $img = wp_get_attachment_image($this->_id, $size, false, $attr);
         }
 
         if ($stripDimensions) {
@@ -301,7 +302,7 @@ class Attachment extends Post {
      * @return string
      */
     public function ampImg($size = 'thumbnail', $responsive = true, $attr = null) {
-        if (empty($this->id)) {
+        if (empty($this->_id)) {
             return null;
         }
 
@@ -313,7 +314,7 @@ class Attachment extends Post {
             $attr['layout'] = 'responsive';
         }
 
-        $img = wp_get_attachment_image($this->id, $size, false, $attr);
+        $img = wp_get_attachment_image($this->_id, $size, false, $attr);
 
         $img = str_replace('<img', '<amp-img', $img);
 
@@ -328,11 +329,11 @@ class Attachment extends Post {
      * @return string|null
      */
     public function src($size = 'original') {
-        if (empty($this->id)) {
+        if (empty($this->_id)) {
             return null;
         }
 
-        $result = wp_get_attachment_image_src($this->id, $size);
+        $result = wp_get_attachment_image_src($this->_id, $size);
         if ($result && is_array($result) && (count($result) > 0)) {
             return $result[0];
         }
@@ -391,10 +392,10 @@ class Attachment extends Post {
      */
     private function insureAttachmentMeta() {
         if ($this->attachmentMeta == null) {
-            if (empty($this->id)) {
+            if (empty($this->_id)) {
                 $this->attachmentMeta = [];
             } else {
-                $this->attachmentMeta = wp_get_attachment_metadata($this->id);
+                $this->attachmentMeta = wp_get_attachment_metadata($this->_id);
             }
         }
     }
@@ -413,11 +414,11 @@ class Attachment extends Post {
             return $this->attachmentInfo;
         }
 
-        if (empty($this->id)) {
+        if (empty($this->_id)) {
             return null;
         }
 
-        $this->attachmentInfo = wp_prepare_attachment_for_js($this->id);
+        $this->attachmentInfo = wp_prepare_attachment_for_js($this->_id);
         return $this->attachmentInfo;
     }
 

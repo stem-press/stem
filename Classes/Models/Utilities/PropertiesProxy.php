@@ -59,6 +59,8 @@ class PropertiesProxy {
 		if (!$this->readOnly && !isset($this->readOnlyProps[$name]) && isset($this->props[$name])) {
 			return $this->getField($name);
 		}
+
+		return null;
 	}
 
 	public function __set($name, $value) {
@@ -76,5 +78,7 @@ class PropertiesProxy {
 		if (($this->readOnly || isset($this->readOnlyProps[$name])) && isset($this->props[$name])) {
 			return $this->getField($name);
 		}
+
+		return null;
 	}
 }

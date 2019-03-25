@@ -3,6 +3,7 @@
 namespace Stem\External\Twig\Extensions;
 
 use Stem\Core\Context;
+use Twig\Compiler;
 
 class HeaderFooterNode extends \Twig_Node
 {
@@ -17,7 +18,7 @@ class HeaderFooterNode extends \Twig_Node
         $this->type = $type;
     }
 
-    public function compile(\Twig_Compiler $compiler)
+    public function compile(Compiler $compiler)
     {
         if ($this->type == 'header') {
             $body = $this->context->ui->header();

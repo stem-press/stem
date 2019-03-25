@@ -19,6 +19,8 @@ class ErrorController extends Controller {
         if ($this->template) {
             return new Response($this->template, ['exception' => self::$exception], self::$statusCode);
         }
+
+        return null;
     }
 
     public static function setCurrentError($statusCode, $exception = null) {

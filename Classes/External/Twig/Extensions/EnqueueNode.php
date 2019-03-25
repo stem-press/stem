@@ -3,6 +3,7 @@
 namespace Stem\External\Twig\Extensions;
 
 use Stem\Core\Context;
+use Twig\Compiler;
 
 /**
  * Class EnqueueNode.
@@ -22,7 +23,7 @@ class EnqueueNode extends \Twig_Node
         $this->context = $context;
     }
 
-    public function compile(\Twig_Compiler $compiler)
+    public function compile(Compiler $compiler)
     {
         $compiler->addDebugInfo($this);
     }

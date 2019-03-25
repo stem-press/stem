@@ -45,5 +45,7 @@ class EnqueueDirective extends ViewDirective
                 return "<?php wp_enqueue_style('$resource'', '{$this->context->ui->css($resource)}', $deps); ?>";
             }
         }
+
+        return '';
     }
 }

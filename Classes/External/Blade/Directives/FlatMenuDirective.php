@@ -30,7 +30,7 @@ class FlatMenuDirective extends ViewDirective  {
 
 	public static function OutputFlatMenu($slug) {
         global $wp;
-        $current_url = home_url( add_query_arg( array(), $wp->request ) );
+        $current_url = home_url(add_query_arg([], $wp->request));
         $current_url = trim($current_url, "/");
 		$menuArray = wp_get_nav_menu_items($slug);
 

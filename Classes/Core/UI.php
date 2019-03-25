@@ -403,7 +403,7 @@ class UI
     {
         if (isset($this->enqueueConfig['manifest'])) {
             if (file_exists($this->rootPath.'/'.$this->enqueueConfig['manifest'])) {
-                $manifest = JSONParser::parse(file_get_contents($this->rootPath.'/'.$this->enqueueConfig['manifest']), true);
+                $manifest = JSONParser::parse(file_get_contents($this->rootPath.'/'.$this->enqueueConfig['manifest']));
                 if (isset($manifest['dependencies'])) {
                     foreach ($manifest['dependencies'] as $key => $info) {
                         $ext = pathinfo($key, PATHINFO_EXTENSION);
@@ -599,8 +599,6 @@ class UI
                 if (function_exists('shortcode_ui_register_for_shortcode')) {
                     if (! $uiConfig) {
                         $shortCode->registerUI($key);
-                    } else {
-                        // TODO: Shortcode ui registration
                     }
                 }
             }
@@ -966,7 +964,7 @@ class UI
      * @param string $insertGap
      * @param bool|false $array
      *
-     * @return false|mixed|object|string|void
+     * @return false|mixed|object|string|null
      */
     public function menu($name, $stripUL = false, $removeText = false, $insertGap = '', $array = false)
     {
