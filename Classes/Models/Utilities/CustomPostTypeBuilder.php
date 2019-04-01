@@ -210,6 +210,16 @@ class CustomPostTypeBuilder {
         return $this;
     }
 
+	/**
+	 * Sets the callback for this post type's metaboxes
+	 * @param callable $callable
+	 * @return $this
+	 */
+    public function metaboxCallback($callable) {
+    	$this->postProperties['register_meta_box_cb'] = $callable;
+    	return $this;
+    }
+
     /**
      * Sets the query_var key for this post type.
      * @param bool|string $value
@@ -587,6 +597,20 @@ class CustomPostTypeBuilder {
         $this->postProperties['supports'] = $items;
 
         return $this;
+    }
+
+	/**
+	 * Sets labels
+	 * @param $labels
+	 * @return $this
+	 */
+    public function labels($labels)  {
+		if (!isset($this->postProperties['labels'])) {
+			$this->postProperties['labels'] = [];
+		}
+
+		$this->postProperties['labels'] = array_merge($this->postProperties['labels'], $labels);
+		return $this;
     }
 
 
