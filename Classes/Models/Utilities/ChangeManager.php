@@ -2,6 +2,9 @@
 
 namespace Stem\Models\Utilities;
 
+use Stem\Core\Context;
+use Stem\Models\Attachment;
+
 /**
  * Manages changes to a post
  *
@@ -9,6 +12,7 @@ namespace Stem\Models\Utilities;
  */
 class ChangeManager {
     protected $changes = [];
+    protected $currentValues = [];
 
     public function __construct() {
     }
@@ -23,6 +27,29 @@ class ChangeManager {
         return (count($this->changes) > 0);
     }
 
+	/**
+	 * Determines if a specific field has been changed.
+	 * @param $field
+	 * @return bool
+	 */
+    public function hasChange($field) {
+    	return isset($this->currentValues[$field]);
+    }
+
+	/**
+	 * Returns the current value for a given field, if any
+	 *
+	 * @param $field
+	 * @return null|mixed
+	 */
+    public function value($field) {
+    	if (isset($this->currentValues[$field])) {
+    		return $this->currentValues[$field];
+	    }
+
+    	return null;
+    }
+
     /**
      * Adds a change for the post
      * @param $field
@@ -34,17 +61,35 @@ class ChangeManager {
             'field' => $field,
             'value' => $value
         ];
+
+        $this->currentValues[$field] = $value;
     }
 
     /**
      * Sets the post's thumbnail
-     * @param $attachmentId
+     * @param \WP_Post|Attachment|int $attachment
      */
-    public function setThumbnail($attachmentId) {
-        $this->changes[] = [
-            'type' => 'thumbnail',
-            'set' => $attachmentId
-        ];
+    public function setThumbnail($attachment) {
+    	if (is_object($attachment)) {
+    		if ($attachment instanceof Attachment) {
+    			$attachmentId = $attachment->id;
+		    } else if ($attachment instanceof \WP_Post) {
+    			$attachmentId = $attachment->ID;
+    			$attachment = Context::current()->modelForPost($attachment);
+		    }
+	    } else {
+    		$attachmentId = $attachment;
+    		$attachment = Context::current()->modelForPostID($attachment);
+	    }
+
+    	if (!empty($attachmentId)) {
+	        $this->changes[] = [
+	            'type' => 'thumbnail',
+	            'set' => $attachmentId
+	        ];
+
+		    $this->currentValues['thumbnail'] = $attachment;
+	    }
     }
 
     /**
@@ -55,6 +100,8 @@ class ChangeManager {
             'type' => 'thumbnail',
             'clear' => true
         ];
+
+        unset($this->currentValues['thumbnail']);
     }
 
     /**
@@ -113,6 +160,8 @@ class ChangeManager {
             'field' => $field,
             'value' => $value
         ];
+
+        $this->currentValues[$field] = $value;
     }
 
     /**
@@ -125,6 +174,8 @@ class ChangeManager {
             'action' => 'delete',
             'field' => $field
         ];
+
+        unset($this->currentValues[$field]);
     }
 
     /**
@@ -139,6 +190,8 @@ class ChangeManager {
             'key' => $key,
             'value' => $value
         ];
+
+        $this->currentValues[$key] = $value;
     }
 
     /**
@@ -173,6 +226,8 @@ class ChangeManager {
             'action' => 'delete',
             'key' => $key
         ];
+
+        unset($this->currentValues[$key]);
     }
 
     //endregion
