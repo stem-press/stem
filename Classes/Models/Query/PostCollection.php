@@ -262,18 +262,18 @@ class PostCollection implements \ArrayAccess, \Iterator, \Countable {
 
     //region Debug
 
-    public function __debugInfo() {
-        return [
-            'posts' => $this->posts,
-            'args' => $this->args,
-            'sql' => $this->sql(),
-            'wpQuery' => $this->wpQuery,
-            'count' => $this->count(),
-            'total' => $this->total(),
-            'pages' => $this->pages(),
-            'currentPage' => $this->currentPage()
-        ];
-    }
+//    public function __debugInfo() {
+//        return [
+//            'posts' => $this->posts,
+//            'args' => $this->args,
+//            'sql' => $this->sql(),
+//            'wpQuery' => $this->wpQuery,
+//            'count' => $this->count(),
+//            'total' => $this->total(),
+//            'pages' => $this->pages(),
+//            'currentPage' => $this->currentPage()
+//        ];
+//    }
 
     //endregion
 
