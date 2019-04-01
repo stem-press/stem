@@ -14,6 +14,7 @@ use Stem\Models\User;
  * @property-read Field $slugs Post slugs
  * @property-read Field $title Post title
  * @property-read Field $type Post type
+ * @property-read Field $parent Post parent
  * @property-read Field $author Post author
  * @property-read Field $authors Post authors
  * @property-read Field $authorName Post author name
@@ -63,7 +64,8 @@ final class Query {
         'id',
         'slug',
         'title',
-        'author',
+	    'parent',
+	    'author',
         'authorName',
         'category',
         'tag',
@@ -79,6 +81,7 @@ final class Query {
         'id' => ['=', '!=', 'in', 'not in'],
         'slug' => ['=', 'in'],
         'title' => ['='],
+	    'parent' => ['=', '!=', 'in', 'not in'],
         'author' => ['=', '!=', 'in', 'not in'],
         'authorName' => ['='],
         'category' => ['=', '!=', 'in', 'not in', 'all'],
@@ -144,9 +147,13 @@ final class Query {
                 $this->processWhere($field, $operator, $value);
             });
         } else if ($name == 'title') {
-            return new Field($this, 'title', static::$fieldOperators['title'], function($field, $operator, $value) {
-                $this->processWhere($field, $operator, $value);
-            });
+	        return new Field($this, 'title', static::$fieldOperators['title'], function($field, $operator, $value) {
+		        $this->processWhere($field, $operator, $value);
+	        });
+        }  else if ($name == 'parent') {
+	        return new Field($this, 'parent', static::$fieldOperators['parent'], function($field, $operator, $value) {
+		        $this->processWhere($field, $operator, $value);
+	        });
         } else if ($name == 'author') {
             return new Field($this, 'author', static::$fieldOperators['author'], function($field, $operator, $value) {
                 $this->processWhere($field, $operator, $value);
@@ -308,6 +315,10 @@ final class Query {
             'compare' => strtoupper($operator)
         ];
 
+        if (strtoupper($operator) == 'EXISTS') {
+        	unset($metaQuery['value']);
+        }
+
         if ($type != 'CHAR') {
             $metaQuery['type'] = $type;
         }
@@ -361,9 +372,16 @@ final class Query {
             $this->args['orderby'] = [];
         }
 
-        $this->args['orderby'][] = [
-            "$field" => $direction
-        ];
+        if (in_array($field, static::$nonMetaFields)) {
+	        $this->args['orderby'] = array_merge($this->args['orderby'], [
+		        "$field" => $direction
+	        ]);
+        } else {
+        	$this->field($field, 'EXISTS', null, 'NUMERIC', "{$field}_clause");
+        	$this->args['orderby'] = array_merge($this->args['orderby'], [
+        		"{$field}_clause" => $direction
+	        ]);
+        }
 
         return $this;
     }
@@ -408,7 +426,9 @@ final class Query {
         if ($field == 'id') {
             $this->processIds($operator, $value);
         } else if ($field == 'slug') {
-            $this->processSlugs($operator, $value);
+	        $this->processSlugs($operator, $value);
+        }  else if ($field == 'parent') {
+	        $this->processParent($operator, $value);
         } else if ($field == 'title') {
             $this->setArgument('title', $value);
         } else if ($field == 'author') {
@@ -525,6 +545,47 @@ final class Query {
             $this->authorName = null;
         }
     }
+
+	/**
+	 * Processes a parent where clause
+	 *
+	 * @param string $operator
+	 * @param mixed|null $value
+	 * @throws \Exception
+	 */
+	private function processParent($operator, $value) {
+		if (in_array($operator, ['=', 'in'])) {
+			$postOp = 'post_parent__in';
+		} else {
+			$postOp = 'post_parent__not_in';
+		}
+
+		if (empty($value)) {
+			unset($this->args[$postOp]);
+			return;
+		}
+
+		$ids = [];
+		if (is_numeric($value) || is_string($value)) {
+			$ids = [$value];
+		} else if (is_array($value)) {
+			foreach($value as $post) {
+				if (is_numeric($post) || is_string($post)) {
+					$ids[] = $post;
+				} else if ($post instanceof \WP_Post) {
+					$ids[] = $post->ID;
+				} else if ($post instanceof Post) {
+					$ids[] = $post->id;
+				}
+			}
+		}
+
+		if (empty($value)) {
+			unset($this->args[$postOp]);
+		} else {
+			$this->args[$postOp] = $ids;
+		}
+	}
 
     /**
      * Processes where clause for post IDs
