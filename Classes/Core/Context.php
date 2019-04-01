@@ -443,6 +443,29 @@ class Context {
                 $this->modelMap[$modelClassname::postType()] = $modelClassname;
             }
         }
+
+        foreach($this->modelMap as $key => $modelClassname) {
+	        if (function_exists('acf_add_local_field_group')) {
+		        $fields = $modelClassname::registerFields();
+		        $modelClassname::updatePropertyMap($fields);
+
+		        if (!empty($fields)) {
+			        if (!isset($fields['location'])) {
+				        $fields['location'] = [
+					        [
+						        [
+							        'param' => 'post_type',
+							        'operator' => '==',
+							        'value' => $modelClassname::postType()
+						        ]
+					        ]
+				        ];
+			        }
+
+			        acf_add_local_field_group($fields);
+		        }
+	        }
+        }
     }
 
     /**
@@ -469,30 +492,12 @@ class Context {
     private function setupCustomPostTypes() {
         foreach($this->modelMap as $postType => $modelClassname) {
         	$modelClassname::initialize();
+
+        	add_filter('views_edit-'.$modelClassname::postType(), [$modelClassname, 'registerViews']);
+
             $builder = $modelClassname::postTypeProperties();
             if ($builder != null) {
                 $builder->register();
-            }
-
-            if (function_exists('acf_add_local_field_group')) {
-                $fields = $modelClassname::registerFields();
-                $modelClassname::updatePropertyMap($fields);
-
-                if (!empty($fields)) {
-                    if (!isset($fields['location'])) {
-                        $fields['location'] = [
-                            [
-                                [
-                                    'param' => 'post_type',
-                                    'operator' => '==',
-                                    'value' => $modelClassname::postType()
-                                ]
-                            ]
-                        ];
-                    }
-
-                    acf_add_local_field_group($fields);
-                }
             }
         }
 
