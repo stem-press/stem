@@ -23,7 +23,7 @@ class RepeaterPropertiesProxy implements \ArrayAccess, \Countable, \Iterator {
 		$this->readOnly = $readOnly;
 		$this->post = $post;
 		$this->field = $field;
-		$count = $this->post->getField($field['field']);
+		$count = get_post_meta($this->post->id, $field['field'], true);
 		for($i = 0; $i < $count; $i++) {
 			$this->childProxies[] = new PropertiesProxy($post, $field['fields'], $readOnly, [], $i);
 		}

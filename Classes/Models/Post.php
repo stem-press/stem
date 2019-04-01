@@ -20,6 +20,22 @@ use Stem\Utilities\Text;
  *
  * @property-read int|null $id
  * @property string|null $title
+ * @property string|null $slug
+ * @property string|null $status
+ * @property int|null $menuOrder
+ * @property Post|null $parent
+ * @property Attachment|null $thumbnail
+ * @property User|null $author
+ * @property-read string|null $editLink
+ * @property-read string|null $permalink
+ * @property-read null|Term[] $categories
+ * @property-read null|Term $topCategory
+ * @property-read null|Term[] $tags
+ * @property-read string|null $strippedContent
+ * @property string|null $content
+ * @property-read string[]|null $videoEmbeds
+ * @property Carbon|null $date
+ * @property Carbon|null $update
  */
 class Post implements \JsonSerializable {
 	/** @var bool Determines if the model is read-only. */
@@ -29,16 +45,32 @@ class Post implements \JsonSerializable {
     protected static $postType = 'post';
 
 	/** @var string[] ACF Fields  */
-	protected static $propertyMap = [];
+	protected static $metaProperties = [];
 
 	/** @var string[] ACF Fields  */
-	protected static $readOnlyProps = [];
+	protected static $readOnlyMetaProperties = [];
+
+	/** @var array Properties */
+	protected $postProperties = [
+		'title' => 'post_title',
+		'slug' => 'post_name',
+		'status' => 'post_status',
+		'menuOrder' => 'menu_order'
+	];
+
+	/** @var array Properties */
+	protected $dateProperties = [
+		'date' => 'post_date_gmt',
+		'updated' => 'post_modified_gmt'
+	];
+
+	/** @var array Properties */
+	protected $modelProperties = [
+		'parent' => 'post_parent'
+	];
 
 	/** @var null|PropertiesProxy  */
 	protected $propertiesProxy = null;
-
-    /** @var int|null ID of the post */
-    protected $_id;
 
     /** @var Context  */
     public $context;
@@ -49,50 +81,41 @@ class Post implements \JsonSerializable {
     /** @var \WP_Post The underlying Wordpress post */
     protected $post;
 
-    /** @var string|null The post status. Default 'draft'  */
-    protected $status = null;
-
-    /** @var Post|null The parent post, if any */
-    protected $parent = null;
-
-    /** @var int The order the post should be displayed in. */
-    protected $menuOrder = 0;
-
-    /** @var null|string Slug for the post */
-    protected $slug = null;
-
-    /** @var null|string Title for the post */
-    protected $_title = null;
+    /** @var Post|null The parent post  */
+	protected $_parent = null;
 
     /** @var null|User The author of the post  */
-    protected $author = null;
+	protected $_author = null;
+
+	/** @var null|Attachment The featured image for the post */
+	protected $_thumbnail = null;
 
     /** @var null|Term The primary category for the post  */
-    protected $topCategory = null;
+	protected $_topCategory = null;
+
+	/** @var null|Term[] All categories assigned to this post */
+	protected $_categories = null;
+
+	/** @var null|Term[] All terms assigned to this post */
+	protected $_tags = null;
 
     /** @var null|Term[] The top level categories for this post */
     protected $topCategories = null;
 
-    /** @var null|Term[] All categories assigned to this post */
-    protected $categories = null;
-
-    /** @var null|Term[] All terms assigned to this post */
-    protected $tags = null;
-
     /** @var null|array All terms assigned to this post for a given taxonomy */
     protected $taxes = null;
 
-    /** @var null|string The permalink for this post  */
-    protected $permalink = null;
+	/** @var null|string The permalink for this post  */
+	protected $_permalink = null;
 
-    /** @var null|Attachment The featured image for the post */
-    protected $thumbnail = null;
+	/** @var null|string The edit post link for this post  */
+	protected $_editPostLink = null;
 
     /** @var null|Carbon The date the post was published */
-    protected $date = null;
+	protected $_date = null;
 
     /** @var null|Carbon The date the post was updated */
-    protected $updated = null;
+	protected $_updated = null;
 
     /** @var null|string The post's content */
     protected $content = null;
@@ -115,25 +138,23 @@ class Post implements \JsonSerializable {
     /** @var array Field validators for properties */
     protected $propertyValidators = [];
 
-    protected $wordPressPropertyMap = [
-    	'title' => 'post_title'
-    ];
-
     /**
      * Post constructor.
      *
      * @param Context $context
      * @param \WP_Post $post
      */
-    public function __construct(Context $context, \WP_Post $post = null) {
+    public function __construct(Context $context = null, \WP_Post $post = null) {
         $this->changes = new ChangeManager();
 
-        $this->context = $context;
+        if (empty($context)) {
+        	$this->context = Context::current();
+        } else {
+            $this->context = $context;
+        }
 
         if (!empty($post)) {
-            $this->_id = $post->ID;
             $this->post = $post;
-            $this->menuOrder = $post->menu_order;
         }
     }
 
@@ -169,6 +190,22 @@ class Post implements \JsonSerializable {
         return null;
     }
 
+	/**
+	 * Registers any views for this model's table view
+	 * @param array $views
+	 * @return array
+	 */
+	public static function registerViews($views) {
+		return $views;
+	}
+
+	/**
+	 * Parses ACF fields
+	 * @param $prefix
+	 * @param $fields
+	 *
+	 * @return array
+	 */
 	private static function parseFields($prefix, $fields) {
 		$result = [];
 
@@ -192,13 +229,17 @@ class Post implements \JsonSerializable {
 		return $result;
 	}
 
+	/**
+	 * Updates this model's meta property map based on ACF field defs
+	 * @param $acfFieldsDef
+	 */
     public static function updatePropertyMap($acfFieldsDef) {
     	if (empty($acfFieldsDef)) {
     		return;
 	    }
 
     	$fields = arrayPath($acfFieldsDef, 'fields', []);
-	    static::$propertyMap[static::class] = static::parseFields('', $fields);
+	    static::$metaProperties[static::class] = static::parseFields('', $fields);
     }
 
 	/**
@@ -211,69 +252,282 @@ class Post implements \JsonSerializable {
     //endregion
 
 	//region Dynamic Properties
-	private function doGetProperty($name, $postProperty) {
+
+	/**
+	 * Gets a property value
+	 * @param $name
+	 * @param $postProperty
+	 *
+	 * @return mixed|null
+	 */
+	protected function getProperty($name, $postProperty) {
     	$privateName = '_'.$name;
-    	if (!property_exists($this, $privateName)) {
+    	if (property_exists($this, $privateName)) {
+		    if (!empty($this->{$privateName})) {
+			    return $this->{$privateName};
+		    }
+
+		    if (empty($this->post)) {
+			    return null;
+		    }
+
+		    $this->{$privateName} = $this->post->{$postProperty};
+		    return $this->{$privateName};
+	    }
+
+    	if ($this->changes->hasChange($postProperty)) {
+    		return $this->changes->value($postProperty);
+	    }
+
+    	if (empty($this->post)) {
     		return null;
 	    }
 
-    	if ($this->{$privateName} != null) {
-    		return $this->{$privateName};
-	    }
-
-    	if (empty($this->_id)) {
-    		return null;
-	    }
-
-    	$this->{$privateName} = $this->post->{$postProperty};
-    	return $this->{$privateName};
+    	return $this->post->{$postProperty};
 	}
 
-	private function doSetProperty($name, $postProperty, $value) {
+	/**
+	 * Gets a model property value
+	 * @param $name
+	 * @param $postProperty
+	 *
+	 * @return Attachment|Page|Post|null
+	 */
+	protected function getModelProperty($name, $postProperty) {
 		$privateName = '_'.$name;
-		if (!property_exists($this, $privateName)) {
-			return;
+
+		$hasProperty = property_exists($this, $privateName);
+		if ($hasProperty && !empty($this->{$privateName})) {
+			return $this->{$privateName};
 		}
 
-		$this->{$privateName} = $value;
+		if (empty($this->post)) {
+			if (!$this->changes->hasChange($postProperty)) {
+				return null;
+			}
+
+			$id = $this->changes->value($postProperty);
+		} else {
+			$id = $this->post->{$postProperty};
+		}
+
+		$model = $this->context->modelForPostID($id);
+
+		if ($hasProperty) {
+			$this->{$privateName} = $model;
+		}
+
+		return $model;
+	}
+
+	/**
+	 * Gets a a date property value
+	 * @param $name
+	 * @param $postProperty
+	 *
+	 * @return Carbon|null
+	 */
+	protected function getDateProperty($name, $postProperty) {
+		$privateName = '_'.$name;
+
+		$hasProperty = property_exists($this, $privateName);
+		if ($hasProperty && !empty($this->{$privateName})) {
+			return $this->{$privateName};
+		}
+
+		if (empty($this->post)) {
+			if (!$this->changes->hasChange($postProperty)) {
+				return null;
+			}
+
+			$dateVal = $this->changes->value($postProperty);
+		} else {
+			$dateVal = $this->post->{$postProperty};
+		}
+
+		$date = Carbon::parse($dateVal);
+
+		if ($hasProperty) {
+			$this->{$privateName} = $date;
+		}
+
+		return $date;
+	}
+
+	/**
+	 * Sets a property value
+	 * @param $name
+	 * @param $postProperty
+	 * @param $value
+	 */
+	protected function setProperty($name, $postProperty, $value) {
+		$privateName = '_'.$name;
+		if (property_exists($this, $privateName)) {
+			$this->{$privateName} = $value;
+		}
+
 		$this->changes->addChange($postProperty, $value);
 	}
 
+	/**
+	 * Sets a model property value
+	 * @param $name
+	 * @param $postProperty
+	 * @param $value
+	 *
+	 * @throws \Exception
+	 */
+	protected function setModelProperty($name, $postProperty, $value) {
+		$privateName = '_'.$name;
+
+		if (is_numeric($value)) {
+			$value = $this->context->modelForPostID($value);
+
+			if (empty($value)) {
+				throw new \Exception("Invalid post id '{$value}'.");
+			}
+		} else if ($value instanceof \WP_Post) {
+			$value = $this->context->modelForPost($value);
+		}
+
+		if (property_exists($this, $privateName)) {
+			$this->{$privateName} = $value;
+		}
+
+		$this->changes->addChange($postProperty, $value->id);
+	}
+
+	/**
+	 * Sets a date property value
+	 * @param $name
+	 * @param $postProperty
+	 * @param $value
+	 */
+	protected function setDateProperty($name, $postProperty, $value) {
+		$privateName = '_'.$name;
+
+		if ($value instanceof Carbon) {
+			$dateVal = $value;
+			$value = $value->toDateTimeString();
+		} else {
+			if (is_numeric($value)) {
+				$dateVal = Carbon::createFromTimestamp($value);
+				$value = $dateVal->toDateTimeString();
+			} else {
+				$dateVal = Carbon::parse($value);
+			}
+		}
+
+		if (property_exists($this, $privateName)) {
+			$this->{$privateName} = $dateVal;
+		}
+
+		$this->changes->addChange($postProperty, $value);
+	}
+
+	/**
+	 * Magic property accessor method
+	 *
+	 * @param $name
+	 *
+	 * @return Carbon|int|mixed|Attachment|Page|Post|PropertiesProxy|null
+	 */
 	public function __get($name) {
     	if ($name == 'id') {
-    		return $this->id;
+    		return empty($this->post) ? null : $this->post->ID;
 	    }
 
-    	if (isset($this->wordPressPropertyMap[$name])) {
-            return $this->doGetProperty($name, $this->wordPressPropertyMap[$name]);
+    	if (isset($this->postProperties[$name])) {
+            return $this->getProperty($name, $this->postProperties[$name]);
 	    }
+
+		if (isset($this->modelProperties[$name])) {
+			return $this->getModelProperty($name, $this->modelProperties[$name]);
+		}
+
+		if (isset($this->dateProperties[$name])) {
+			return $this->getDateProperty($name, $this->dateProperties[$name]);
+		}
+
+		$getFunction = 'get'.ucfirst($name);
+		if (method_exists($this, $getFunction)) {
+			return call_user_func([$this, $getFunction]);
+		}
 
     	if (empty($this->propertiesProxy)) {
-    		$this->propertiesProxy = new PropertiesProxy($this, static::$propertyMap[static::class], static::$isReadOnly, static::$readOnlyProps);
+    		$this->propertiesProxy = new PropertiesProxy($this, static::$metaProperties[static::class], static::$isReadOnly, static::$readOnlyMetaProperties);
 	    }
 
     	return $this->propertiesProxy->__get($name);
 	}
 
+	/**
+	 * Magic property setter method
+	 * @param $name
+	 * @param $value
+	 *
+	 * @throws InvalidPropertiesException
+	 */
 	public function __set($name, $value) {
-    	if (isset($this->wordPressPropertyMap[$name])) {
-			$this->doSetProperty($name, $this->wordPressPropertyMap[$name], $value);
+    	if (isset($this->postProperties[$name])) {
+			$this->setProperty($name, $this->postProperties[$name], $value);
 			return;
 	    }
 
+		if (isset($this->modelProperties[$name])) {
+			$this->setModelProperty($name, $this->modelProperties[$name], $value);
+			return;
+		}
+
+		if (isset($this->dateProperties[$name])) {
+			$this->setDateProperty($name, $this->dateProperties[$name], $value);
+			return;
+		}
+
+		$getFunction = 'get'.ucfirst($name);
+		$setFunction = 'set'.ucfirst($name);
+		if (method_exists($this, $getFunction)) {
+			if (method_exists($this, $setFunction)) {
+				call_user_func([$this, $getFunction], $value);
+			} else {
+				throw new InvalidPropertiesException("Property '$name' is read-only.");
+			}
+		}
+
 		if (empty($this->propertiesProxy)) {
-			$this->propertiesProxy = new PropertiesProxy($this, static::$propertyMap[static::class], static::$isReadOnly, static::$readOnlyProps);
+			$this->propertiesProxy = new PropertiesProxy($this, static::$metaProperties[static::class], static::$isReadOnly, static::$readOnlyMetaProperties);
 		}
 
 		$this->propertiesProxy->__set($name, $value);
 	}
 
-	public function __call($name, $arguments) {
-		if (empty($this->propertiesProxy)) {
-			$this->propertiesProxy = new PropertiesProxy($this, static::$propertyMap[static::class], static::$isReadOnly, static::$readOnlyProps);
+	public function __isset($name) {
+		if ($name == 'id') {
+			return true;
 		}
 
-		$this->propertiesProxy->__call($name, $arguments);
+		if (isset($this->postProperties[$name])) {
+			return true;
+		}
+
+		if (isset($this->modelProperties[$name])) {
+			return true;
+		}
+
+		if (isset($this->dateProperties[$name])) {
+			return true;
+		}
+
+		$getFunction = 'get'.ucfirst($name);
+		if (method_exists($this, $getFunction)) {
+			return true;
+		}
+
+		if (empty($this->propertiesProxy)) {
+			$this->propertiesProxy = new PropertiesProxy($this, static::$metaProperties[static::class], static::$isReadOnly, static::$readOnlyMetaProperties);
+		}
+
+		return $this->propertiesProxy->__isset($name);
 	}
 	//endregion
 
@@ -294,7 +548,7 @@ class Post implements \JsonSerializable {
      * @return string
      */
     public function cssClass($class = '') {
-        if (empty($this->_id)) {
+        if (empty($this->id)) {
             if (is_array($class)) {
                 return implode(' ', $class);
             } else {
@@ -302,7 +556,7 @@ class Post implements \JsonSerializable {
             }
         }
 
-        $result = get_post_class($class, $this->_id);
+        $result = get_post_class($class, $this->id);
         return implode(' ', $result);
     }
 
@@ -311,20 +565,20 @@ class Post implements \JsonSerializable {
      *
      * @return User|null
      */
-    public function author() {
-        if ($this->author != null) {
-            return $this->author;
+    protected function getAuthor() {
+        if ($this->_author != null) {
+            return $this->_author;
         }
 
-        if (empty($this->_id)) {
+        if (empty($this->id)) {
             return null;
         }
 
         if ($this->post->post_author) {
-            $this->author = new User($this->context, new \WP_User($this->post->post_author));
+            $this->_author = new User($this->context, new \WP_User($this->post->post_author));
         }
 
-        return $this->author;
+        return $this->_author;
     }
 
     /**
@@ -332,91 +586,30 @@ class Post implements \JsonSerializable {
      *
      * @param User $user
      */
-    public function setAuthor(User $user) {
-        $this->author = $user;
+	protected function setAuthor(User $user) {
+        $this->_author = $user;
 
         $this->changes->addChange('post_author', $user->id());
-    }
-
-    /**
-     * The post's slug
-     *
-     * @return null|string
-     */
-    public function slug() {
-        if ($this->slug != null) {
-            return $this->slug;
-        }
-
-        if (empty($this->_id)) {
-            return null;
-        }
-
-        $this->slug = $this->post->post_name;
-        return $this->slug;
-    }
-
-    /**
-     * Sets the post's slug
-     * @param string $newSlug
-     */
-    public function setSlug($newSlug) {
-        $this->slug = $newSlug;
-        $this->changes->addChange('post_name', $newSlug);
-    }
-
-    /**
-     * Returns the date the post was published
-     * @return Carbon|null
-     */
-    public function date() {
-        if ($this->date != null) {
-            return $this->date;
-        }
-
-        if (empty($this->_id)) {
-            return null;
-        }
-
-        $this->date = new Carbon($this->post->post_date_gmt);
-        return $this->date;
-    }
-
-    /**
-     * Returns the date the post was updated
-     * @return Carbon|null
-     */
-    public function updated() {
-        if ($this->updated != null) {
-            return $this->updated;
-        }
-
-        if (empty($this->_id)) {
-            return null;
-        }
-
-        $this->updated = new Carbon($this->post->post_modified_gmt);
-        return $this->updated;
     }
 
     /**
      * Returns the post's featured image
      * @return Attachment|null
      */
-    public function thumbnail() {
-        if ($this->thumbnail != null) {
-            return $this->thumbnail;
+	protected function getThumbnail() {
+        if ($this->_thumbnail != null) {
+            return $this->_thumbnail;
         }
 
-        if (empty($this->_id)) {
+        if (empty($this->id)) {
             return null;
         }
 
         $thumb_id = get_post_thumbnail_id($this->post->ID);
         if ($thumb_id) {
-            $this->thumbnail = $this->context->modelForPost(\WP_Post::get_instance($thumb_id));
+            $this->_thumbnail = $this->context->modelForPost(\WP_Post::get_instance($thumb_id));
         }
-        return $this->thumbnail;
+        return $this->_thumbnail;
     }
 
     /**
@@ -424,9 +617,9 @@ class Post implements \JsonSerializable {
      * @param Attachment|int $attachmentOrId
      * @throws \Exception
      */
-    public function setThumbnail($attachmentOrId = null) {
+	protected function setThumbnail($attachmentOrId = null) {
         if (empty($attachmentOrId)) {
-            $this->thumbnail = null;
+            $this->_thumbnail = null;
             $this->changes->clearThumbnail();
         } else {
             if (is_numeric($attachmentOrId)) {
@@ -436,100 +629,9 @@ class Post implements \JsonSerializable {
                 }
             }
 
-            $this->thumbnail = $attachmentOrId;
+            $this->_thumbnail = $attachmentOrId;
             $this->changes->setThumbnail($attachmentOrId->id);
         }
-    }
-
-    /**
-     * The post status. Default 'draft'
-     * @return null|string
-     */
-    public function status() {
-        if ($this->status != null) {
-            return $this->status;
-        }
-
-        if (empty($this->_id)) {
-            return 'draft';
-        }
-
-        $this->status = $this->post->post_status;
-        return $this->status;
-    }
-
-    /**
-     * Sets the post's status
-     * @param $status
-     */
-    public function setStatus($status) {
-        $this->status = $status;
-        $this->changes->addChange('post_status', $status);
-    }
-
-    /**
-     * The parent post, if any
-     * @return Attachment|Page|Post|null
-     */
-    public function parent() {
-        if ($this->parent != null) {
-            return $this->parent;
-        }
-
-        if (empty($this->_id)) {
-            return null;
-        }
-
-        if (empty($this->post->post_parent)) {
-            return null;
-        }
-
-        $this->parent = $this->context->modelForPostID($this->post->post_parent);
-
-        if (empty($this->parent)) {
-            $this->parent = null;
-        }
-
-        return $this->parent;
-    }
-
-    /**
-     * Sets the parent
-     * @param Attachment|Page|Post|null|int $parent
-     */
-    public function setParent($parent) {
-        if (empty($parent)) {
-            $this->parent = null;
-            $this->changes->addChange('post_parent', null);
-        } else if (is_numeric($parent)) {
-            $this->parent = $this->context->modelForPostID($parent);
-
-            if (empty($this->parent)) {
-                $this->parent = null;
-            } else {
-                $this->changes->addChange('post_parent', $parent);
-            }
-        } else {
-            $this->parent = $parent;
-            $this->changes->addChange('post_parent', $parent->id);
-        }
-    }
-
-    /**
-     * The order the post should be displayed in.
-     * @return int
-     */
-    public function menuOrder() {
-        return $this->menuOrder;
-    }
-
-    /**
-     * Sets the menu order.
-     * @param $order
-     */
-    public function setMenuOrder($order) {
-        $this->menuOrder = $order;
-        $this->changes->addChange('menu_order', $order);
     }
 
     //endregion
@@ -587,10 +689,10 @@ class Post implements \JsonSerializable {
      */
     private function insureMeta() {
         if ($this->meta == null) {
-            if (empty($this->_id)) {
+            if (empty($this->id)) {
                 $this->meta = [];
             } else {
-                $this->meta = get_post_meta($this->_id);
+                $this->meta = get_post_meta($this->id);
             }
         }
     }
@@ -603,24 +705,29 @@ class Post implements \JsonSerializable {
      * Returns the edit link for this post.
      * @return null|string
      */
-    public function editLink() {
-        return (empty($this->_id)) ? null : get_edit_post_link($this->_id);
+	protected function getEditLink() {
+	    if ($this->_editPostLink != null) {
+		    return $this->_editPostLink;
+	    }
+
+        $this->_editPostLink = (empty($this->id)) ? null : get_edit_post_link($this->id);
+	    return $this->_editPostLink;
     }
 
     /**
      * Returns the post's permalink
      * @return null|string
      */
-    public function permalink() {
-        if ($this->permalink != null) {
-            return $this->permalink;
+	protected function getPermalink() {
+        if ($this->_permalink != null) {
+            return $this->_permalink;
         }
 
-        if (empty($this->_id)) {
+        if (empty($this->id)) {
             return null;
         }
 
-        $permalink = get_permalink($this->_id);
+        $permalink = get_permalink($this->id);
 
         if ($this->context->ui->useRelative) {
             if ($permalink && ! empty($permalink)) {
@@ -634,8 +741,8 @@ class Post implements \JsonSerializable {
             }
         }
 
-        $this->permalink = $permalink;
-        return $this->permalink;
+        $this->_permalink = $permalink;
+        return $this->_permalink;
     }
 
     //endregion
@@ -646,24 +753,24 @@ class Post implements \JsonSerializable {
      * Returns the list of categories this post belongs to
      * @return Term[]|null
      */
-    public function categories() {
-        if ($this->categories != null) {
-            return $this->categories;
+	protected function getCategories() {
+        if ($this->_categories != null) {
+            return $this->_categories;
         }
 
-        if (empty($this->_id)) {
-            $this->categories = [];
+        if (empty($this->id)) {
+            $this->_categories = [];
         } else {
             $categories = wp_get_post_categories($this->post->ID);
             if ($categories && (count($categories) > 0)) {
-                $this->categories = [];
+                $this->_categories = [];
                 foreach ($categories as $categoryID) {
-                    $this->categories[] = Term::term($this->context, $categoryID, 'category');
+                    $this->_categories[] = Term::term($this->context, $categoryID, 'category');
                 }
             }
         }
 
-        return $this->categories;
+        return $this->_categories;
     }
 
     /**
@@ -675,10 +782,10 @@ class Post implements \JsonSerializable {
             return $this->taxes[$taxonomy];
         }
 
-        if (empty($this->_id)) {
+        if (empty($this->id)) {
             $this->taxes[$taxonomy] = [];
         } else {
-            $taxes = wp_get_object_terms($this->_id, $taxonomy);
+            $taxes = wp_get_object_terms($this->id, $taxonomy);
             if (is_array($taxes) && (count($taxes) > 0)) {
                 $this->taxes[$taxonomy] = [];
                 foreach ($taxes as $termID) {
@@ -699,20 +806,20 @@ class Post implements \JsonSerializable {
      * @param Term $category
      */
     public function addCategory($category) {
-        $this->categories();
+        $this->getCategories();
 
-        foreach($this->categories as $cat) {
+        foreach($this->_categories as $cat) {
             if ($cat->id() == $category->id()) {
                 return;
             }
         }
 
-        $this->categories[] = $category;
+        $this->_categories[] = $category;
         $this->changes->addCategory($category->id());
 
         $this->topCategories = null;
-        $this->topCategory = null;
-        $this->topCategory();
+        $this->_topCategory = null;
+        $this->getTopCategory();
     }
 
     /**
@@ -721,10 +828,10 @@ class Post implements \JsonSerializable {
      * @param Term $category
      */
     public function removeCategory($category) {
-        $this->categories();
+        $this->getCategories();
 
         $cleanedCats = [];
-        foreach($this->categories as $cat) {
+        foreach($this->_categories as $cat) {
             if ($category->id() == $cat->id()) {
                 continue;
             }
@@ -732,12 +839,12 @@ class Post implements \JsonSerializable {
             $cleanedCats[] = $cat;
         }
 
-        $this->categories = $cleanedCats;
+        $this->_categories = $cleanedCats;
         $this->changes->removeCategory($category);
 
         $this->topCategories = null;
-        $this->topCategory = null;
-        $this->topCategory();
+        $this->_topCategory = null;
+	    $this->getTopCategory();
     }
 
     /**
@@ -745,12 +852,12 @@ class Post implements \JsonSerializable {
      *
      * @return Term|null
      */
-    public function topCategory() {
-        if ($this->topCategory != null) {
-            return $this->topCategory;
+    public function getTopCategory() {
+        if ($this->_topCategory != null) {
+            return $this->_topCategory;
         }
 
-        $cats = $this->categories();
+        $cats = $this->getCategories();
         $this->topCategories = [];
         foreach ($cats as $category) {
             $parent = $category->parent();
@@ -769,32 +876,32 @@ class Post implements \JsonSerializable {
         }
 
         if (count($this->topCategories) > 0) {
-            $this->topCategory = $this->topCategories[0];
+            $this->_topCategory = $this->topCategories[0];
         }
 
-        return $this->topCategory;
+        return $this->_topCategory;
     }
 
     /**
      * Returns the associated tags with this post
      * @return Term[]
      */
-    public function tags() {
-        if ($this->tags != null) {
-            return $this->tags;
+    protected function getTags() {
+        if ($this->_tags != null) {
+            return $this->_tags;
         }
 
-        $this->tags = [];
-        if (!empty($this->_id)) {
-            $tags = wp_get_post_tags($this->_id);
+        $this->_tags = [];
+        if (!empty($this->id)) {
+            $tags = wp_get_post_tags($this->id);
             if ($tags && (count($tags) > 0)) {
                 foreach ($tags as $tag) {
-                    $this->tags[] = Term::termFromTermData($this->context, $tag);
+                    $this->_tags[] = Term::termFromTermData($this->context, $tag);
                 }
             }
         }
 
-        return $this->tags;
+        return $this->_tags;
     }
 
     /**
@@ -803,15 +910,15 @@ class Post implements \JsonSerializable {
      * @param Term $tag
      */
     public function addTag($tag) {
-        $this->tags();
+        $this->getTags();
 
-        foreach($this->tags as $existingTag) {
+        foreach($this->_tags as $existingTag) {
             if ($existingTag->id() == $tag->id()) {
                 return;
             }
         }
 
-        $this->tags[] = $tag;
+        $this->_tags[] = $tag;
         $this->changes->addTag($tag->id());
     }
 
@@ -820,10 +927,10 @@ class Post implements \JsonSerializable {
      * @param Term $tag
      */
     public function removeTag($tag) {
-        $this->tags();
+        $this->getTags();
 
         $cleanedTags = [];
-        foreach($this->tags as $existingTag) {
+        foreach($this->_tags as $existingTag) {
             if ($existingTag->id() == $tag->id()) {
                 continue;
             }
@@ -831,7 +938,7 @@ class Post implements \JsonSerializable {
             $cleanedTags[] = $tag;
         }
 
-        $this->tags = $cleanedTags;
+        $this->_tags = $cleanedTags;
         $this->changes->removeTag($tag);
     }
 
@@ -856,10 +963,15 @@ class Post implements \JsonSerializable {
             throw new \Exception("Attempting to save a deleted model.");
         }
 
-        if ($this->_id == null) {
-            $this->_id = $this->changes->create(static::$postType);
+        if ($this->id == null) {
+        	$id = $this->changes->create(static::$postType);
+        	if (empty($this->post)) {
+        		$this->post = \WP_Post::get_instance($id);
+	        } else {
+                $this->post->ID = $id;
+	        }
         } else {
-            $this->changes->update($this->_id);
+            $this->changes->update($this->id);
         }
     }
 
@@ -868,15 +980,14 @@ class Post implements \JsonSerializable {
      * @param bool $force_delete
      */
     public function delete($force_delete = false) {
-        if ($this->deleted || ($this->_id == null)) {
+        if ($this->deleted || ($this->id == null)) {
             return;
         }
 
         $this->deleted = true;
 
-        wp_delete_post($this->_id, $force_delete);
+        wp_delete_post($this->id, $force_delete);
 
-        $this->_id = null;
         $this->post->ID = null;
     }
 
@@ -884,18 +995,26 @@ class Post implements \JsonSerializable {
 
     //region Content
 
+	/**
+	 * Returns content stripped of empty <p> tags.
+	 * @return string|null
+	 */
+	protected function getStrippedContent() {
+    	return $this->getContent(true);
+	}
+
     /**
      * Returns the post's content
      *
      * @param bool $stripEmptyParagraphs
      * @return null|string
      */
-    public function content($stripEmptyParagraphs = false) {
-        if ($this->content != null) {
+	protected function getContent($stripEmptyParagraphs = false) {
+        if (($this->content != null) && !$stripEmptyParagraphs) {
             return $this->content;
         }
 
-        if (empty($this->_id)) {
+        if (empty($this->id)) {
             return null;
         }
 
@@ -909,7 +1028,7 @@ class Post implements \JsonSerializable {
         $post = $previousPost;
 
         if ($stripEmptyParagraphs) {
-            $this->content = str_replace('<p>&nbsp;</p>', '', $this->content);
+            return str_replace('<p>&nbsp;</p>', '', $this->content);
         }
 
         return $this->content;
@@ -919,7 +1038,7 @@ class Post implements \JsonSerializable {
      * Updates the post's content
      * @param $content
      */
-    public function setContent($content) {
+	protected function setContent($content) {
         $this->unfilteredContent = $content;
         $this->content = apply_filters('the_content', $content);
         $this->changes->addChange('post_content', $content);
@@ -929,9 +1048,9 @@ class Post implements \JsonSerializable {
      * Returns any video embeds that might be in the post's content
      * @return array
      */
-    public function videoEmbeds() {
+    protected function getVideoEmbeds() {
         if ($this->content == null) {
-            if (empty($this->content())) {
+            if (empty($this->getContent())) {
                 return [];
             }
         }
@@ -974,12 +1093,12 @@ class Post implements \JsonSerializable {
      * @return null|string
      */
     public function excerpt($len = 50, $force = false, $readmore = 'Read More', $strip = true, $allowed_tags = 'p a span b i br h1 h2 h3 h4 h5 ul li img blockquote') {
-        if (($this->excerpt == null) && (!empty($this->_id))) {
+        if (($this->excerpt == null) && (!empty($this->id))) {
             $this->excerpt = $this->post->post_excerpt;
         }
 
         if ($this->content == null) {
-            if (empty($this->content())) {
+            if (empty($this->getContent())) {
                 return '';
             }
         }
@@ -1039,7 +1158,7 @@ class Post implements \JsonSerializable {
             }
 
             if ($readmore) {
-                $text .= ' <a href="'.$this->permalink().'" class="read-more">'.$readmore.'</a>';
+                $text .= ' <a href="'.$this->getPermalink().'" class="read-more">'.$readmore.'</a>';
             }
 
             if (! $strip) {
@@ -1077,13 +1196,13 @@ class Post implements \JsonSerializable {
     		return $this->fieldsCache[$fieldName];
 	    }
 
-        if (empty($this->_id)) {
+        if (empty($this->id)) {
             return $defaultValue;
         }
 
         $fieldName = $fieldName ?: $property;
 
-        $val = Acf::field($fieldName, $this->_id)->get();
+        $val = Acf::field($fieldName, $this->id)->get();
         if ($val != null) {
             if ($transformer != null) {
                 $val = $transformer($val);
@@ -1154,7 +1273,7 @@ JOIN
 ON
 	T2.object_id = WP.ID
 WHERE
-	T1.object_id = {$this->_id}
+	T1.object_id = {$this->id}
     AND WP.post_status='publish'
     and WP.post_type in ($postTypes)
 GROUP BY
@@ -1182,17 +1301,17 @@ QUERY;
         return [
             'type'=>static::$postType,
             'title'=>$this->title,
-            'slug'=>$this->slug(),
-            'author'=>$this->author()->displayName(),
-            'date'=>$this->date()->toIso8601String(),
-            'updated'=>$this->updated()->toIso8601String(),
-            'content'=>$this->content(),
+            'slug'=>$this->slug,
+            'author'=>$this->author->displayName(),
+            'date'=>$this->date->toIso8601String(),
+            'updated'=>$this->updated->toIso8601String(),
+            'content'=>$this->getContent(),
             'excerpt'=>$this->excerpt(),
-            'url'=>$this->permalink(),
+            'url'=>$this->permalink,
             'mime_type'=>$this->post->post_mime_type,
-            'thumbnail'=>$this->thumbnail(),
-            'categories'=>$this->categories(),
-            'tags'=>$this->tags(),
+            'thumbnail'=>$this->thumbnail,
+            'categories'=>$this->categories,
+            'tags'=>$this->tags,
         ];
     }
 
@@ -1280,8 +1399,10 @@ QUERY;
 				continue;
 			}
 
-			$this->setACFProperty($key, $key, arrayPath($formValues, $key, null));
+			$this->updateField($key, arrayPath($formValues, $key, null));
 		}
+
+		$this->propertiesProxy = null;
 	}
 	//endregion
 }

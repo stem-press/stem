@@ -56,7 +56,7 @@ class PropertiesProxy {
 	}
 
 	public function __get($name) {
-		if (!$this->readOnly && !isset($this->readOnlyProps[$name]) && isset($this->props[$name])) {
+		if ($this->__isset($name)) {
 			return $this->getField($name);
 		}
 
@@ -64,21 +64,35 @@ class PropertiesProxy {
 	}
 
 	public function __set($name, $value) {
-		if (!$this->readOnly && !isset($this->readOnlyProps[$name]) && isset($this->props[$name])) {
+		if ($this->__isset($name)) {
+			if ($this->readOnly && isset($this->readOnlyProps[$name])) {
+				throw new InvalidPropertiesException("The property '$name' is read-only.");
+			}
+
 			$field = $this->props[$name];
 			if (in_array($field['type'], ['group', 'repeater'])) {
 				throw new InvalidPropertiesException("Property {$name} is read-only and cannot be assigned to.");
 			} else {
+				if (in_array($field['type'], ['image', 'file', 'post_object', 'page'])) {
+					if ($value instanceof Post) {
+						$value = $value->id;
+					}
+				} else if ($field['type'] == 'date_picker') {
+					if ($value instanceof Carbon) {
+						$value = $value->format("Y-m-d H:i:s");
+					}
+				}
+
 				$this->post->updateField($field['field'], $value);
 			}
 		}
 	}
 
-	public function __call($name, $arguments) {
-		if (($this->readOnly || isset($this->readOnlyProps[$name])) && isset($this->props[$name])) {
-			return $this->getField($name);
+	public function __isset($name) {
+		if (isset($this->readOnlyProps[$name]) || isset($this->props[$name])) {
+			return true;
 		}
 
-		return null;
+		return false;
 	}
 }
