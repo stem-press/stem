@@ -222,7 +222,7 @@ class Attachment extends Post {
         $this->_type = null;
         $this->_subtype = null;
 
-        $mime = $this->getMime();
+        $mime = $this->mime;
         if (empty($mime)) {
             return;
         }

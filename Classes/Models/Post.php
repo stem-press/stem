@@ -523,11 +523,15 @@ class Post implements \JsonSerializable {
 			return true;
 		}
 
-		if (empty($this->propertiesProxy)) {
-			$this->propertiesProxy = new PropertiesProxy($this, static::$metaProperties[static::class], static::$isReadOnly, static::$readOnlyMetaProperties);
+		if (isset(static::$metaProperties[static::class])) {
+			if (empty($this->propertiesProxy)) {
+				$this->propertiesProxy = new PropertiesProxy($this, static::$metaProperties[static::class], static::$isReadOnly, static::$readOnlyMetaProperties);
+			}
+
+			return $this->propertiesProxy->__isset($name);
 		}
 
-		return $this->propertiesProxy->__isset($name);
+		return false;
 	}
 	//endregion
 

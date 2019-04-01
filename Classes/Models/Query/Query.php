@@ -372,7 +372,7 @@ final class Query {
             $this->args['orderby'] = [];
         }
 
-        if (in_array($field, static::$nonMetaFields)) {
+        if (in_array($field, static::$nonMetaFields) || ($field == 'post_date')) {
 	        $this->args['orderby'] = array_merge($this->args['orderby'], [
 		        "$field" => $direction
 	        ]);
@@ -737,7 +737,7 @@ final class Query {
      */
     public function first() {
         $result = $this->limit(1)->order('post_date', 'ASC', true)->get();
-        if (empty($result)) {
+        if (count($result) == 0) {
             return null;
         }
 
