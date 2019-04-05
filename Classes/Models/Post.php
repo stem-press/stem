@@ -454,11 +454,15 @@ class Post implements \JsonSerializable {
 			return call_user_func([$this, $getFunction]);
 		}
 
-    	if (empty($this->propertiesProxy)) {
-    		$this->propertiesProxy = new PropertiesProxy($this, static::$metaProperties[static::class], static::$isReadOnly, static::$readOnlyMetaProperties);
-	    }
+		if (isset(static::$metaProperties[static::class])) {
+			if (empty($this->propertiesProxy)) {
+				$this->propertiesProxy = new PropertiesProxy($this, static::$metaProperties[static::class], static::$isReadOnly, static::$readOnlyMetaProperties);
+			}
 
-    	return $this->propertiesProxy->__get($name);
+			return $this->propertiesProxy->__get($name);
+		}
+
+		return null;
 	}
 
 	/**
@@ -494,11 +498,15 @@ class Post implements \JsonSerializable {
 			}
 		}
 
-		if (empty($this->propertiesProxy)) {
-			$this->propertiesProxy = new PropertiesProxy($this, static::$metaProperties[static::class], static::$isReadOnly, static::$readOnlyMetaProperties);
+		if (isset(static::$metaProperties[static::class])) {
+			if(empty($this->propertiesProxy)) {
+				$this->propertiesProxy = new PropertiesProxy($this, static::$metaProperties[static::class], static::$isReadOnly, static::$readOnlyMetaProperties);
+			}
+
+			$this->propertiesProxy->__set($name, $value);
 		}
 
-		$this->propertiesProxy->__set($name, $value);
+		throw new InvalidPropertiesException("Unknown property '$name'.");
 	}
 
 	public function __isset($name) {

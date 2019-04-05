@@ -9,6 +9,7 @@ use Stem\Core\Context;
  * Represents a media attachment
  *
  * @property-read string|null $filename
+ * @property-read string|null $localFilePath
  * @property-read string|null $url
  * @property-read string|null $link
  * @property string|null $alt
@@ -18,6 +19,7 @@ use Stem\Core\Context;
  * @property-read string|null $subType
  * @property string|null $mime
  * @property-read string|null $icon
+ * @property-read array|null $sizeUrls
  *
  */
 class Attachment extends Post {
@@ -29,8 +31,11 @@ class Attachment extends Post {
 		'caption' => 'post_excerpt'
 	];
 
-    /** @var null|string The attachment's filename */
-    protected $_filename = null;
+	/** @var null|string The attachment's filename */
+	protected $_filename = null;
+
+	/** @var null|string The attachment's local file path */
+	protected $_localFilePath = null;
 
     /** @var null|string The attachment's url */
     protected $_url = null;
@@ -65,6 +70,9 @@ class Attachment extends Post {
     /** @var null|array Attachment metadata */
     protected $_attachmentMeta = null;
 
+    /** @var null|array URLs for all of the image sizes  */
+    protected $_sizeUrls = null;
+
 	/**
 	 * Attachment constructor.
 	 *
@@ -80,7 +88,7 @@ class Attachment extends Post {
 
     //region Properties
 
-    /**
+	/**
      * The filename of the attachment
      * @return null|string
      */
@@ -89,13 +97,30 @@ class Attachment extends Post {
             return $this->_filename;
         }
 
-        if (empty($this->_id)) {
+        if (empty($this->id)) {
             return null;
         }
 
-        $this->_filename = wp_basename(get_attached_file($this->_id));
+        $this->_filename = wp_basename(get_attached_file($this->id));
         return $this->_filename;
     }
+
+	/**
+	 * The filename of the attachment
+	 * @return null|string
+	 */
+	protected function getLocalFilePath() {
+		if ($this->_localFilePath != null) {
+			return $this->_localFilePath;
+		}
+
+		if (empty($this->id)) {
+			return null;
+		}
+
+		$this->_localFilePath = get_attached_file($this->id);
+		return $this->_localFilePath;
+	}
 
     /**
      * The URL for the attachment's original image
@@ -106,12 +131,46 @@ class Attachment extends Post {
             return $this->_url;
         }
 
-        if (empty($this->_id)) {
+        if (empty($this->id)) {
             return null;
         }
 
-        $this->_url = wp_get_attachment_url($this->_id);
+        $this->_url = wp_get_attachment_url($this->id);
         return $this->_url;
+    }
+
+
+	/**
+	 * The URLs for the attachment's sizes
+	 * @return null|array
+	 */
+    protected function getSizeUrls() {
+    	if ($this->_sizeUrls != null) {
+    		return $this->_sizeUrls;
+	    }
+
+	    global $_wp_additional_image_sizes;
+
+	    $sizes = [];
+	    $get_intermediate_image_sizes = get_intermediate_image_sizes();
+
+	    // Create the full array with sizes and crop info
+	    foreach($get_intermediate_image_sizes as $_size) {
+	    	$sizes[$_size] = null;
+	    }
+
+	    foreach($_wp_additional_image_sizes as $_size => $sizeData) {
+	    	if (!isset($sizes[$_size])) {
+	    		$sizes[$_size] = null;
+		    }
+	    }
+
+	    foreach($sizes as $key => $useless) {
+	    	$sizes[$key] = wp_get_attachment_image_src($this->id, $key)[0];
+	    }
+
+	    $this->_sizeUrls = $sizes;
+	    return $sizes;
     }
 
     /**
@@ -123,11 +182,11 @@ class Attachment extends Post {
             return $this->_link;
         }
 
-        if (empty($this->_id)) {
+        if (empty($this->id)) {
             return null;
         }
 
-        $this->_link = get_attachment_link($this->_id);
+        $this->_link = get_attachment_link($this->id);
         return $this->_link;
     }
 
@@ -178,7 +237,7 @@ class Attachment extends Post {
             return $this->_mime;
         }
 
-        if (empty($this->_id)) {
+        if (empty($this->id)) {
             return null;
         }
 
@@ -207,11 +266,11 @@ class Attachment extends Post {
             return $this->_icon;
         }
 
-        if (empty($this->_id)) {
+        if (empty($this->id)) {
             return null;
         }
 
-        $this->_icon = wp_mime_type_icon($this->_mime ?: $this->_id);
+        $this->_icon = wp_mime_type_icon($this->_mime ?: $this->id);
         return $this->_icon;
     }
 
@@ -248,14 +307,14 @@ class Attachment extends Post {
      * @return string|null
      */
     public function img($size = 'original', $attr = false, $stripDimensions = false) {
-        if (empty($this->_id)) {
+        if (empty($this->id)) {
             return null;
         }
 
         if (! $attr) {
-            $img = wp_get_attachment_image($this->_id, $size);
+            $img = wp_get_attachment_image($this->id, $size);
         } else {
-            $img = wp_get_attachment_image($this->_id, $size, false, $attr);
+            $img = wp_get_attachment_image($this->id, $size, false, $attr);
         }
 
         if ($stripDimensions) {
@@ -274,7 +333,7 @@ class Attachment extends Post {
      * @return string
      */
     public function ampImg($size = 'thumbnail', $responsive = true, $attr = null) {
-        if (empty($this->_id)) {
+        if (empty($this->id)) {
             return null;
         }
 
@@ -286,7 +345,7 @@ class Attachment extends Post {
             $attr['layout'] = 'responsive';
         }
 
-        $img = wp_get_attachment_image($this->_id, $size, false, $attr);
+        $img = wp_get_attachment_image($this->id, $size, false, $attr);
 
         $img = str_replace('<img', '<amp-img', $img);
 
@@ -301,11 +360,11 @@ class Attachment extends Post {
      * @return string|null
      */
     public function src($size = 'original') {
-        if (empty($this->_id)) {
+        if (empty($this->id)) {
             return null;
         }
 
-        $result = wp_get_attachment_image_src($this->_id, $size);
+        $result = wp_get_attachment_image_src($this->id, $size);
         if ($result && is_array($result) && (count($result) > 0)) {
             return $result[0];
         }
@@ -364,10 +423,10 @@ class Attachment extends Post {
      */
     private function insureAttachmentMeta() {
         if ($this->_attachmentMeta == null) {
-            if (empty($this->_id)) {
+            if (empty($this->id)) {
                 $this->_attachmentMeta = [];
             } else {
-                $this->_attachmentMeta = wp_get_attachment_metadata($this->_id);
+                $this->_attachmentMeta = wp_get_attachment_metadata($this->id);
             }
         }
     }
@@ -386,11 +445,11 @@ class Attachment extends Post {
             return $this->_attachmentInfo;
         }
 
-        if (empty($this->_id)) {
+        if (empty($this->id)) {
             return null;
         }
 
-        $this->_attachmentInfo = wp_prepare_attachment_for_js($this->_id);
+        $this->_attachmentInfo = wp_prepare_attachment_for_js($this->id);
         return $this->_attachmentInfo;
     }
 
