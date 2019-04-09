@@ -85,6 +85,8 @@ class PropertiesProxy {
 
 				$this->post->updateField($field['field'], $value);
 			}
+		} else {
+			throw new InvalidPropertiesException("Unknown property '$name'.");
 		}
 	}
 

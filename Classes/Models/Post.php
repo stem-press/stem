@@ -504,6 +504,8 @@ class Post implements \JsonSerializable {
 			}
 
 			$this->propertiesProxy->__set($name, $value);
+
+			return;
 		}
 
 		throw new InvalidPropertiesException("Unknown property '$name'.");

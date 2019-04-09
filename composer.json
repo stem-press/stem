@@ -28,7 +28,10 @@
     "johnbillion/extended-cpts": "^4.2",
     "samrap/acf-fluent": "^0.4.0",
     "filp/whoops": "^2.3",
-    "kint-php/kint": "^3.2"
+    "kint-php/kint": "^3.2",
+    "illuminate/contracts": ">=5.4,<5.5",
+    "illuminate/view": ">=5.4,<5.5",
+    "illuminate/events": ">=5.4,<5.5"
   },
   "autoload": {
     "psr-4": {
