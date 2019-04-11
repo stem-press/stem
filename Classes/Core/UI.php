@@ -231,6 +231,7 @@ class UI
         // Load custom fields
 	    add_action('acf/include_field_types', function($version = false) {
 	        $fields = arrayPath($this->config, 'content/fields', []);
+	        $fields = apply_filters('heavymetal/ui/fields', $fields);
 	        if (!empty($fields) && is_array($fields)) {
 	            foreach($fields as $fieldClass) {
 	                new $fieldClass();
@@ -241,6 +242,7 @@ class UI
 	    // Load Custom Columns
         add_action('ac/column_types', function(\AC\ListScreen $listScreen) {
 	        $columns = arrayPath($this->config, 'content/columns', []);
+	        $columns = apply_filters('heavymetal/ui/columns', $columns);
 	        foreach($columns as $columnClass => $validPostTypes) {
 	            $validPostType = (empty($validPostTypes) || in_array($listScreen->get_key(), $validPostTypes));
 	            if ($validPostType) {
@@ -574,6 +576,7 @@ class UI
     private function setupShortCodes()
     {
         $shortCodes = $this->setting('shortcodes', []);
+        $shortCodes = apply_filters('heavymetal/ui/shortcodes', $shortCodes);
         foreach ($shortCodes as $key => $data) {
             $shortCode = null;
             $uiConfig = null;
@@ -631,6 +634,7 @@ class UI
         }
 
         $widgets = $this->setting('widgets', []);
+        $widgets = apply_filters('heavymetal/ui/widgets', $widgets);
         foreach($widgets as $widget) {
             $this->widgets[] = new $widget($this->context, $this);
         }

@@ -34,8 +34,15 @@ class BladeView extends View
 
         $this->blade = new BladeInstance($viewPath, $cache);
 
+	    $additionalPaths = apply_filters('heavymetal/views/paths', []);
+	    if (!empty($additionalPaths)) {
+		    foreach ($additionalPaths as $path) {
+			    $this->blade->addPath($path);
+		    }
+	    }
+
         $additionalPaths = apply_filters('stem/additional_view_paths', []);
-        if (is_array($additionalPaths)) {
+        if (!empty($additionalPaths)) {
             foreach ($additionalPaths as $path) {
                 $this->blade->addPath($path);
             }
@@ -87,8 +94,8 @@ class BladeView extends View
         ];
 
         $directives = $this->context->ui->setting('options/views/directives', []);
-
         $directives = array_merge($defaultDirectives, $directives);
+        $directives = apply_filters('heavymetal/ui/directives', $directives);
 
         foreach ($directives as $key => $class) {
             if (class_exists($class)) {

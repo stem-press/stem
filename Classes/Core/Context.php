@@ -330,6 +330,7 @@ class Context {
      */
     private function parseRoutes() {
         $routesConfig = include $this->rootPath.'/config/routes.php';
+        $routesConfig = apply_filters('heavymetal/app/routes', $routesConfig);
         foreach ($routesConfig as $route => $routeInfo) {
             if (!is_array($routeInfo) && is_callable($routeInfo)) {
                 $this->router->addRoute(false, $route, $route, $routeInfo);
@@ -405,13 +406,16 @@ class Context {
      */
     private function setupControllers() {
 
-        if (isset($this->config['page-controllers'])) {
-            foreach ($this->config['page-controllers'] as $key => $controller) {
+    	$pageControllers = (!empty($this->config['page-controllers'])) ? $this->config['page-controllers'] : [];
+    	$pageControllers = apply_filters('heavymetal/app/controllers', $pageControllers);
+
+        if (!empty($pageControllers)) {
+            foreach ($pageControllers as $key => $controller) {
                 $this->controllerMap[strtolower(preg_replace('|[^aA-zZ0-9_]+|', '-', $key))] = $controller;
             }
 
-            add_filter('theme_page_templates', function ($page_templates, $theme, $post) {
-                foreach ($this->config['page-controllers'] as $key => $controller) {
+            add_filter('theme_page_templates', function ($page_templates, $theme, $post) use ($pageControllers) {
+                foreach ($pageControllers as $key => $controller) {
                     $page_templates[preg_replace('/\\s+/', '-', $key).'.php'] = $key;
                 }
 
@@ -438,6 +442,7 @@ class Context {
 
         // Load the user declared models
         $models = arrayPath($this->config, 'models', []);
+        $models = apply_filters('heavymetal/app/models', $models);
         foreach($models as $modelClassname) {
             if (class_exists($modelClassname)) {
                 $this->modelMap[$modelClassname::postType()] = $modelClassname;

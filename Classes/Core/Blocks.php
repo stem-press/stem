@@ -39,7 +39,8 @@ class Blocks {
      * @throws \Exception
      */
     private function loadBlocks() {
-        $blocksArray = arrayPath($this->ui->config,'blocks', []);
+	    $blocksArray = arrayPath($this->ui->config,'blocks', []);
+	    $blocksArray = apply_filters('heavymetal/ui/blocks', $blocksArray);
         foreach($blocksArray as $blockDataorClass) {
             /** @var Block $block */
             $block = null;
