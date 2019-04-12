@@ -204,6 +204,7 @@ class Context {
         // Register any command line commands
 	    if (defined( 'WP_CLI' ) && class_exists('\WP_CLI')) {
 	    	$commands = arrayPath($this->config, 'commands', []);
+	    	$commands = apply_filters('heavymetal/app/commands', $commands);
 	    	if (!empty($commands)) {
 	    		foreach($commands as $commandClass) {
 	    			if (class_exists($commandClass)) {

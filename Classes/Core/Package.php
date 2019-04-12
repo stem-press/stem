@@ -66,6 +66,7 @@ class Package {
 	protected function addConfigFilters() {
 		$this->addFilter('app/models');
 		$this->addFilter('app/controllers');
+		$this->addFilter('app/commands');
 
 		$this->addFilter('ui/columns');
 		$this->addFilter('ui/fields');
