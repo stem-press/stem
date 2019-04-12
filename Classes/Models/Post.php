@@ -251,6 +251,26 @@ class Post implements \JsonSerializable {
 
     //endregion
 
+	//region Post Events
+
+	public function willDelete()  {
+
+	}
+
+	public function didDelete() {
+
+	}
+
+	public function trashed() {
+
+	}
+
+	public function restored() {
+
+	}
+
+	//endregion
+
 	//region Dynamic Properties
 
 	/**
@@ -1004,6 +1024,22 @@ class Post implements \JsonSerializable {
 
         $this->post->ID = null;
     }
+
+	public function trash() {
+		if ($this->deleted || ($this->id == null)) {
+			return;
+		}
+
+		wp_trash_post($this->id);
+	}
+
+	public function restore() {
+		if ($this->deleted || ($this->id == null)) {
+			return;
+		}
+
+		wp_untrash_post($this->id);
+	}
 
     //endregion
 

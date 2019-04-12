@@ -472,6 +472,34 @@ class Context {
 		        }
 	        }
         }
+
+        add_action('trashed_post', function($postId) {
+			$post = $this->modelForPostID($postId);
+			if (!empty($post)) {
+				$post->trashed();
+			}
+        });
+
+        add_action('untrash_post', function($postId) {
+	        $post = $this->modelForPostID($postId);
+	        if (!empty($post)) {
+		        $post->restored();
+	        }
+        });
+
+        add_action('before_delete_post', function($postId) {
+	        $post = $this->modelForPostID($postId);
+	        if (!empty($post)) {
+		        $post->willDelete();
+	        }
+        });
+
+        add_action('delete_post', function($postId) {
+	        $post = $this->modelForPostID($postId);
+	        if (!empty($post)) {
+		        $post->didDelete();
+	        }
+        });
     }
 
     /**
