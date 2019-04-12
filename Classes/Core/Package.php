@@ -11,6 +11,8 @@ class Package {
 	protected $rootPath = null;
 	protected $config = null;
 
+	protected $packagePriority = 1;
+
 	/**
 	 * Package constructor.
 	 *
@@ -21,20 +23,21 @@ class Package {
 
 		if (file_exists($rootPath.'/config/config.php')) {
 			$this->config = include $rootPath.'/config/config.php';
+			$this->packagePriority = arrayPath($this->config, 'priority', 1);
 			$this->addConfigFilters();
 		}
 
 		if (file_exists($rootPath.'/views')) {
 			add_filter('heavymetal/views/paths', function($paths) {
-				return [ $this->rootPath.'/views' ];
-			});
+				return array_merge($paths, [ $this->rootPath.'/views' ]);
+			}, $this->packagePriority);
 		}
 
 		if (file_exists($this->rootPath.'/config/routes.php')) {
 			add_filter('heavymetal/app/routes', function($routes) {
 				$appRoutes = include $this->rootPath . '/config/routes.php';
 				return array_merge($appRoutes, $routes);
-			});
+			}, $this->packagePriority);
 		}
 	}
 
@@ -54,7 +57,7 @@ class Package {
 
 		add_filter("heavymetal/{$for}", function($data) use ($for, $appData) {
 			return array_merge($appData, $data);
-		});
+		}, $this->packagePriority);
 	}
 
 	/**
