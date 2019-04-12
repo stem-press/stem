@@ -91,6 +91,9 @@ class Context {
     /** @var array Map of post_types to model classes */
     protected $modelMap = [];
 
+    /** @var array|null The last ACF group to be updated  */
+    private $lastUpdatedACFGroup = null;
+
     /**
      * Constructor.
      *
@@ -251,8 +254,31 @@ class Context {
      * Configure ACF
      */
     private function setupACF() {
+	    add_action('acf/trash_field_group', function($group) {
+		    $this->lastUpdatedACFGroup = $group;
+	    }, 1, 1);
+	    
+	    add_action('acf/untrash_field_group', function($group) {
+		    $this->lastUpdatedACFGroup = $group;
+	    }, 1, 1);
+
+	    add_action('acf/delete_field_group', function($group) {
+		    $this->lastUpdatedACFGroup = $group;
+	    }, 1, 1);
+
+    	add_action('acf/update_field_group', function($group){
+			$this->lastUpdatedACFGroup = $group;
+	    }, 1, 1);
+
         // Load/save ACF Pro JSON fields to our config directory
         add_filter('acf/settings/save_json', function ($path) {
+        	if (!empty($this->lastUpdatedACFGroup)) {
+        	    $newPath = apply_filters('heavymetal/acf/json/save_path', false, $this->lastUpdatedACFGroup);
+        	    if (!empty($newPath)) {
+        	    	return $newPath;
+	            }
+	        }
+
             $newpath = $this->rootPath.'/config/fields';
             if (file_exists($newpath)) {
                 return $newpath;
@@ -262,16 +288,19 @@ class Context {
 
             return $path;
         });
+
         add_filter('acf/settings/load_json', function ($paths) {
             $newpath = $this->rootPath.'/config/fields';
-            if (! file_exists($newpath)) {
-                Log::error("Loading ACF fields, missing $newpath directory.");
-
-                return $paths;
+            if (file_exists($newpath)) {
+            	$paths[] = $newpath;
+            } else {
+	            Log::error("Loading ACF fields, missing $newpath directory.");
             }
 
-            unset($paths[0]);
-            $paths[] = $newpath;
+            $paths = apply_filters('heavymetal/acf/json/load_paths', $paths);
+            if (count($paths) > 1) {
+	            unset($paths[0]);
+            }
 
             return $paths;
         });

@@ -33,6 +33,23 @@ class Package {
 			}, $this->packagePriority);
 		}
 
+		if (file_exists($rootPath.'/config/fields/')) {
+			add_filter('heavymetal/acf/json/save_path', function($path, $group) {
+				$groupKey = $group['key'];
+
+				if (file_exists($this->rootPath.'/config/fields/'.$groupKey.'.json')) {
+					return $this->rootPath.'/config/fields/';
+				}
+
+				return false;
+			}, $this->packagePriority, 2);
+
+			add_filter('heavymetal/acf/json/load_paths', function($paths) {
+				$paths[] = $this->rootPath.'/config/fields/';
+				return $paths;
+			}, $this->packagePriority);
+		}
+
 		if (file_exists($this->rootPath.'/config/routes.php')) {
 			add_filter('heavymetal/app/routes', function($routes) {
 				$appRoutes = include $this->rootPath . '/config/routes.php';
