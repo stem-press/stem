@@ -139,56 +139,56 @@ final class Query {
         }
 
         if ($name == 'id') {
-            return new Field($this, 'id', static::$fieldOperators['id'], function($field, $operator, $value) {
-                $this->processWhere($field, $operator, $value);
+            return new Field($this, 'id', static::$fieldOperators['id'], function($field, $type, $operator, $value) {
+                $this->processWhere($field, $type, $operator, $value);
             });
         } else if ($name == 'slug') {
-            return new Field($this, 'slug', static::$fieldOperators['id'], function($field, $operator, $value) {
-                $this->processWhere($field, $operator, $value);
+            return new Field($this, 'slug', static::$fieldOperators['id'], function($field, $type, $operator, $value) {
+                $this->processWhere($field, $type, $operator, $value);
             });
         } else if ($name == 'title') {
-	        return new Field($this, 'title', static::$fieldOperators['title'], function($field, $operator, $value) {
-		        $this->processWhere($field, $operator, $value);
+	        return new Field($this, 'title', static::$fieldOperators['title'], function($field, $type, $operator, $value) {
+		        $this->processWhere($field, $type, $operator, $value);
 	        });
         }  else if ($name == 'parent') {
-	        return new Field($this, 'parent', static::$fieldOperators['parent'], function($field, $operator, $value) {
-		        $this->processWhere($field, $operator, $value);
+	        return new Field($this, 'parent', static::$fieldOperators['parent'], function($field, $type, $operator, $value) {
+		        $this->processWhere($field, $type, $operator, $value);
 	        });
         } else if ($name == 'author') {
-            return new Field($this, 'author', static::$fieldOperators['author'], function($field, $operator, $value) {
-                $this->processWhere($field, $operator, $value);
+            return new Field($this, 'author', static::$fieldOperators['author'], function($field, $type, $operator, $value) {
+                $this->processWhere($field, $type, $operator, $value);
             });
         } else if ($name == 'authorName') {
-            return new Field($this, 'authorName', static::$fieldOperators['authorName'], function($field, $operator, $value) {
-                $this->processWhere($field, $operator, $value);
+            return new Field($this, 'authorName', static::$fieldOperators['authorName'], function($field, $type, $operator, $value) {
+                $this->processWhere($field, $type, $operator, $value);
             });
         } else if ($name == 'category') {
-            return new Field($this, 'category', static::$fieldOperators['category'], function($field, $operator, $value) {
-                $this->processWhere($field, $operator, $value);
+            return new Field($this, 'category', static::$fieldOperators['category'], function($field, $type, $operator, $value) {
+                $this->processWhere($field, $type, $operator, $value);
             });
         } else if ($name == 'tag') {
-            return new Field($this, 'tag', static::$fieldOperators['tag'], function($field, $operator, $value) {
-                $this->processWhere($field, $operator, $value);
+            return new Field($this, 'tag', static::$fieldOperators['tag'], function($field, $type, $operator, $value) {
+                $this->processWhere($field, $type, $operator, $value);
             });
         } else if ($name == 'hasPassword') {
-            return new Field($this, 'hasPassword', static::$fieldOperators['hasPassword'], function($field, $operator, $value) {
-                $this->processWhere($field, $operator, $value);
+            return new Field($this, 'hasPassword', static::$fieldOperators['hasPassword'], function($field, $type, $operator, $value) {
+                $this->processWhere($field, $type, $operator, $value);
             });
         } else if ($name == 'password') {
-            return new Field($this, 'password', static::$fieldOperators['password'], function($field, $operator, $value) {
-                $this->processWhere($field, $operator, $value);
+            return new Field($this, 'password', static::$fieldOperators['password'], function($field, $type, $operator, $value) {
+                $this->processWhere($field, $type, $operator, $value);
             });
         } else if ($name == 'type') {
-            return new Field($this, 'type', static::$fieldOperators['type'], function($field, $operator, $value) {
-                $this->processWhere($field, $operator, $value);
+            return new Field($this, 'type', static::$fieldOperators['type'], function($field, $type, $operator, $value) {
+                $this->processWhere($field, $type, $operator, $value);
             });
         } else if ($name == 'status') {
-            return new Field($this, 'status', static::$fieldOperators['status'], function($field, $operator, $value) {
-                $this->processWhere($field, $operator, $value);
+            return new Field($this, 'status', static::$fieldOperators['status'], function($field, $type, $operator, $value) {
+                $this->processWhere($field, $type, $operator, $value);
             });
         } else if ($name == 'commentCount') {
-            return new Field($this, 'commentCount', static::$fieldOperators['commentCount'], function($field, $operator, $value) {
-                $this->processWhere($field, $operator, $value);
+            return new Field($this, 'commentCount', static::$fieldOperators['commentCount'], function($field, $type, $operator, $value) {
+                $this->processWhere($field, $type, $operator, $value);
             });
         } else if ($name == 'or') {
             if ($this->metaqueryRelation != null) {
@@ -207,8 +207,8 @@ final class Query {
 
             return $this;
         } else {
-            return new Field($this, $name, static::$fieldOperators['meta'], function($field, $operator, $value) {
-                $this->field($field, $operator, $value);
+            return new Field($this, $name, static::$fieldOperators['meta'], function($field, $type, $operator, $value) {
+                $this->field($field, $type, $operator, $value);
             });
         }
     }
@@ -255,7 +255,7 @@ final class Query {
             throw new \Exception("Invalid taxonomy value type '$valueType'.  Valid value types: slug, term_id, name, term_taxonomy_id.");
         }
 
-        return new Field($this, 'taxonomy', static::$fieldOperators['taxonomy'], function($field, $operator, $value) use ($taxonomy, $valueType) {
+        return new Field($this, 'taxonomy', static::$fieldOperators['taxonomy'], function($field, $type, $operator, $value) use ($taxonomy, $valueType) {
             if ($operator == '=') {
                 $operator = 'in';
             } else if ($operator == '!=') {
@@ -308,7 +308,7 @@ final class Query {
      * @param string $queryName
      * @return $this
      */
-    public function field($field, $operator, $value, $type = 'CHAR', $queryName = null) {
+    public function field($field, $fieldType, $operator, $value, $type = 'CHAR', $queryName = null) {
         $metaQuery = [
             'key' => $field,
             'value' => $value,
@@ -317,6 +317,10 @@ final class Query {
 
         if (strtoupper($operator) == 'EXISTS') {
         	unset($metaQuery['value']);
+        }
+
+        if (!empty($fieldType)) {
+        	$type = $fieldType;
         }
 
         if ($type != 'CHAR') {
@@ -412,7 +416,7 @@ final class Query {
      * @param mixed|null $value
      * @throws \Exception
      */
-    private function processWhere($field, $operator, $value) {
+    private function processWhere($field, $fieldType, $operator, $value) {
         if (isset(static::$pluralAliases[$field])) {
             $field = static::$pluralAliases[$field];
         }
@@ -459,7 +463,7 @@ final class Query {
                 ];
             }
         } else {
-            $this->field($field, $operator, $value);
+            $this->field($field, $fieldType, $operator, $value);
         }
     }
 
