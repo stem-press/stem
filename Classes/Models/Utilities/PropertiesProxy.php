@@ -46,8 +46,8 @@ class PropertiesProxy {
 			if (!empty($val)) {
 				if (in_array($field['type'], ['image', 'file', 'post_object', 'page'])) {
 					$val = ($val instanceof \WP_Post) ? Context::current()->modelForPost($val) : Context::current()->modelForPostID($val);
-				} else if ($field['type'] == 'date_picker') {
-					$val = Carbon::parse($val);
+				} else if (($field['type'] == 'date_picker') || ($field['type'] == 'date_time_picker')) {
+					$val = Carbon::parse($val, Context::timezone());
 				}
 			}
 
@@ -77,8 +77,9 @@ class PropertiesProxy {
 					if ($value instanceof Post) {
 						$value = $value->id;
 					}
-				} else if ($field['type'] == 'date_picker') {
+				} else if (($field['type'] == 'date_picker') || ($field['type'] == 'date_time_picker')) {
 					if ($value instanceof Carbon) {
+						$value->setTimezone(get_option('timezone_string'));
 						$value = $value->format("Y-m-d H:i:s");
 					}
 				}

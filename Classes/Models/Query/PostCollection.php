@@ -9,7 +9,7 @@ use Stem\Core\Context;
  *
  * @package Stem\Models
  */
-class PostCollection implements \ArrayAccess, \Iterator, \Countable {
+class PostCollection implements \ArrayAccess, \Iterator, \Countable, \JsonSerializable {
     /** @var Context|null The context */
     protected $context = null;
 
@@ -277,4 +277,7 @@ class PostCollection implements \ArrayAccess, \Iterator, \Countable {
 
     //endregion
 
+	public function jsonSerialize() {
+    	return $this->posts;
+	}
 }
