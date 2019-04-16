@@ -269,6 +269,8 @@ class UI
 	    }
 
 	    $this->enqueueConfig = arrayPath($this->config,'enqueue');
+	    $this->enqueueConfig['js'] = apply_filters('heavymetal/ui/enqueue/public/js', $this->enqueueConfig['js']);
+	    $this->enqueueConfig['css'] = apply_filters('heavymetal/ui/enqueue/public/css', $this->enqueueConfig['css']);
     }
 
     public function setup()
@@ -300,13 +302,25 @@ class UI
 
                 if (isset($this->enqueueConfig['js'])) {
                     foreach ($this->enqueueConfig['js'] as $js) {
-                        wp_enqueue_script($js, $this->jsPath.$js, ['jquery'], $this->context->currentBuild, true);
+	                    if (!filter_var($js, FILTER_VALIDATE_URL)) {
+		                    $jsUrl = $this->jsPath.$js;
+	                    } else {
+	                        $jsUrl = $js;
+                        }
+
+                        wp_enqueue_script($js, $jsUrl, ['jquery'], $this->context->currentBuild, true);
                     }
                 }
 
                 if (isset($this->enqueueConfig['css'])) {
                     foreach ($this->enqueueConfig['css'] as $css) {
-                        wp_enqueue_style($css, $this->cssPath.$css,[],$this->context->currentBuild);
+	                    if (!filter_var($css, FILTER_VALIDATE_URL)) {
+		                    $cssUrl = $this->cssPath.$css;
+	                    } else {
+		                    $cssUrl = $css;
+	                    }
+
+                        wp_enqueue_style($css, $cssUrl, [], $this->context->currentBuild);
                     }
                 }
             } else {

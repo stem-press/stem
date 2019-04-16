@@ -92,5 +92,10 @@ class Package {
 		$this->addFilter('ui/blocks');
 		$this->addFilter('ui/directives');
 		$this->addFilter('ui/metaboxes');
+
+		$this->addFilter('ui/enqueue/admin/js');
+		$this->addFilter('ui/enqueue/admin/css');
+		$this->addFilter('ui/enqueue/public/js');
+		$this->addFilter('ui/enqueue/public/css');
 	}
 }
