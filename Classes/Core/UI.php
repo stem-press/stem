@@ -2,6 +2,8 @@
 
 namespace Stem\Core;
 
+use Stem\Models\Post;
+use Stem\UI\MetaBox;
 use Stem\UI\Theme;
 use Stem\UI\Widget;
 
@@ -148,6 +150,9 @@ class UI
 
     /** @var Widget[] Array of widget instances */
     private $widgets = [];
+
+    /** @var array Array of MetaBox instances keyed by custom post type  */
+    private $metaboxes = [];
 
     /**
      * Constructor.
@@ -367,6 +372,7 @@ class UI
         $this->setupTheme();
         $this->setupShortCodes();
         $this->setupEditor();
+        $this->setupMetaboxes();
     }
 
     /**
@@ -573,6 +579,25 @@ class UI
         }
     }
 
+    private function setupMetaboxes() {
+	    $metaBoxes = $this->setting('metaboxes', []);
+	    $metaBoxes = apply_filters('heavymetal/ui/metaboxes', $metaBoxes);
+	    foreach($metaBoxes as $metaBoxClass) {
+	        if (class_exists($metaBoxClass)) {
+	            /** @var MetaBox $metaBox */
+	            $metaBox = new $metaBoxClass($this->context, $this);
+	            $postTypes = $metaBox->postTypes();
+	            foreach($postTypes as $postType) {
+	                if (!isset($this->metaboxes[$postType])) {
+	                    $this->metaboxes[$postType] = [];
+                    }
+
+	                $this->metaboxes[$postType][] = $metaBox;
+                }
+            }
+        }
+    }
+
     private function setupShortCodes()
     {
         $shortCodes = $this->setting('shortcodes', []);
@@ -763,6 +788,24 @@ class UI
             }
         }
     }
+
+	public function registerMetabox($postType) {
+		if (!isset($this->metaboxes[$postType])) {
+			return;
+		}
+
+		/** @var MetaBox[] $metaboxes */
+		$metaboxes = $this->metaboxes[$postType];
+
+		foreach($metaboxes as $metaBox) {
+			add_meta_box($metaBox->id(), $metaBox->title(), function($post) use ($metaBox) {
+				$model = $this->context->modelForPost($post);
+				if (!empty($model)) {
+					echo $metaBox->render($model);
+				}
+			}, $metaBox->screen(), $metaBox->context(), $metaBox->priority());
+		}
+	}
 
     /**
      * Registers a shortcode.

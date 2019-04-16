@@ -91,5 +91,6 @@ class Package {
 		$this->addFilter('ui/shortcodes');
 		$this->addFilter('ui/blocks');
 		$this->addFilter('ui/directives');
+		$this->addFilter('ui/metaboxes');
 	}
 }

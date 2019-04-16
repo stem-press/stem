@@ -11,6 +11,7 @@ use Stem\Controllers\PostController;
 use Stem\Controllers\TermController;
 use Stem\Controllers\PostsController;
 use Stem\Controllers\SearchController;
+use Stem\Models\Utilities\CustomPostTypeBuilder;
 use Stem\Utilities\Plugins\PluginManager;
 use Symfony\Component\HttpFoundation\Request;
 use Whoops\Handler\PrettyPageHandler;
@@ -561,8 +562,13 @@ class Context {
 
         	add_filter('views_edit-'.$modelClassname::postType(), [$modelClassname, 'registerViews']);
 
+        	/** @var CustomPostTypeBuilder $builder */
             $builder = $modelClassname::postTypeProperties();
             if ($builder != null) {
+            	$builder->metaboxCallback(function() use ($postType) {
+            		$this->ui->registerMetabox($postType);
+	            });
+
                 $builder->register();
             }
         }
