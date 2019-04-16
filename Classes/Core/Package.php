@@ -81,6 +81,8 @@ class Package {
 	 * Adds the filters for overloading configuration
 	 */
 	protected function addConfigFilters() {
+		$this->addFilter('admin/pages');
+
 		$this->addFilter('app/models');
 		$this->addFilter('app/controllers');
 		$this->addFilter('app/commands');

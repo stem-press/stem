@@ -2,6 +2,8 @@
 
 namespace Stem\Core;
 
+use Stem\Controllers\AdminPageController;
+
 /**
  * Class Admin.
  *
@@ -14,6 +16,9 @@ class Admin
      * @var Context
      */
     protected $context;
+
+    /** @var AdminPageController[] */
+    protected $adminPages = [];
 
     /**
      * Admin configuration.
@@ -53,6 +58,7 @@ class Admin
         });
 
         $this->configureCustomization();
+	    $this->setupAdminPages();
     }
 
     protected function configureAdminBar()
@@ -106,30 +112,41 @@ class Admin
         }
 
         $js = $this->setting('customize/enqueue/js', []);
+        $js = apply_filters('heavymetal/ui/enqueue/admin/js', $js);
         if (count($js) > 0) {
             add_action('admin_enqueue_scripts', function () use ($js) {
                 foreach ($js as $key => $script) {
-                    wp_register_script($key, $this->context->ui->script($script));
+	                if (!filter_var($script, FILTER_VALIDATE_URL)) {
+		                $script = $this->context->ui->script($script);
+	                }
+
+                    wp_register_script($key, $script);
                     wp_enqueue_script($key);
                 }
             });
         }
 
         $css = $this->setting('customize/enqueue/css', []);
+	    $css = apply_filters('heavymetal/ui/enqueue/admin/css', $css);
         if (count($css) > 0) {
-            $css = $this->setting('customize/enqueue/css', []);
-            if (count($css) > 0) {
-                add_action('login_enqueue_scripts', function () use ($css) {
-                    foreach ($css as $key => $stylesheet) {
-                        wp_register_style($key, $this->context->ui->css($stylesheet));
-                        wp_enqueue_style($key);
-                    }
-                });
-            }
+            add_action('login_enqueue_scripts', function () use ($css) {
+                foreach ($css as $key => $stylesheet) {
+                	if (!filter_var($stylesheet, FILTER_VALIDATE_URL)) {
+                		$stylesheet = $this->context->ui->css($stylesheet);
+	                }
+
+                    wp_register_style($key, $stylesheet);
+                    wp_enqueue_style($key);
+                }
+            });
 
             add_action('admin_enqueue_scripts', function () use ($css) {
                 foreach ($css as $key => $stylesheet) {
-                    wp_register_style($key, $this->context->ui->css($stylesheet));
+	                if (!filter_var($stylesheet, FILTER_VALIDATE_URL)) {
+		                $stylesheet = $this->context->ui->css($stylesheet);
+	                }
+
+	                wp_register_style($key, $stylesheet);
                     wp_enqueue_style($key);
                 }
             });
@@ -169,6 +186,41 @@ class Admin
             });
         }
     }
+
+	/**
+	 * Sets up admin page controllers
+	 */
+	private function setupAdminPages() {
+		if (!is_admin()) {
+			return;
+		}
+
+		$pages = $this->setting('pages');
+		$pages = apply_filters('heavymetal/admin/pages', $pages);
+		if (count($pages) == 0) {
+			return;
+		}
+
+		foreach($pages as $pageClass) {
+			if (class_exists($pageClass) && is_subclass_of($pageClass, AdminPageController::class)) {
+				/** @var AdminPageController $adminPage */
+				$adminPage = new $pageClass($this->context);
+				$this->adminPages[] = $adminPage;
+
+				add_action('admin_menu', function() use ($adminPage) {
+					if ($adminPage->parentMenuSlug() == null) {
+						add_menu_page($adminPage->pageTitle(), $adminPage->menuTitle(), $adminPage->capability(), $adminPage->menuSlug(), function() use ($adminPage) {
+							echo $adminPage->execute($this->context->request);
+						}, $adminPage->icon(), $adminPage->position());
+					} else {
+						add_submenu_page($adminPage->parentMenuSlug(), $adminPage->pageTitle(), $adminPage->menuTitle(), $adminPage->capability(), $adminPage->menuSlug(), function() use ($adminPage) {
+							echo $adminPage->execute($this->context->request);
+						});
+					}
+				}, 10001);
+			}
+		}
+	}
 
     /**
      * Returns a setting using a path string, eg 'options/views/engine'.  Consider this
