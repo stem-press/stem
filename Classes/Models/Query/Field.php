@@ -46,6 +46,9 @@ class Field {
     /** @var null|string */
     protected $operator = null;
 
+    /** @var null|string The type (for meta queries) to use for comparison  */
+    protected $type = null;
+
     /** @var array All of the operators that can be used on any field */
     protected static $allOperators = [
         'equals' => '=',
@@ -125,6 +128,17 @@ class Field {
         return $this->operator;
     }
 
+	/**
+	 * Set the field type for comparison
+	 *
+	 * @param $type
+	 * @return $this
+	 */
+    public function type($type) {
+    	$this->type = $type;
+    	return $this;
+    }
+
     /**
      * Magic method for calling the field operator
      *
@@ -142,7 +156,7 @@ class Field {
         $this->operator = static::$allOperators[$name];
 
         if ($this->callback) {
-            call_user_func($this->callback, $this->fieldName, $this->operator, $this->value);
+            call_user_func($this->callback, $this->fieldName, $this->type, $this->operator, $this->value);
         }
 
         return $this->query;
