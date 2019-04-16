@@ -94,6 +94,9 @@ class Context {
     /** @var array|null The last ACF group to be updated  */
     private $lastUpdatedACFGroup = null;
 
+    /** @var null|string The system's timezone */
+    private static $timezone = null;
+
     /**
      * Constructor.
      *
@@ -958,4 +961,50 @@ class Context {
     }
 
     //endregion
+
+	//region Timezone
+	/**
+	 * Returns the system's timezone
+	 * @return string
+	 */
+	public static function timezone() {
+		if (!empty(static::$timezone)) {
+			return static::$timezone;
+		}
+
+		$tz = get_option('timezone_string');
+		if (empty($tz)) {
+			$tz = 'UTC';
+			if (is_link('/etc/localtime')) {
+				// Mac OS X (and older Linuxes)
+				// /etc/localtime is a symlink to the
+				// timezone in /usr/share/zoneinfo.
+				$filename = readlink('/etc/localtime');
+				if (strpos($filename, '/usr/share/zoneinfo/') === 0) {
+					$tz = substr($filename, 20);
+				}
+			} elseif (file_exists('/etc/timezone')) {
+				// Ubuntu / Debian.
+				$data = file_get_contents('/etc/timezone');
+				if ($data) {
+					$tz = $data;
+				}
+			} elseif (file_exists('/etc/sysconfig/clock')) {
+				// RHEL / CentOS
+				$data = parse_ini_file('/etc/sysconfig/clock');
+				if (!empty($data['ZONE'])) {
+					$tz = $data['ZONE'];
+				}
+			}
+		}
+
+		if (!empty($tz)) {
+			static::$timezone = $tz;
+			return static::$timezone;
+		}
+
+		return 'UTC';
+	}
+
+	//endregion
 }
