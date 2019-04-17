@@ -11,6 +11,7 @@ use Stem\Controllers\PostController;
 use Stem\Controllers\TermController;
 use Stem\Controllers\PostsController;
 use Stem\Controllers\SearchController;
+use Stem\Models\Taxonomy;
 use Stem\Models\Utilities\CustomPostTypeBuilder;
 use Stem\Utilities\Plugins\PluginManager;
 use Symfony\Component\HttpFoundation\Request;
@@ -97,6 +98,9 @@ class Context {
 
     /** @var null|string The system's timezone */
     private static $timezone = null;
+
+    /** @var Taxonomy[] Custom taxonomies  */
+    private $taxonomies = [];
 
     /**
      * Constructor.
@@ -462,6 +466,15 @@ class Context {
      * Loads and configures the model map
      */
     private function setupModels() {
+	    // Load any custom taxonomies
+	    $taxonomies = arrayPath($this->config, 'taxonomies', []);
+	    $taxonomies = apply_filters('heavymetal/app/taxonomies', $taxonomies);
+	    foreach($taxonomies as $taxonomyClassname) {
+		    if (class_exists($taxonomyClassname)) {
+			    $this->taxonomies[] = new $taxonomyClassname();
+		    }
+	    }
+
         // Register the default model map, which can be overridden ;)
         $this->modelMap['post'] = '\\Stem\\Models\\Post';
         $this->modelMap['attachment'] = '\\Stem\\Models\\Attachment';
@@ -557,6 +570,10 @@ class Context {
      * Install custom post types.
      */
     private function setupCustomPostTypes() {
+    	foreach($this->taxonomies as $taxonomy) {
+    		$taxonomy->register();
+	    }
+
         foreach($this->modelMap as $postType => $modelClassname) {
         	$modelClassname::initialize();
 

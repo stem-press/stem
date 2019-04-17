@@ -8,7 +8,8 @@ class CustomPostTypeBuilder {
     protected $siteSortables = [];
     protected $siteFilters = [];
     protected $postProperties = [];
-    protected $names = [];
+	protected $names = [];
+	protected $taxonomies = [];
     protected $postType = null;
 
     public function __construct($postType, $singularName, $pluralName = null, $slug = null) {
@@ -258,6 +259,16 @@ class CustomPostTypeBuilder {
     public function featuredImageName($value) {
         $this->postProperties['featured_image'] = $value;
         return $this;
+    }
+
+	/**
+	 * Associates a taxonomy
+	 * @param $taxId
+	 * @return $this
+	 */
+    public function addTaxonomy($taxId) {
+    	$this->taxonomies[] = $taxId;
+    	return $this;
     }
 
     /**
@@ -913,9 +924,15 @@ class CustomPostTypeBuilder {
             $args['site_filters'] = $this->siteFilters;
         }
 
+        if (!empty($this->taxonomies)) {
+        	$args['taxonomies'] = $this->taxonomies;
+        }
+
         if (empty($args['supports'])) {
         	$args['supports'] = false;
         }
+
+
 
         register_extended_post_type($this->postType, $args, $this->names);
     }

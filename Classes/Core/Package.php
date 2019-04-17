@@ -85,6 +85,7 @@ class Package {
 
 		$this->addFilter('app/models');
 		$this->addFilter('app/controllers');
+		$this->addFilter('app/taxonomies');
 		$this->addFilter('app/commands');
 
 		$this->addFilter('ui/columns');
