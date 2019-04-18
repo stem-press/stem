@@ -3,6 +3,7 @@
 namespace Stem\Core;
 
 use Kint\Kint;
+use Stem\Commands\Queue\QueueWorkerCommand;
 use Stem\Models\Page;
 use Stem\Models\Post;
 use Stem\Models\Attachment;
@@ -13,6 +14,7 @@ use Stem\Controllers\PostsController;
 use Stem\Controllers\SearchController;
 use Stem\Models\Taxonomy;
 use Stem\Models\Utilities\CustomPostTypeBuilder;
+use Stem\Queue\Queue;
 use Stem\Utilities\Plugins\PluginManager;
 use Symfony\Component\HttpFoundation\Request;
 use Whoops\Handler\PrettyPageHandler;
@@ -222,6 +224,14 @@ class Context {
 	    				call_user_func([$commandClass, 'Register']);
 				    }
 			    }
+		    }
+	    }
+
+	    $queueConfig = $this->setting('queue', []);
+	    if (!empty($queueConfig)) {
+	    	Queue::instance()->configure($queueConfig);
+		    if (defined( 'WP_CLI' ) && class_exists('\WP_CLI')) {
+			    QueueWorkerCommand::Register();
 		    }
 	    }
     }
