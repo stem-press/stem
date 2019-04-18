@@ -381,7 +381,7 @@ final class Query {
 		        "$field" => $direction
 	        ]);
         } else {
-        	$this->field($field, 'EXISTS', null, 'NUMERIC', "{$field}_clause");
+        	$this->field($field, null, 'EXISTS', null, 'NUMERIC', "{$field}_clause");
         	$this->args['orderby'] = array_merge($this->args['orderby'], [
         		"{$field}_clause" => $direction
 	        ]);
