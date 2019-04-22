@@ -195,7 +195,7 @@ class Admin
 			return;
 		}
 
-		$pages = $this->setting('pages');
+		$pages = $this->setting('pages', []);
 		$pages = apply_filters('heavymetal/admin/pages', $pages);
 		if (count($pages) == 0) {
 			return;
