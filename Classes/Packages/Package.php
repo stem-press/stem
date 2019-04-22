@@ -1,6 +1,6 @@
 <?php
 
-namespace Stem\Core;
+namespace Stem\Packages;
 
 /**
  * A Package is usually a set of models, controllers, etc that are provided in a plugin.
@@ -8,6 +8,8 @@ namespace Stem\Core;
  * @package Stem\Core
  */
 class Package {
+	protected $title = null;
+	protected $description = null;
 	protected $rootPath = null;
 	protected $config = null;
 
@@ -17,9 +19,13 @@ class Package {
 	 * Package constructor.
 	 *
 	 * @param string $rootPath The root path of the package
+	 * @param string|null $title The title of the package
+	 * @param string|null $description The description of the package
 	 */
-	public function __construct($rootPath) {
+	public function __construct($rootPath, $title = null, $description = null) {
+		$this->title = $title;
 		$this->rootPath = $rootPath;
+		$this->description = $description;
 
 		if (file_exists($rootPath.'/config/config.php')) {
 			$this->config = include $rootPath.'/config/config.php';
@@ -56,6 +62,21 @@ class Package {
 				return array_merge($appRoutes, $routes);
 			}, $this->packagePriority);
 		}
+
+		PackageManager::registerPackage($this);
+	}
+
+	/**
+	 * Returns the db migration path for the package if any.
+	 *
+	 * @return string|null
+	 */
+	public function migrationsPath() {
+		if (file_exists($this->rootPath.'/migrations')) {
+			return $this->rootPath.'/migrations';
+		}
+
+		return null;
 	}
 
 	/**
