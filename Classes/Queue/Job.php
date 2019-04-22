@@ -14,6 +14,9 @@ abstract class Job {
 	/** @var int Job had an error */
 	const STATUS_ERROR = -1;
 
+	/** @var int Job had a fatal error and should not be re-enqueued */
+	const STATUS_FATAL_ERROR = -2;
+
 	/** @var int The entire queue should be stopped and cleared */
 	const STATUS_STOP_ALL = 666;
 
