@@ -377,6 +377,10 @@ final class Query {
         }
 
         if (in_array($field, static::$nonMetaFields) || ($field == 'post_date')) {
+        	if ($field == 'id') {
+        		$field = 'ID';
+	        }
+
 	        $this->args['orderby'] = array_merge($this->args['orderby'], [
 		        "$field" => $direction
 	        ]);
