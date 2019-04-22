@@ -31,6 +31,26 @@ function arrayPath($array, $path, $defaultValue = null)
 }
 
 /**
+ * Polyfill for PHP < 7.3
+ */
+if (!function_exists('array_key_first')) {
+	/**
+	 * Gets the first key of an array
+	 *
+	 * @param array $array
+	 * @return mixed
+	 */
+	function array_key_first($array)
+	{
+		if (!is_array($array) || !count($array)) {
+			return null;
+		}
+		$keys = array_keys($array);
+		return $keys[0];
+	}
+}
+
+/**
  * Validates the values in an associative array, returning the fields that don't validate
  *
  * @param $array
@@ -106,6 +126,38 @@ function unsetArrayPath(&$array, $path)
 
         $config = &$config[$part];
     }
+}
+
+/**
+ * Determines if an array has all of the specified keys
+ * @param array $array
+ * @param array $keys
+ * @return bool
+ */
+function arrayHasKeys($array, $keys) {
+	foreach($keys as $key) {
+		if (!array_key_exists($key, $array)) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+/**
+ * Insures all items in the array have a value
+ * @param array $set
+ *
+ * @return bool
+ */
+function anyEmpty(...$set) {
+	foreach($set as $item) {
+		if (empty($item)) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 /**
