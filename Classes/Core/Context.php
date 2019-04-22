@@ -3,6 +3,7 @@
 namespace Stem\Core;
 
 use Kint\Kint;
+use Stem\Commands\Migrations\MigrationsCommand;
 use Stem\Commands\Queue\QueueWorkerCommand;
 use Stem\Models\Page;
 use Stem\Models\Post;
@@ -225,6 +226,8 @@ class Context {
 				    }
 			    }
 		    }
+
+	    	MigrationsCommand::Register();
 	    }
 
 	    $queueConfig = $this->setting('queue', []);
