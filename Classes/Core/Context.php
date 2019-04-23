@@ -176,6 +176,8 @@ class Context {
         // Setup autoloading
         $this->setupAutoloading();
 
+        do_action('heavymetal/app/packages/install');
+
         // Configure ACF
         $this->setupACF();
 

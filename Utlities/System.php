@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Fetches a value from an array using a path string, eg 'some/setting/here'.
  * @param $array
