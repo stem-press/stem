@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: jong
- * Date: 8/18/15
- * Time: 3:48 PM.
- */
 
 namespace Stem\Utilities;
 

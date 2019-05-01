@@ -111,8 +111,8 @@ class Admin
             }
         }
 
-        $js = $this->setting('customize/enqueue/js', []);
-        $js = apply_filters('heavymetal/ui/enqueue/admin/js', $js);
+	    $js = apply_filters('heavymetal/ui/enqueue/admin/js', []);
+        $js = array_merge($js, $this->setting('customize/enqueue/js', []));
         if (count($js) > 0) {
             add_action('admin_enqueue_scripts', function () use ($js) {
                 foreach ($js as $key => $script) {
@@ -126,8 +126,8 @@ class Admin
             });
         }
 
-        $css = $this->setting('customize/enqueue/css', []);
-	    $css = apply_filters('heavymetal/ui/enqueue/admin/css', $css);
+	    $css = apply_filters('heavymetal/ui/enqueue/admin/css', []);
+        $css = array_merge($css, $this->setting('customize/enqueue/css', []));
         if (count($css) > 0) {
             add_action('login_enqueue_scripts', function () use ($css) {
                 foreach ($css as $key => $stylesheet) {
@@ -195,8 +195,8 @@ class Admin
 			return;
 		}
 
-		$pages = $this->setting('pages', []);
-		$pages = apply_filters('heavymetal/admin/pages', $pages);
+		$pages = apply_filters('heavymetal/admin/pages', []);
+		$pages = array_merge($pages, $this->setting('pages', []));
 		if (count($pages) == 0) {
 			return;
 		}

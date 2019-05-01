@@ -235,8 +235,8 @@ class UI
 
         // Load custom fields
 	    add_action('acf/include_field_types', function($version = false) {
-	        $fields = arrayPath($this->config, 'content/fields', []);
-	        $fields = apply_filters('heavymetal/ui/fields', $fields);
+		    $fields = apply_filters('heavymetal/ui/fields', []);
+	        $fields = array_merge($fields, arrayPath($this->config, 'fields', []));
 	        if (!empty($fields) && is_array($fields)) {
 	            foreach($fields as $fieldClass) {
 	                new $fieldClass();
@@ -246,8 +246,8 @@ class UI
 
 	    // Load Custom Columns
         add_action('ac/column_types', function(\AC\ListScreen $listScreen) {
-	        $columns = arrayPath($this->config, 'content/columns', []);
-	        $columns = apply_filters('heavymetal/ui/columns', $columns);
+	        $columns = apply_filters('heavymetal/ui/columns', []);
+	        $columns = array_merge($columns, arrayPath($this->config, 'columns', []));
 	        foreach($columns as $columnClass => $validPostTypes) {
 	            $validPostType = (empty($validPostTypes) || in_array($listScreen->get_key(), $validPostTypes));
 	            if ($validPostType) {
@@ -594,8 +594,8 @@ class UI
     }
 
     private function setupMetaboxes() {
-	    $metaBoxes = $this->setting('metaboxes', []);
-	    $metaBoxes = apply_filters('heavymetal/ui/metaboxes', $metaBoxes);
+	    $metaBoxes = apply_filters('heavymetal/ui/metaboxes', []);
+	    $metaBoxes = array_merge($metaBoxes, $this->setting('metaboxes', []));
 	    foreach($metaBoxes as $metaBoxClass) {
 	        if (class_exists($metaBoxClass)) {
 	            /** @var MetaBox $metaBox */
@@ -614,8 +614,8 @@ class UI
 
     private function setupShortCodes()
     {
-        $shortCodes = $this->setting('shortcodes', []);
-        $shortCodes = apply_filters('heavymetal/ui/shortcodes', $shortCodes);
+        $shortCodes = apply_filters('heavymetal/ui/shortcodes', []);
+	    $shortCodes = array_merge($shortCodes, $this->setting('shortcodes', []));
         foreach ($shortCodes as $key => $data) {
             $shortCode = null;
             $uiConfig = null;
@@ -672,8 +672,8 @@ class UI
             });
         }
 
-        $widgets = $this->setting('widgets', []);
-        $widgets = apply_filters('heavymetal/ui/widgets', $widgets);
+        $widgets = apply_filters('heavymetal/ui/widgets', []);
+	    $widgets = array_merge($widgets, $this->setting('widgets', []));
         foreach($widgets as $widget) {
             $this->widgets[] = new $widget($this->context, $this);
         }

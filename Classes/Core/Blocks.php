@@ -39,8 +39,8 @@ class Blocks {
      * @throws \Exception
      */
     private function loadBlocks() {
-	    $blocksArray = arrayPath($this->ui->config,'blocks', []);
-	    $blocksArray = apply_filters('heavymetal/ui/blocks', $blocksArray);
+	    $blocksArray = apply_filters('heavymetal/ui/gutenberg/blocks', []);
+	    $blocksArray = array_merge($blocksArray, arrayPath($this->ui->config,'gutenberg/blocks', []));
         foreach($blocksArray as $blockDataorClass) {
             /** @var Block $block */
             $block = null;

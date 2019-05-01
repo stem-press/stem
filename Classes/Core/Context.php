@@ -219,8 +219,8 @@ class Context {
 
         // Register any command line commands
 	    if (defined( 'WP_CLI' ) && class_exists('\WP_CLI')) {
-	    	$commands = arrayPath($this->config, 'commands', []);
-	    	$commands = apply_filters('heavymetal/app/commands', $commands);
+		    $commands = apply_filters('heavymetal/app/commands', []);
+	    	$commands = array_merge($commands, $this->setting('commands', []));
 	    	if (!empty($commands)) {
 	    		foreach($commands as $commandClass) {
 	    			if (class_exists($commandClass)) {
@@ -382,8 +382,10 @@ class Context {
      * Parse routes from a PHP configuration file.
      */
     private function parseRoutes() {
-        $routesConfig = include $this->rootPath.'/config/routes.php';
-        $routesConfig = apply_filters('heavymetal/app/routes', $routesConfig);
+	    $routesConfig = apply_filters('heavymetal/app/routes', []);
+        $themeRoutesConfig = include $this->rootPath.'/config/routes.php';
+        $routesConfig = array_merge($routesConfig, $themeRoutesConfig);
+
         foreach ($routesConfig as $route => $routeInfo) {
             if (!is_array($routeInfo) && is_callable($routeInfo)) {
                 $this->router->addRoute(false, $route, $route, $routeInfo);
@@ -459,9 +461,8 @@ class Context {
      */
     private function setupControllers() {
 
-    	$pageControllers = (!empty($this->config['page-controllers'])) ? $this->config['page-controllers'] : [];
-    	$pageControllers = apply_filters('heavymetal/app/controllers', $pageControllers);
-
+	    $pageControllers = apply_filters('heavymetal/app/controllers', []);
+    	$pageControllers = array_merge($pageControllers, $this->setting('controllers', []));
         if (!empty($pageControllers)) {
             foreach ($pageControllers as $key => $controller) {
                 $this->controllerMap[strtolower(preg_replace('|[^aA-zZ0-9_]+|', '-', $key))] = $controller;
@@ -482,8 +483,8 @@ class Context {
      */
     private function setupModels() {
 	    // Load any custom taxonomies
-	    $taxonomies = arrayPath($this->config, 'taxonomies', []);
-	    $taxonomies = apply_filters('heavymetal/app/taxonomies', $taxonomies);
+	    $taxonomies = apply_filters('heavymetal/app/taxonomies', []);
+	    $taxonomies = array_merge($taxonomies, arrayPath($this->config, 'taxonomies', []));
 	    foreach($taxonomies as $taxonomyClassname) {
 		    if (class_exists($taxonomyClassname)) {
 			    $this->taxonomies[] = new $taxonomyClassname();
@@ -503,8 +504,8 @@ class Context {
         }
 
         // Load the user declared models
-        $models = arrayPath($this->config, 'models', []);
-        $models = apply_filters('heavymetal/app/models', $models);
+	    $models = apply_filters('heavymetal/app/models', []);
+        $models = array_merge($models, arrayPath($this->config, 'models', []));
         foreach($models as $modelClassname) {
             if (class_exists($modelClassname)) {
                 $this->modelMap[$modelClassname::postType()] = $modelClassname;
