@@ -47,7 +47,11 @@ class PropertiesProxy {
 				if (in_array($field['type'], ['image', 'file', 'post_object', 'page'])) {
 					$val = ($val instanceof \WP_Post) ? Context::current()->modelForPost($val) : Context::current()->modelForPostID($val);
 				} else if (($field['type'] == 'date_picker') || ($field['type'] == 'date_time_picker')) {
-					$val = Carbon::parse($val, Context::timezone());
+					try {
+						$val = Carbon::parse($val, Context::timezone());
+					} catch (\Exception $ex) {
+						$val = Carbon::createFromFormat('d/m/Y', $val, Context::timezone());
+					}
 				}
 			}
 

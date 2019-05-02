@@ -365,7 +365,11 @@ class Post implements \JsonSerializable {
 			$dateVal = $this->post->{$postProperty};
 		}
 
-		$date = Carbon::parse($dateVal, Context::timezone());
+		try {
+			$date = Carbon::parse($dateVal, Context::timezone());
+		} catch (\Exception $ex) {
+			$date = Carbon::createFromFormat('d/m/Y', $dateVal, Context::timezone());
+		}
 
 		if ($hasProperty) {
 			$this->{$privateName} = $date;

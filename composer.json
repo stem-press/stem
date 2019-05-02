@@ -29,7 +29,8 @@
     "samrap/acf-fluent": "^0.4.0",
     "filp/whoops": "^2.3",
     "kint-php/kint": "^3.2",
-    "predis/predis": "^1.1"
+    "predis/predis": "^1.1",
+    "defuse/php-encryption": "^2.2.1"
   },
   "autoload": {
     "psr-4": {
