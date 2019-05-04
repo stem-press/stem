@@ -848,6 +848,23 @@ class Context {
 
     //region Model Mapping/Filtering
 
+	/**
+	 * Returns the class name for the model for a given post type
+	 * @param $postType
+	 *
+	 * @return string|null
+	 */
+	public function modelClassForPostType($postType) {
+		if (isset($this->modelMap[$postType])) {
+			$className = $this->modelMap[$postType];
+			if (class_exists($className)) {
+				return $className;
+			}
+		}
+
+		return null;
+	}
+
     /**
      * Creates a model instance for the supplied WP_Post object.
      *
