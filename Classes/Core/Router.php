@@ -107,7 +107,7 @@ class Router
 
             if ($controller) {
                 if (! class_exists($controller)) {
-                    $error = new Response('Invalid method', 501);
+                    $error = new Response("Missing controller $controller", 501);
                     $error->send();
                     die;
                 }
