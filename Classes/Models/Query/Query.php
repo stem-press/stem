@@ -80,7 +80,7 @@ final class Query {
     private static $fieldOperators = [
         'id' => ['=', '!=', 'in', 'not in'],
         'slug' => ['=', 'in'],
-        'title' => ['='],
+        'title' => ['=', 'like', 'not like'],
 	    'parent' => ['=', '!=', 'in', 'not in'],
         'author' => ['=', '!=', 'in', 'not in'],
         'authorName' => ['='],
@@ -438,7 +438,13 @@ final class Query {
         }  else if ($field == 'parent') {
 	        $this->processParent($operator, $value);
         } else if ($field == 'title') {
-            $this->setArgument('title', $value);
+        	if ($operator == 'like') {
+		        $this->setArgument('post_title_like', $value);
+	        } else if ($operator == 'not like') {
+		        $this->setArgument('post_title_not_like', $value);
+	        } else {
+                $this->setArgument('title', $value);
+	        }
         } else if ($field == 'author') {
             $operator = in_array($operator, ['=', 'in']) ? '=' : '!=';
             $this->processAuthor($operator, $value);
@@ -771,7 +777,23 @@ final class Query {
 	 * @return PostCollection
 	 */
 	public function get() {
-		return new PostCollection($this->context, $this);
+		add_filter('posts_where', [$this, 'filterPostsWhere'], 10, 2);
+		$collection = new PostCollection($this->context, $this);
+		remove_filter('posts_where', [$this, 'filterPostsWhere']);
+
+		return $collection;
+	}
+
+	public function filterPostsWhere($where, $wp_query) {
+		global $wpdb;
+
+		if ($search_term = $wp_query->get( 'post_title_like' ) ) {
+			$where .= ' AND ' . $wpdb->posts . '.post_title LIKE \'%' . $wpdb->esc_like( $search_term ) . '%\'';
+		} else if ($search_term = $wp_query->get( 'post_title_not_like' ) ) {
+			$where .= ' AND ' . $wpdb->posts . '.post_title NOT LIKE \'%' . $wpdb->esc_like( $search_term ) . '%\'';
+		}
+
+		return $where;
 	}
 
     /**
