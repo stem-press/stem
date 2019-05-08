@@ -105,6 +105,7 @@ class Package {
 		$this->addFilter('admin/pages');
 
 		$this->addFilter('app/models');
+		$this->addFilter('app/template-controllers');
 		$this->addFilter('app/controllers');
 		$this->addFilter('app/taxonomies');
 		$this->addFilter('app/commands');
