@@ -159,6 +159,47 @@ function anyEmpty(...$set) {
 	return false;
 }
 
+
+/**
+ * Insures all items are not null
+ * @param array $set
+ *
+ * @return bool
+ */
+function anyNull(...$set) {
+	foreach($set as $item) {
+		if ($item === null) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
+/**
+ * Insures all arrays have the same count
+ * @param array $set
+ *
+ * @return bool
+ */
+function arrayCountsEqual(...$set) {
+	$count = null;
+	foreach($set as $item) {
+		if (($item === null) || !is_array($item)) {
+			return false;
+		}
+
+		if ($count == null) {
+			$count = count($item);
+		} else if (count($item) != $count) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
 /**
  * Recursively deletes a directory
  *
