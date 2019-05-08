@@ -10,8 +10,8 @@ use Stem\Models\Query\PostCollection;
 use Symfony\Component\HttpFoundation\Request;
 
 class PostsController extends Controller {
-    public $page = null;
-    public $posts = null;
+    protected $page = null;
+	protected $posts = null;
 
     public function __construct(Context $context, $template = null) {
         parent::__construct($context, $template);
