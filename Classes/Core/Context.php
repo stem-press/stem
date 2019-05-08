@@ -391,6 +391,7 @@ class Context {
                 $this->router->addRoute(false, $route, $route, $routeInfo);
             }
             else {
+            	$route = rtrim($route, '/');
             	$routeName = $route;
 
             	$methods = [];
@@ -419,7 +420,8 @@ class Context {
                 }
 
                 if ($destination) {
-                    $this->router->addRoute($early, $routeName, $route, $destination, $defaults, $requirements, $methods);
+	                $this->router->addRoute($early, $routeName, $route, $destination, $defaults, $requirements, $methods);
+	                $this->router->addRoute($early, $routeName.'/', $route.'/', $destination, $defaults, $requirements, $methods);
                 } else {
                     Log::error("Invalid destination for route '$route'.");
                 }
@@ -460,21 +462,28 @@ class Context {
      * classes in the stem app.  Additionally, we surface these as "page templates" in the wordpress admin UI.
      */
     private function setupControllers() {
-
-	    $pageControllers = apply_filters('heavymetal/app/controllers', []);
-    	$pageControllers = array_merge($pageControllers, $this->setting('controllers', []));
-        if (!empty($pageControllers)) {
-            foreach ($pageControllers as $key => $controller) {
+	    $templateControllers = apply_filters('heavymetal/app/template-controllers', []);
+    	$templateControllers = array_merge($templateControllers, $this->setting('template-controllers', []));
+        if (!empty($templateControllers)) {
+            foreach ($templateControllers as $key => $controller) {
                 $this->controllerMap[strtolower(preg_replace('|[^aA-zZ0-9_]+|', '-', $key))] = $controller;
             }
 
-            add_filter('theme_page_templates', function ($page_templates, $theme, $post) use ($pageControllers) {
-                foreach ($pageControllers as $key => $controller) {
+            add_filter('theme_page_templates', function ($page_templates, $theme, $post) use ($templateControllers) {
+                foreach ($templateControllers as $key => $controller) {
                     $page_templates[preg_replace('/\\s+/', '-', $key).'.php'] = $key;
                 }
 
                 return $page_templates;
             }, 10, 3);
+        }
+
+        $pageControllers = apply_filters('heavymetal/app/controllers', []);
+        $pageControllers = array_merge($pageControllers, $this->setting('controllers', []));
+        if (!empty($pageControllers)) {
+	        foreach ($pageControllers as $key => $controller) {
+		        $this->controllerMap[strtolower(preg_replace('|[^aA-zZ0-9_]+|', '-', $key))] = $controller;
+	        }
         }
     }
 
