@@ -512,6 +512,12 @@ class Post implements \JsonSerializable {
 			return;
 		}
 
+		if ($name == 'thumbnail') {
+			$this->_thumbnail = $value;
+			$this->changes->setThumbnail($value);
+			return;
+		}
+
 		$getFunction = 'get'.ucfirst($name);
 		$setFunction = 'set'.ucfirst($name);
 		if (method_exists($this, $getFunction)) {
@@ -748,7 +754,7 @@ class Post implements \JsonSerializable {
 		    return $this->_editPostLink;
 	    }
 
-        $this->_editPostLink = (empty($this->id)) ? null : get_edit_post_link($this->id);
+        $this->_editPostLink = (empty($this->id)) ? null : str_replace('&amp;', '&', get_edit_post_link($this->id));
 	    return $this->_editPostLink;
     }
 
