@@ -4,6 +4,7 @@ namespace Stem\External\Blade\Directives;
 
 use Stem\Core\Context;
 use Stem\Core\ViewDirective;
+use Stem\Utilities\ArgumentParser;
 
 /**
  * Class InlineSVGDirective.
@@ -32,11 +33,11 @@ class InlineSVGDirective extends ViewDirective
         }
     }
 
-	public function execute($args) {
-		if (count($args) == 0) {
-			throw new \Exception('Missing menu svg filename argument for @svg directive.');
-		}
+    public function parseArgs() {
+    	return false;
+    }
 
-		return "<?php echo Stem\\External\\Blade\\Directives\\InlineSVGDirective::InlineSVG('{$args[0]}'); ?>";
+	public function execute($args) {
+		return "<?php echo Stem\\External\\Blade\\Directives\\InlineSVGDirective::InlineSVG({$args}); ?>";
 	}
 }

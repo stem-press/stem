@@ -17,10 +17,20 @@ abstract class ViewDirective
         $this->context = $context;
     }
 
+	/**
+	 * Controls if directive arguments are parsed before being passed to the directive to execute.
+	 * If this returns false, the directive must parse the argument string itself.
+	 *
+	 * @return bool
+	 */
+    public function parseArgs() {
+    	return true;
+    }
+
     /**
      * Executes the directive.
      *
-     * @param array $args Arguments for the directive
+     * @param array|string $args Arguments for the directive
      *
      * @return mixed
      */

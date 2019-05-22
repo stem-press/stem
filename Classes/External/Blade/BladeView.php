@@ -5,6 +5,7 @@ namespace Stem\External\Blade;
 use Stem\Core\UI;
 use Stem\Core\View;
 use Stem\Core\Context;
+use Stem\Core\ViewDirective;
 use Stem\Models\Theme;
 use duncan3dc\Laravel\Blade;
 use duncan3dc\Laravel\BladeInstance;
@@ -99,10 +100,16 @@ class BladeView extends View
 
         foreach ($directives as $key => $class) {
             if (class_exists($class)) {
+            	/** @var ViewDirective $directive */
                 $directive = new $class($this->context);
                 $this->blade->directive($key, function ($expression) use ($directive) {
                     $expression = trim($expression, '()');
-                    $args = ArgumentParser::Parse($expression);
+
+                    if ($directive->parseArgs()) {
+                        $args = ArgumentParser::Parse($expression);
+                    } else {
+                    	$args = $expression;
+                    }
 
                     return $directive->execute($args);
                 });
