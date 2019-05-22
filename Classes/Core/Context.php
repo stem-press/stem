@@ -571,6 +571,8 @@ class Context {
 		        $post->didDelete();
 	        }
         });
+
+        do_action('heavymetal/app/models/complete', $this);
     }
 
     /**

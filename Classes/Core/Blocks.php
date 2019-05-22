@@ -2,6 +2,7 @@
 
 namespace Stem\Core;
 
+use Carbon\Carbon;
 use Stem\UI\Block;
 
 /**
@@ -31,7 +32,37 @@ class Blocks {
             }, 5, 2 );
 
             $this->loadBlocks();
+            $this->enqueueBlockAssets();
         });
+    }
+
+    private function enqueueBlockAssets() {
+    	add_action('enqueue_block_editor_assets', function() {
+    		$cssFiles = apply_filters('heavymetal/ui/gutenberg/enqueue/css', []);
+    		$cssFiles = array_merge($cssFiles, arrayPath($this->ui->config,'gutenberg/enqueue/css', []));
+    		foreach($cssFiles as $css) {
+			    if (!filter_var($css, FILTER_VALIDATE_URL)) {
+				    $cssUrl = $this->ui->cssPath.$css;
+			    } else {
+				    $cssUrl = $css;
+			    }
+
+			    wp_enqueue_style($css, $cssUrl, [], $this->context->currentBuild);
+		    }
+
+
+		    $jsFiles = apply_filters('heavymetal/ui/gutenberg/enqueue/js', []);
+		    $jsFiles = array_merge($jsFiles, arrayPath($this->ui->config,'gutenberg/enqueue/js', []));
+		    foreach($jsFiles as $js) {
+			    if (!filter_var($js, FILTER_VALIDATE_URL)) {
+				    $jsUrl = $this->ui->jsPath.$js;
+			    } else {
+				    $jsUrl = $js;
+			    }
+
+			    wp_enqueue_script($js, $jsUrl, ['jquery'], $this->context->currentBuild, true);
+		    }
+	    });
     }
 
     /**
@@ -102,45 +133,52 @@ class Blocks {
         return $block_categories;
     }
 
+    private function processFieldsData($fields, $blockData) {
+	    $data = [];
+	    foreach($fields as $field) {
+		    $name = $field['name'];
+		    $type = $field['type'];
+		    $value = (isset($blockData[$name])) ? $blockData[$name] : null;
+
+		    if ($type == 'repeater') {
+			    $repeaterData = get_field($name);
+			    $value = [];
+			    foreach($repeaterData as $repeaterDatum) {
+			    	$value[] = $this->processFieldsData($field['sub_fields'], $repeaterDatum);
+			    }
+		    } else if (!empty($value)) {
+			    if (in_array($type, ['image', 'file', 'post_object', 'page'])) {
+				    $value = ($value instanceof \WP_Post) ? Context::current()->modelForPost($value) : Context::current()->modelForPostID($value);
+			    } else if (($field['type'] == 'date_picker') || ($field['type'] == 'date_time_picker')) {
+				    try {
+					    $value = Carbon::parse($value, Context::timezone());
+				    } catch (\Exception $ex) {
+					    $value = Carbon::createFromFormat('d/m/Y', $value, Context::timezone());
+				    }
+			    } else if ($type == 'oembed') {
+				    if (filter_var($value, FILTER_VALIDATE_URL)) {
+					    $value = wp_oembed_get($value);
+				    }
+			    }
+		    }
+
+		    $data[$name] = $value;
+	    }
+
+
+	    return (object)$data;
+    }
+
     /**
      * Maps the ACF field keys to their names for use in rendering the views
      *
+     * @param Block $block
      * @param $blockData
      * @return array|object
      */
-    private function normalizeData($blockData) {
-        $data = [];
-
-        if (empty($blockData)) {
-            return $data;
-        }
-
-        foreach($blockData as $key => $value) {
-            if (is_array($value) && (strpos($key, 'field_') === false)) {
-                $data[] = $this->normalizeData($value);
-            } else {
-                $field = acf_get_field($key);
-                $fieldName = $field['name'];
-
-                if ($field['type']=='repeater') {
-                    $data[$fieldName] = $this->normalizeData($value);
-                } else {
-                    if (in_array($field['type'], ['image', 'post_object', 'page_link'])) {
-                        if (is_numeric($value)) {
-                            $data[$fieldName] = $this->context->modelForPostID($value);
-                        } else if (is_array($value) && isset($value['ID'])) {
-                            $data[$fieldName] = $this->context->modelForPostID($value);
-                        } else if ($value instanceof \WP_Post) {
-                            $data[$field['name']] = $this->context->modelForPost($value);
-                        }
-                    } else {
-                        $data[$field['name']] = $value;
-                    }
-                }
-            }
-        }
-
-        return (object)$data;
+    private function processData($block, $blockData) {
+    	$fields = $block->getFields();
+    	return $this->processFieldsData($fields['fields'], $blockData);
     }
 
     /**
@@ -152,7 +190,7 @@ class Blocks {
     private function renderBlock($block, $blockData) {
         $data = [];
         if (isset($blockData['data'])) {
-            $data = $this->normalizeData($blockData['data']);
+            $data = $this->processData($block, $blockData['data']);
         }
 
         echo $block->render(['block' => $data]);

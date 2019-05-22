@@ -114,6 +114,14 @@ class Block {
         }
     }
 
+	/**
+	 * Returns the ACF fields config
+	 * @return array|mixed|null
+	 */
+    public function getFields() {
+    	return $this->acfFields;
+    }
+
     /**
      * Description of the block
      * @return string
