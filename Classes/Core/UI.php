@@ -393,7 +393,7 @@ class UI
      * Returns a setting using a path string, eg 'options/views/engine'.  Consider this
      * a poor man's xpath.
      *
-     * @param $settingPath The "path" in the config settings to look up.
+     * @param string $settingPath The "path" in the config settings to look up.
      * @param bool|mixed $default The default value to return if the settings doesn't exist.
      *
      * @return bool|mixed The result
