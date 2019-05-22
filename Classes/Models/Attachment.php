@@ -20,6 +20,9 @@ use Stem\Core\Context;
  * @property string|null $mime
  * @property-read string|null $icon
  * @property-read array|null $sizeUrls
+ * @property-read int $width
+ * @property-read int $height
+ * @property-read string|null $orientation
  *
  */
 class Attachment extends Post {
@@ -87,6 +90,27 @@ class Attachment extends Post {
     }
 
     //region Properties
+
+	public function __get($name) {
+    	if ($name == 'width') {
+    		return $this->attachmentMeta('width', (int)0);
+	    } else if ($name == 'height') {
+		    return $this->attachmentMeta('height', (int)0);
+	    } else if ($name == 'orientation') {
+		    $w = $this->attachmentMeta('width', (int)0);
+		    $h = $this->attachmentMeta('height', (int)0);
+
+		    if ($w > $h) {
+		    	return 'landscape';
+		    } else if ($w < $h) {
+		    	return 'portrait';
+		    } else if ($w == $h) {
+		    	return 'square';
+		    }
+	    }
+
+		return parent::__get($name);
+	}
 
 	/**
      * The filename of the attachment
