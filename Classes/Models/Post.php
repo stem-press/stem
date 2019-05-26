@@ -522,7 +522,8 @@ class Post implements \JsonSerializable {
 		$setFunction = 'set'.ucfirst($name);
 		if (method_exists($this, $getFunction)) {
 			if (method_exists($this, $setFunction)) {
-				call_user_func([$this, $getFunction], $value);
+				call_user_func([$this, $setFunction], $value);
+				return;
 			} else {
 				throw new InvalidPropertiesException("Property '$name' is read-only.");
 			}
