@@ -22,7 +22,7 @@ use Stem\Models\InvalidPropertiesException;
  * @property callable $metaboxCallback
  * @property bool $showAdminColumn
  * @property string $description
- * @property bool $heirarchical
+ * @property bool $hierarchical
  * @property callable $updateCountCallback
  * @property bool|string $queryVar
  * @property bool $sort
@@ -49,7 +49,7 @@ use Stem\Models\InvalidPropertiesException;
  * @method $this setMetaboxCallback(callable $metaboxCallback)
  * @method $this setShowAdminColumn(bool $showAdminColumn)
  * @method $this setShowDescription(string $description)
- * @method $this setHeirarchical(bool $heirarchical)
+ * @method $this setHierarchical(bool $hierarchical)
  * @method $this setUpdateCountCallback(callable $updateCountCallback)
  * @method $this setQueryVar(bool|string $queryVar)
  * @method $this setSort(bool $sort)

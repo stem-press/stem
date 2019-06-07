@@ -52,6 +52,10 @@ class PropertiesProxy {
 					} catch (\Exception $ex) {
 						$val = Carbon::createFromFormat('d/m/Y', $val, Context::timezone());
 					}
+				} else if ($field['type'] == 'taxonomy') {
+					$valId = $val;
+				} else {
+					$valId = $val;
 				}
 			}
 
