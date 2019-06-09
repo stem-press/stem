@@ -391,7 +391,12 @@ class Context {
                 $this->router->addRoute(false, $route, $route, $routeInfo);
             }
             else {
-            	$route = rtrim($route, '/');
+	            $enabled = arrayPath($routeInfo, 'enabled', true);
+	            if (!$enabled) {
+	            	continue;
+	            }
+
+	            $route = rtrim($route, '/');
             	$routeName = $route;
 
             	$methods = [];
