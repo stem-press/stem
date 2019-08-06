@@ -2,6 +2,7 @@
 
 namespace Stem\Models\Query;
 
+use Carbon\Carbon;
 use Stem\Core\Context;
 use Stem\Models\Post;
 use Stem\Models\User;
@@ -66,7 +67,9 @@ final class Query {
         'title',
 	    'parent',
 	    'author',
-        'authorName',
+	    'authorName',
+	    'postDate',
+	    'postModified',
         'category',
         'tag',
         'hasPassword',
@@ -91,7 +94,9 @@ final class Query {
         'password' => ['='],
         'type' => ['=', 'in'],
         'status' => ['=', 'in'],
-        'commentCount' => ['=', '!=', '<', '<=', '>', '>='],
+	    'commentCount' => ['=', '!=', '<', '<=', '>', '>='],
+	    'postDate' => ['=', '!=', '<', '<=', '>', '>='],
+	    'postModified' => ['=', '!=', '<', '<=', '>', '>='],
         'meta' =>  ['=', '!=', '<', '<=', '>', '>=', 'like', 'not like', 'in', 'not in', 'between', 'not between', 'exists', 'not exists', 'regexp', 'not regexp', 'rlike']
     ];
 
@@ -187,9 +192,17 @@ final class Query {
                 $this->processWhere($field, $type, $operator, $value);
             });
         } else if ($name == 'commentCount') {
-            return new Field($this, 'commentCount', static::$fieldOperators['commentCount'], function($field, $type, $operator, $value) {
-                $this->processWhere($field, $type, $operator, $value);
-            });
+	        return new Field($this, 'commentCount', static::$fieldOperators['commentCount'], function($field, $type, $operator, $value) {
+		        $this->processWhere($field, $type, $operator, $value);
+	        });
+        }  else if ($name == 'postDate') {
+	        return new Field($this, 'postDate', static::$fieldOperators['postDate'], function($field, $type, $operator, $value) {
+		        $this->processWhere($field, $type, $operator, $value);
+	        });
+        }  else if ($name == 'postModified') {
+	        return new Field($this, 'postModified', static::$fieldOperators['postModified'], function($field, $type, $operator, $value) {
+		        $this->processWhere($field, $type, $operator, $value);
+	        });
         } else if ($name == 'or') {
             if ($this->metaqueryRelation != null) {
                 throw new \Exception("The meta query relation has already been set to '{$this->metaqueryRelation}'.  Once set, it cannot be changed.");
@@ -462,7 +475,11 @@ final class Query {
         } else if ($field == 'type') {
             $this->setArgument('post_type', $value);
         } else if ($field == 'status') {
-            $this->setArgument('post_status', $value);
+	        $this->setArgument('post_status', $value);
+        } else if ($field == 'postDate') {
+	        $this->processDate('post_date', $operator, $value);
+        }  else if ($field == 'postModified') {
+	        $this->processDate('post_modified', $operator, $value);
         } else if ($field == 'commentCount') {
             if ($value === null) {
                 unset($this->args['comment_count']);
@@ -512,6 +529,26 @@ final class Query {
         } else {
             $this->args[$postOp] = $slugs;
         }
+    }
+
+    private function processDate($column, $operator, $value) {
+    	if (!($value instanceof Carbon)) {
+    		throw new \Exception("Date must be instance of Carbon.");
+	    }
+
+		$date_query = isset($this->args['date_query']) ? $this->args['date_query'] : [];
+		$date_query[] = [
+			'column' => $column,
+			'year' => $value->year,
+			'month' => $value->month,
+			'day' => $value->day,
+			'hour' => $value->hour,
+			'minute' => $value->minute,
+			'second' => $value->second,
+			'compare' => $operator
+		];
+
+		$this->args['date_query'] = $date_query;
     }
 
     /**
