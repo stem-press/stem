@@ -821,6 +821,21 @@ final class Query {
 		return $collection;
 	}
 
+	/**
+	 * Executes the query and returns the ids of the results
+	 *
+	 * @return PostCollection
+	 */
+	public function ids() {
+		add_filter('posts_where', [$this, 'filterPostsWhere'], 10, 2);
+		$args = $this->build();
+		$args['fields'] = 'ids';
+		$wpQuery = new \WP_Query($args);
+		remove_filter('posts_where', [$this, 'filterPostsWhere']);
+
+		return $wpQuery->posts;
+	}
+
 	public function filterPostsWhere($where, $wp_query) {
 		global $wpdb;
 
