@@ -1402,12 +1402,17 @@ QUERY;
 
 	/**
 	 * Returns all of the posts of this type
+	 * @param $status
 	 * @return PostCollection|null
 	 * @throws \Exception
 	 */
-	public static function all() {
+	public static function all($status = ['publish', 'draft', 'trash']) {
 		$query = static::query();
-		$query->status->in(['publish', 'draft', 'trash']);
+
+		if (!empty($status)) {
+			$query->status->in($status);
+		}
+
 		$query->limit(-1);
 		return $query->get();
 	}
