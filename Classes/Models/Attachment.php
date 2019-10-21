@@ -20,6 +20,7 @@ use Stem\Core\Context;
  * @property string|null $mime
  * @property-read string|null $icon
  * @property-read array|null $sizeUrls
+ * @property-read array|null $cleanedSizeUrls
  * @property-read int $width
  * @property-read int $height
  * @property-read string|null $orientation
@@ -73,8 +74,11 @@ class Attachment extends Post {
     /** @var null|array Attachment metadata */
     protected $_attachmentMeta = null;
 
-    /** @var null|array URLs for all of the image sizes  */
-    protected $_sizeUrls = null;
+	/** @var null|array URLs for all of the image sizes  */
+	protected $_sizeUrls = null;
+
+	/** @var null|array URLs for all of the image sizes  */
+	protected $_cleanedSizeUrls = null;
 
 	/**
 	 * Attachment constructor.
@@ -196,6 +200,25 @@ class Attachment extends Post {
 	    $this->_sizeUrls = $sizes;
 	    return $sizes;
     }
+
+
+	/**
+	 * The URLs for the attachment's sizes
+	 * @return null|array
+	 */
+	protected function getCleanedSizeUrls() {
+		if ($this->_cleanedSizeUrls != null) {
+			return $this->_cleanedSizeUrls;
+		}
+
+		$sizedUrls = $this->getSizeUrls();
+		$this->_cleanedSizeUrls = [];
+		foreach($sizedUrls as $size => $url) {
+			$this->_cleanedSizeUrls[str_replace('-','_', $size)] = $url;
+		}
+
+		return $this->_cleanedSizeUrls;
+	}
 
     /**
      * Link to the attachment's page
