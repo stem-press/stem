@@ -81,7 +81,7 @@ class User implements \JsonSerializable
         $this->lastName = $user->last_name;
         $this->bio = $user->description;
         $this->website = $user->user_url;
-        $this->displayName = $user->user_nicename;
+        $this->displayName = $user->display_name;
         $this->email = $user->user_email;
 
         $this->permalink = get_author_posts_url($user->ID, $this->displayName);
