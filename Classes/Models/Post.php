@@ -1407,6 +1407,7 @@ QUERY;
 	 */
 	public static function all() {
 		$query = static::query();
+		$query->status->in(['publish', 'draft', 'trash']);
 		$query->limit(-1);
 		return $query->get();
 	}
