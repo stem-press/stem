@@ -399,25 +399,55 @@ class Attachment extends Post {
         return $img;
     }
 
-    /**
-     * Returns the url for an image using the requested size template.
-     *
-     * @param string $size The size template to use.
-     *
-     * @return string|null
-     */
-    public function src($size = 'original') {
-        if (empty($this->id)) {
-            return null;
-        }
+	/**
+	 * Returns the url for an image using the requested size template.
+	 *
+	 * @param string $size The size template to use.
+	 *
+	 * @return string|null
+	 */
+	public function src($size = 'original') {
+		if (empty($this->id)) {
+			return null;
+		}
 
-        $result = wp_get_attachment_image_src($this->id, $size);
-        if ($result && is_array($result) && (count($result) > 0)) {
-            return $result[0];
-        }
+		$result = wp_get_attachment_image_src($this->id, $size);
+		if ($result && is_array($result) && (count($result) > 0)) {
+			return $result[0];
+		}
 
-        return null;
-    }
+		return null;
+	}
+
+	/**
+	 * Returns a <source> tag
+	 *
+	 * @param string $size The size template to use.
+	 * @param array $mediaQuery The media query to match this source
+	 *
+	 * @return string|null
+	 */
+	public function source($size = 'original', $mediaQuery = []) {
+		if (empty($this->id)) {
+			return null;
+		}
+
+		$result = wp_get_attachment_image_src($this->id, $size);
+		if ($result && is_array($result) && (count($result) > 0)) {
+			$src = $result[0];
+
+			$queryEle = [];
+			foreach($mediaQuery as $query => $querySize) {
+				$queryEle[] = "$query:  $querySize";
+			}
+
+			$query = implode(' and ', $queryEle);
+
+			return "<source srcset='{$src}' media='({$query})'>";
+		}
+
+		return null;
+	}
 
     //endregion
 

@@ -496,6 +496,14 @@ class UI
 
                     return $sizes;
                 });
+
+	            add_filter('media-cloud/dynamic-images/filter-parameters', function($parameters, $imageSize, $attachmentId, $attachmentMeta) use ($sizesConfig) {
+	                if (isset($sizesConfig['sizes'][$imageSize]) && isset($sizesConfig['sizes'][$imageSize]['imgix'])) {
+                        return array_merge($sizesConfig['sizes'][$imageSize]['imgix'], $parameters);
+                    }
+
+		            return $parameters;
+	            }, 1000, 4);
             }
         }
 
