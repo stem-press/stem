@@ -54,6 +54,13 @@ class PropertiesProxy {
 					}
 				} else if ($field['type'] == 'taxonomy') {
 					$valId = $val;
+				} else if ($field['type'] == 'relationship') {
+					$related = [];
+					foreach($val as $valId) {
+						$related[] = ($valId instanceof \WP_Post) ? Context::current()->modelForPost($valId) : Context::current()->modelForPostID($valId);
+					}
+
+					$val = $related;
 				} else {
 					$valId = $val;
 				}
