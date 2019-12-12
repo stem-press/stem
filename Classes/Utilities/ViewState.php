@@ -9,7 +9,7 @@ use Defuse\Crypto\Key;
  * Manages "view state" across multi-page forms.
  * @package Stem\Utilities
  */
-class ViewState {
+class ViewState implements \JsonSerializable {
 	protected $props = [];
 	protected $key = null;
 	protected $inputName = '__viewstate';
@@ -326,4 +326,11 @@ class ViewState {
 	}
 
 	//endregion
+
+	/**
+	 * @inheritDoc
+	 */
+	public function jsonSerialize() {
+		return $this->props;
+	}
 }
