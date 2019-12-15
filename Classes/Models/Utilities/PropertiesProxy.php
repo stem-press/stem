@@ -44,7 +44,7 @@ class PropertiesProxy {
 			$val = $this->post->getField($acfField);
 
 			if (!empty($val)) {
-				if (in_array($field['type'], ['image', 'file', 'post_object', 'page'])) {
+				if (in_array($field['type'], ['image', 'file', 'post_object', 'page', 'read_only_post_field'])) {
 					$val = ($val instanceof \WP_Post) ? Context::current()->modelForPost($val) : Context::current()->modelForPostID($val);
 				} else if (($field['type'] == 'date_picker') || ($field['type'] == 'date_time_picker')) {
 					try {
@@ -88,7 +88,7 @@ class PropertiesProxy {
 			if (in_array($field['type'], ['group', 'repeater'])) {
 				throw new InvalidPropertiesException("Property {$name} is read-only and cannot be assigned to.");
 			} else {
-				if (in_array($field['type'], ['image', 'file', 'post_object', 'page'])) {
+				if (in_array($field['type'], ['image', 'file', 'post_object', 'page', 'read_only_post_field'])) {
 					if ($value instanceof Post) {
 						$value = $value->id;
 					}
