@@ -1062,6 +1062,46 @@ class Post implements \JsonSerializable {
 		wp_untrash_post($this->id);
 	}
 
+	public function duplicate($metaFilter, $status = 'unchanged') {
+		if ($this->deleted || ($this->id == null)) {
+			return null;
+		}
+
+		add_filter('stem/post/skip-update-notification', [$this, 'skipUpdateNotification']);
+
+		$wpPost = get_post($this->id, ARRAY_A);
+		unset($wpPost['ID']);
+		unset($wpPost['guid']);
+
+		if ($status !== 'unchanged') {
+			$wpPost['post_status'] = $status;
+		}
+
+		$newPostId = wp_insert_post($wpPost);
+
+		remove_filter('stem/post/skip-update-notification', [$this, 'skipUpdateNotification']);
+
+		if (is_wp_error($newPostId)) {
+			return null;
+		}
+
+		global $wpdb;
+		$allMeta = $wpdb->get_results("select * from {$wpdb->postmeta} where post_id = {$this->id}");
+		foreach($allMeta as $meta) {
+			if (($metaFilter !== null) && call_user_func($metaFilter, $meta->meta_key)) {
+				continue;
+			}
+
+			update_post_meta($newPostId, $meta->meta_key, $meta->meta_value);
+		}
+
+		return $this->context->modelForPostID($newPostId);
+	}
+
+	public function skipUpdateNotification($notify) {
+		return true;
+	}
+
     //endregion
 
     //region Content
