@@ -269,6 +269,14 @@ class Post implements \JsonSerializable {
 
 	}
 
+	public function didSave() {
+
+	}
+
+	public function didUpdate() {
+
+	}
+
 	//endregion
 
 	//region Dynamic Properties

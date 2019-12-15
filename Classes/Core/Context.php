@@ -570,12 +570,28 @@ class Context {
 	        }
         });
 
-        add_action('delete_post', function($postId) {
-	        $post = $this->modelForPostID($postId);
-	        if (!empty($post)) {
-		        $post->didDelete();
-	        }
-        });
+	    add_action('delete_post', function($postId) {
+		    $post = $this->modelForPostID($postId);
+		    if (!empty($post)) {
+			    $post->didDelete();
+		    }
+	    });
+
+	    add_action('save_post', function($postId, $wpPost, $update) {
+		    $skip = apply_filters('stem/post/skip-update-notification', false);
+		    if (!empty($skip)) {
+			    return;
+		    }
+
+		    $post = $this->modelForPost($wpPost);
+		    if (!empty($post)) {
+			    if ($update) {
+				    $post->didUpdate();
+			    } else {
+				    $post->didSave();
+			    }
+		    }
+	    }, 10, 3);
 
         do_action('heavymetal/app/models/complete', $this);
     }
