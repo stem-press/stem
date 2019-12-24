@@ -1092,7 +1092,7 @@ class Post implements \JsonSerializable {
 				continue;
 			}
 
-			update_post_meta($newPostId, $meta->meta_key, $meta->meta_value);
+			update_post_meta($newPostId, $meta->meta_key, maybe_unserialize($meta->meta_value));
 		}
 
 		return $this->context->modelForPostID($newPostId);
