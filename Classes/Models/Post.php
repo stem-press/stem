@@ -178,17 +178,36 @@ class Post implements \JsonSerializable {
         return null;
     }
 
-    /**
-     * Allows subclasses to configure their ACF fields in code.  Don't worry about specifying the location
-     * element, it will be added automatically if it is missing.
-     *
-     * Recommend to use `\StoutLogic\AcfBuilder\FieldsBuilder` and return the result from `build()`
-     *
-     * @return array|null
-     */
-    public static function registerFields() {
-        return null;
+	/**
+	 * Indicates that this post type has multiple custom field groups.  If true,
+	 * then `registerFields()` is not called, but `registerMultipleFields()` is.
+	 * @return bool
+	 */
+    public static function multipleFieldGroups() {
+    	return false;
     }
+
+	/**
+	 * Allows subclasses to configure their ACF fields in code.  Don't worry about specifying the location
+	 * element, it will be added automatically if it is missing.
+	 *
+	 * Recommend to use `\StoutLogic\AcfBuilder\FieldsBuilder` and return the result from `build()`
+	 *
+	 * @return array|null
+	 */
+	public static function registerFields() {
+		return null;
+	}
+
+	/**
+	 * Allows subclasses to configure their ACF fields in code.  Don't worry about specifying the location
+	 * element, it will be added automatically if it is missing.
+	 *
+	 * @return array|null
+	 */
+	public static function registerMultipleFields() {
+		return null;
+	}
 
 	/**
 	 * Registers any views for this model's table view
@@ -197,6 +216,14 @@ class Post implements \JsonSerializable {
 	 */
 	public static function registerViews($views) {
 		return $views;
+	}
+
+	/**
+	 * Determines if Gutenberg should be disabled for this custom post type
+	 * @return bool
+	 */
+	public static function disableGutenberg() {
+		return false;
 	}
 
 	/**
@@ -231,14 +258,13 @@ class Post implements \JsonSerializable {
 
 	/**
 	 * Updates this model's meta property map based on ACF field defs
-	 * @param $acfFieldsDef
+	 * @param $fields
 	 */
-    public static function updatePropertyMap($acfFieldsDef) {
-    	if (empty($acfFieldsDef)) {
+    public static function updatePropertyMap($fields) {
+    	if (empty($fields) || !is_array($fields)) {
     		return;
 	    }
 
-    	$fields = arrayPath($acfFieldsDef, 'fields', []);
 	    static::$metaProperties[static::class] = static::parseFields('', $fields);
     }
 

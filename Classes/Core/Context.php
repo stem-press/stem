@@ -105,6 +105,10 @@ class Context {
     /** @var Taxonomy[] Custom taxonomies  */
     private $taxonomies = [];
 
+    /** @var string[] Custom post types that disable Gutenberg  */
+    private $disabledGutenberg = [];
+
+
     /**
      * Constructor.
      *
@@ -527,29 +531,74 @@ class Context {
         }
 
         foreach($this->modelMap as $key => $modelClassname) {
-	        if (function_exists('acf_add_local_field_group')) {
-		        $fields = $modelClassname::registerFields();
-		        $modelClassname::updatePropertyMap($fields);
+        	if ($modelClassname::disableGutenberg()) {
+        	    $this->disabledGutenberg[] = $key;
+	        }
 
-		        if (!empty($fields)) {
-			        if (!isset($fields['location'])) {
-				        $fields['location'] = [
-					        [
-						        [
-							        'param' => 'post_type',
-							        'operator' => '==',
-							        'value' => $modelClassname::postType()
-						        ]
-					        ]
-				        ];
+	        if (function_exists('acf_add_local_field_group')) {
+	        	$allFields = [];
+
+	        	if ($modelClassname::multipleFieldGroups()) {
+	        		$fieldGroups = $modelClassname::registerMultipleFields();
+
+	        		foreach($fieldGroups as $fields) {
+				        if (!empty($fields)) {
+					        if (!isset($fields['location'])) {
+						        $fields['location'] = [
+							        [
+								        [
+									        'param' => 'post_type',
+									        'operator' => '==',
+									        'value' => $modelClassname::postType()
+								        ]
+							        ]
+						        ];
+					        }
+
+					        acf_add_local_field_group($fields);
+
+					        $allFields = array_merge($allFields, arrayPath($fields, 'fields', []));
+				        }
 			        }
 
-			        acf_add_local_field_group($fields);
+		        } else {
+			        $fields = $modelClassname::registerFields();
+
+			        if (!empty($fields)) {
+				        if (!isset($fields['location'])) {
+					        $fields['location'] = [
+						        [
+							        [
+								        'param' => 'post_type',
+								        'operator' => '==',
+								        'value' => $modelClassname::postType()
+							        ]
+						        ]
+					        ];
+				        }
+
+				        acf_add_local_field_group($fields);
+
+				        $allFields = array_merge($allFields, arrayPath($fields, 'fields', []));
+			        }
 		        }
+
+	        	if (!empty($allFields)) {
+		            $modelClassname::updatePropertyMap($allFields);
+		        }
+
 	        }
         }
 
-        add_action('trashed_post', function($postId) {
+	    add_filter('use_block_editor_for_post_type', function ($current_status, $post_type) {
+	    	if (in_array($post_type, $this->disabledGutenberg)) {
+	    		return false;
+		    }
+
+		    return $current_status;
+	    }, 10, 2);
+
+	    add_action('trashed_post', function($postId) {
 			$post = $this->modelForPostID($postId);
 			if (!empty($post)) {
 				$post->trashed();
