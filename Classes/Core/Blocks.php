@@ -99,7 +99,8 @@ class Blocks {
                 },
                 'category' => $block->categorySlug(),
                 'icon' => $block->icon(),
-                'keywords' => $block->keywords()
+                'keywords' => $block->keywords(),
+	            'mode' => $block->mode()
             ]);
 
             $block->registerFields();
@@ -166,7 +167,7 @@ class Blocks {
 	    }
 
 
-	    return (object)$data;
+	    return $data;
     }
 
     /**

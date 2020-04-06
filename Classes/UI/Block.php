@@ -32,8 +32,11 @@ class Block {
     /** @var string  */
     protected $category= null;
 
-    /** @var string */
-    protected $icon= null;
+	/** @var string */
+	protected $icon= null;
+
+	/** @var string */
+	protected $mode = 'preview';
 
     /** @var array */
     protected $keywords= [];
@@ -148,13 +151,21 @@ class Block {
         return $this->icon;
     }
 
-    /**
-     * Keywords for the block
-     * @return array
-     */
-    public function keywords() {
-        return $this->keywords;
-    }
+	/**
+	 * Keywords for the block
+	 * @return array
+	 */
+	public function keywords() {
+		return $this->keywords;
+	}
+
+	/**
+	 * Mode for the block
+	 * @return string
+	 */
+	public function mode() {
+		return $this->mode;
+	}
 
     /**
      * Title for the block
