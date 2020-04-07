@@ -6,6 +6,7 @@ use Stem\Core\UI;
 use Stem\Core\View;
 use Stem\Core\Context;
 use Stem\Core\ViewDirective;
+use Stem\External\Blade\Directives\AvatarDirective;
 use Stem\Models\Theme;
 use duncan3dc\Laravel\Blade;
 use duncan3dc\Laravel\BladeInstance;
@@ -91,7 +92,8 @@ class BladeView extends View
             "flatmenu" => "\\Stem\\External\\Blade\\Directives\\FlatMenuDirective",
             "svg" => "\\Stem\\External\\Blade\\Directives\\InlineSVGDirective",
 	        "widgets" => "\\Stem\\External\\Blade\\Directives\\WidgetsDirective",
-	        "nonce" => "\\Stem\\External\\Blade\\Directives\\NonceDirective"
+	        "nonce" => "\\Stem\\External\\Blade\\Directives\\NonceDirective",
+	        'avatar' => AvatarDirective::class,
         ];
 
         $directives = $this->context->ui->setting('options/views/directives', []);

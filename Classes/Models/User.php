@@ -189,4 +189,24 @@ class User implements \JsonSerializable
             'permalink' => $this->permalink(),
         ];
     }
+
+    //region static helpers
+
+	/**
+	 * Returns the current user's avatar
+	 * @param int $size
+	 *
+	 * @return string|null
+	 */
+	public static function currentUserAvatar($size = 96) {
+    	if (is_user_logged_in()) {
+    		$user = wp_get_current_user();
+    		if ($user instanceof \WP_User) {
+    			return get_avatar($user->ID, $size);
+		    }
+	    }
+
+    	return null;
+	}
+	//endregion
 }
