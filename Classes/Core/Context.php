@@ -417,7 +417,7 @@ class Context {
                 }
 
                 $destination = arrayPath($routeInfo, 'controller', null);
-                if (! $destination) {
+                if (empty($destination)) {
                     $template = arrayPath($routeInfo, 'template', null);
                     if ($template) {
                         $destination = function () use ($template) {
@@ -428,7 +428,7 @@ class Context {
                     }
                 }
 
-                if ($destination) {
+                if (!empty($destination)) {
 	                $this->router->addRoute($early, $routeName, $route, $destination, $defaults, $requirements, $methods);
 	                $this->router->addRoute($early, $routeName.'/', $route.'/', $destination, $defaults, $requirements, $methods);
                 } else {

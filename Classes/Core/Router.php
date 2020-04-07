@@ -29,8 +29,21 @@ class Router
         $this->context = $context;
     }
 
+    private function isCallable($destination) {
+    	if (is_array($destination) && (count($destination) == 2) && is_string($destination[0]) && is_string($destination[1])) {
+    		$refl = new \ReflectionMethod($destination[0], $destination[1]);
+    		if ($refl->isStatic()) {
+    			return true;
+		    }
+
+    		return false;
+	    }
+
+    	return is_callable($destination);
+    }
+
     public function addRoute($early, $name, $routeStr, $destination, $defaults = [], $requirements = [], $methods = []) {
-        if (is_callable($destination)) {
+        if ($this->isCallable($destination)) {
             $defaults['callable'] = $destination;
             $route = new Route($routeStr, $defaults, $requirements, [], '', [], $methods);
 
@@ -39,17 +52,22 @@ class Router
             } else {
                 $this->routes->add($name, $route);
             }
-        } elseif (is_string($destination)) {
-            $destination = explode('@', $destination);
-            $defaults['controller'] = $destination[0];
-            $defaults['method'] = $destination[1];
-            $route = new Route($routeStr, $defaults, $requirements, [], '', [], $methods);
+        } else {
+	        if (is_string($destination)) {
+		        $destination = explode('@', $destination);
+	        }
 
-            if ($early) {
-                $this->earlyRoutes->add($name, $route);
-            } else {
-                $this->routes->add($name, $route);
-            }
+	        if (is_array($destination) && (count($destination) == 2)) {
+		        $defaults['controller'] = $destination[0];
+		        $defaults['method'] = $destination[1];
+		        $route = new Route($routeStr, $defaults, $requirements, [], '', [], $methods);
+
+		        if ($early) {
+			        $this->earlyRoutes->add($name, $route);
+		        } else {
+			        $this->routes->add($name, $route);
+		        }
+	        }
         }
     }
 
@@ -124,10 +142,10 @@ class Router
 
             die;
         } catch (MethodNotAllowedException $mex) {
-            // let wordpress continue doing what it does.
-            $response = new Response('Method not allowed', 405);
-            $response->send();
-            return true;
+//            // let wordpress continue doing what it does.
+//            $response = new Response('Method not allowed', 405);
+//            $response->send();
+            return false;
         } catch (ResourceNotFoundException $ex) {
             // let wordpress continue doing what it does.
             return false;
