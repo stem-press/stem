@@ -40,7 +40,10 @@ abstract class Controller
     public function __construct(Context $context, $template = null)
     {
         $this->context = $context;
-        $this->template = $template;
+
+        if (empty($this->template)) {
+            $this->template = $template;
+        }
 
         add_filter( 'the_seo_framework_title_from_custom_field', function( $title ) {
             return $this->title ?: $title;
