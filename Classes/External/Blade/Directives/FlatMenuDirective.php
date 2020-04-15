@@ -13,7 +13,7 @@ use Stem\Core\ViewDirective;
  * @package StemPress\Directives
  */
 class FlatMenuDirective extends ViewDirective  {
-	public static function renderMenuItem($menuItem) {
+	public static function renderMenuItem($menuItem, $wrap = '') {
 		$target = (!empty($menuItem['target'])) ? "target='{$menuItem['target']}'" : '';
 		$attrs = implode(" ", $menuItem['attrs']);
 		$classes = implode(" ", $menuItem['classes']);
@@ -23,12 +23,18 @@ class FlatMenuDirective extends ViewDirective  {
 			$submenu = "data-submenu-css='{$menuItem['sub-menu-css']}'";
 		}
 
-		$output = "\t\t\t\t<a href='{$menuItem['url']}' $target $attrs $submenu rel='{$menuItem['rel']}' class='$classes'>{$menuItem['title']}</a>\n";
+		$endWrap = $startWrap = '';
+		if (!empty($wrap)) {
+			$startWrap = "<$wrap>";
+			$endWrap = "</$wrap>";
+		}
+
+		$output = "\t\t\t\t$startWrap<a href='{$menuItem['url']}' $target $attrs $submenu rel='{$menuItem['rel']}' class='$classes'>{$menuItem['title']}</a>$endWrap\n";
 
 		return $output;
 	}
 
-	public static function OutputFlatMenu($slug) {
+	public static function OutputFlatMenu($slug, $wrap = '') {
         global $wp;
         $current_url = home_url(add_query_arg([], $wp->request));
         $current_url = trim($current_url, "/");
@@ -94,10 +100,10 @@ class FlatMenuDirective extends ViewDirective  {
 
 		$output = '';
 		foreach($menuItems as $menuItem) {
-			$output .= static::renderMenuItem($menuItem);
+			$output .= static::renderMenuItem($menuItem, $wrap);
 
 			foreach($menuItem['children'] as $child) {
-				$output .= static::renderMenuItem($child);
+				$output .= static::renderMenuItem($child, $wrap);
 			}
 		}
 
@@ -110,6 +116,8 @@ class FlatMenuDirective extends ViewDirective  {
 			throw new \Exception('Missing menu slug argument for @menu directive.');
 		}
 
-		return "<?php echo Stem\\External\\Blade\\Directives\\FlatMenuDirective::OutputFlatMenu('{$args[0]}'); ?>";
+		$wrap = (count($args) > 1) ? $args[1] : '';
+
+		return "<?php echo Stem\\External\\Blade\\Directives\\FlatMenuDirective::OutputFlatMenu('{$args[0]}', '{$wrap}'); ?>";
 	}
 }
