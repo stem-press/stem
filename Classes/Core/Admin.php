@@ -211,7 +211,7 @@ class Admin
 					if ($adminPage->parentMenuSlug() == null) {
 						add_menu_page($adminPage->pageTitle(), $adminPage->menuTitle(), $adminPage->capability(), $adminPage->menuSlug(), function() use ($adminPage) {
 							echo $adminPage->execute($this->context->request);
-						}, $adminPage->icon(), $adminPage->position());
+						}, $adminPage->icon(), $adminPage->menuPosition());
 					} else {
 						add_submenu_page($adminPage->parentMenuSlug(), $adminPage->pageTitle(), $adminPage->menuTitle(), $adminPage->capability(), $adminPage->menuSlug(), function() use ($adminPage) {
 							echo $adminPage->execute($this->context->request);
