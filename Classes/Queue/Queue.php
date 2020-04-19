@@ -2,10 +2,8 @@
 
 namespace Stem\Queue;
 
-use Predis\Client;
-
 class Queue {
-	/** @var null|Client The Predis client  */
+	/** @var null|\Redis  */
 	private $redisClient = null;
 
 	/** @var int Max waiting time */
@@ -35,7 +33,9 @@ class Queue {
 			$this->maxWait = $config['timeout'];
 		}
 
-		$this->redisClient = new Client($config['driver']);
+		$this->redisClient = new \Redis();
+		$this->redisClient->connect($config['driver']['host'], $config['driver']['port']);
+		$this->redisClient->setOption(\Redis::OPT_SERIALIZER, \Redis::SERIALIZER_PHP);
 	}
 
 	/**
@@ -45,7 +45,7 @@ class Queue {
 	 * @param Job $job
 	 */
 	public function add($queue, $job) {
-		$this->redisClient->lpush($queue, ['object' => serialize($job)]);
+		$this->redisClient->lPush($queue, $job);
 	}
 
 	/**
@@ -68,6 +68,10 @@ class Queue {
 		}
 
 		if (!empty($queueItem)) {
+			if (!is_string($queueItem)) {
+				return $queueItem;
+			}
+
 			return unserialize($queueItem);
 		}
 
@@ -81,7 +85,7 @@ class Queue {
 	 * @param Job $job
 	 */
 	public function remove($queue, $job) {
-		$this->redisClient->lrem("$queue-processing", 1, serialize($job));
+		$this->redisClient->lRem("$queue-processing", $job, 1);
 	}
 
 	/**
@@ -90,7 +94,7 @@ class Queue {
 	 * @param string $queue
 	 */
 	public function clear($queue) {
-		$this->redisClient->del([$queue, "$queue-processing"]);
+		$this->redisClient->del($queue, "$queue-processing");
 	}
 
 	/**
@@ -101,6 +105,6 @@ class Queue {
 	 * @return int
 	 */
 	public function count($queue) {
-		return $this->redisClient->llen($queue);
+		return $this->redisClient->lLen($queue);
 	}
 }
