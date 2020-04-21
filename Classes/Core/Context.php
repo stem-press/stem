@@ -188,7 +188,7 @@ class Context {
         // Load our custom post types
         add_action('init', function() {
             $this->setupCustomPostTypes();
-        }, 10000);
+        }, 1);
 
         // Initialize the UI, CacheControl and Admin managers
         $this->ui = new UI($this);
