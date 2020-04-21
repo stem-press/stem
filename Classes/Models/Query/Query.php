@@ -390,13 +390,13 @@ final class Query {
         }
 
         if (in_array($field, static::$nonMetaFields) || ($field == 'post_date')) {
-        	if ($field == 'id') {
-        		$field = 'ID';
+	        if($field == 'id') {
+		        $field = 'ID';
 	        }
 
-	        $this->args['orderby'] = array_merge($this->args['orderby'], [
-		        "$field" => $direction
-	        ]);
+	        $this->args['orderby'] = array_merge($this->args['orderby'], ["$field" => $direction]);
+        } else if ($field === 'rand') {
+	        $this->args['orderby'] = 'rand';
         } else {
         	$this->field($field, null, 'EXISTS', null, 'NUMERIC', "{$field}_clause");
         	$this->args['orderby'] = array_merge($this->args['orderby'], [
