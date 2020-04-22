@@ -685,6 +685,16 @@ class Context {
 
                 $builder->register();
             }
+
+            add_action('manage_edit-'.$modelClassname::postType().'_columns', function($columns) use ($modelClassname) {
+            	return $modelClassname::customColumns($columns);
+            }, PHP_INT_MAX);
+
+            add_action('manage_'.$modelClassname::postType().'_posts_custom_column', function($column, $post_id) {
+				$model = $this->modelForPostID($post_id);
+				$model->renderCustomColumn($column);
+            }, PHP_INT_MAX, 2);
+
         }
 
         // Install CPTs from one giant PHP file

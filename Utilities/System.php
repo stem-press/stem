@@ -267,3 +267,33 @@ if (!function_exists('keysExist')) {
 function camelCaseString($string) {
 	return lcfirst(preg_replace('#[-_]+#', '', ucwords($string, "-_")));
 }
+
+function insertKeyedArrayBeforeKey($source, $dest, $keys) {
+	$result = [];
+
+	$found = false;
+	foreach($dest as $key => $value) {
+		if (!$found) {
+			if (in_array($key, $keys)) {
+				foreach($source as $sourceKey => $sourceValue) {
+					$result[$sourceKey] = $sourceValue;
+				}
+
+				$result[$key] = $value;
+				$found = true;
+			} else {
+				$result[$key] = $value;
+			}
+		} else {
+			$result[$key] = $value;
+		}
+	}
+
+	if (!$found) {
+		foreach($source as $sourceKey => $sourceValue) {
+			$result[$sourceKey] = $sourceValue;
+		}
+	}
+
+	return $result;
+}

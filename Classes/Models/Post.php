@@ -210,15 +210,6 @@ class Post implements \JsonSerializable {
 	}
 
 	/**
-	 * Registers any views for this model's table view
-	 * @param array $views
-	 * @return array
-	 */
-	public static function registerViews($views) {
-		return $views;
-	}
-
-	/**
 	 * Determines if Gutenberg should be disabled for this custom post type
 	 * @return bool
 	 */
@@ -272,6 +263,40 @@ class Post implements \JsonSerializable {
 	 * Called when a custom post type model is added to the context.
 	 */
     public static function initialize() {
+
+    }
+
+
+	//endregion
+
+	//region WordPress Admin Views
+
+	/**
+	 * Registers any views for this model's table view
+	 * @param array $views
+	 * @return array
+	 */
+	public static function registerViews($views) {
+		return $views;
+	}
+
+	/**
+	 * Allows custom columns to be added to the editing screen
+	 *
+	 * @param $columns
+	 *
+	 * @return mixed
+	 */
+    public static function customColumns($columns) {
+    	return $columns;
+    }
+
+	/**
+	 * Renders the value for a custom column
+	 *
+	 * @param $column
+	 */
+    public function renderCustomColumn($column) {
 
     }
 
