@@ -7,6 +7,7 @@ use Stem\Core\View;
 use Stem\Core\Context;
 use Stem\Core\ViewDirective;
 use Stem\External\Blade\Directives\AvatarDirective;
+use Stem\External\Blade\Directives\InlineCSSDirective;
 use Stem\Models\Theme;
 use duncan3dc\Laravel\Blade;
 use duncan3dc\Laravel\BladeInstance;
@@ -93,6 +94,7 @@ class BladeView extends View
             "svg" => "\\Stem\\External\\Blade\\Directives\\InlineSVGDirective",
 	        "widgets" => "\\Stem\\External\\Blade\\Directives\\WidgetsDirective",
 	        "nonce" => "\\Stem\\External\\Blade\\Directives\\NonceDirective",
+	        "inlinecss" => InlineCSSDirective::class,
 	        'avatar' => AvatarDirective::class,
         ];
 
