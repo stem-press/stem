@@ -232,7 +232,8 @@ class Post implements \JsonSerializable {
 			if (!in_array($field['type'], ['group', 'repeater'])) {
 				$result[$fieldName] = [
 					'field' => $prefix.$field['name'],
-					'type' => $field['type']
+					'type' => $field['type'],
+					'default_value' => arrayPath($field, 'default_value', null)
 				];
 			} else {
 				$newPrefix = ($field['type'] == 'repeater') ? $prefix.$field['name'].'_'.'{INDEX}_' : $prefix.$field['name'].'_';
@@ -1364,19 +1365,20 @@ class Post implements \JsonSerializable {
 
         $fieldName = $fieldName ?: $property;
 
-        $val = Acf::field($fieldName, $this->id)->get();
-        if ($val != null) {
-            if ($transformer != null) {
-                $val = $transformer($val);
-            }
-
-	        if (property_exists($this, $property)) {
-		        $this->{$property} = $val;
-	        } else {
-	        	$this->fieldsCache[$fieldName] = $val;
-	        }
+        if (!postHasMetaKey($this->id, $fieldName)) {
+        	$val =  $defaultValue;
         } else {
-            $val = $defaultValue;
+	        $val = Acf::field($fieldName, $this->id)->get();
+        }
+
+        if ($transformer != null) {
+            $val = $transformer($val);
+        }
+
+        if (property_exists($this, $property)) {
+	        $this->{$property} = $val;
+        } else {
+            $this->fieldsCache[$fieldName] = $val;
         }
 
         return $val;

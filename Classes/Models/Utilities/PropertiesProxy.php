@@ -41,7 +41,7 @@ class PropertiesProxy {
 			}
 		} else {
 			$acfField = ($this->index >= 0) ? str_replace('{INDEX}',$this->index,$field['field']) : $field['field'];
-			$val = $this->post->getField($acfField);
+			$val = $this->post->getField($acfField, null, arrayPath($field, 'default_value', null));
 
 			if (!empty($val)) {
 				if (in_array($field['type'], ['image', 'file', 'post_object', 'page', 'read_only_post_field'])) {

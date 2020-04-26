@@ -297,3 +297,8 @@ function insertKeyedArrayBeforeKey($source, $dest, $keys) {
 
 	return $result;
 }
+
+function postHasMetaKey($post_id, $meta_key) {
+	global $wpdb;
+	return $wpdb->get_var($wpdb->prepare("select 1 from {$wpdb->postmeta} where post_id=%d and meta_key=%s", $post_id, $meta_key));
+}
