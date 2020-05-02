@@ -45,7 +45,16 @@ class PropertiesProxy {
 
 			if (!empty($val)) {
 				if (in_array($field['type'], ['image', 'file', 'post_object', 'page', 'read_only_post_field'])) {
-					$val = ($val instanceof \WP_Post) ? Context::current()->modelForPost($val) : Context::current()->modelForPostID($val);
+					if (is_array($val)) {
+						$result = [];
+						foreach($val as $id) {
+							$result[] = ($id instanceof \WP_Post) ? Context::current()->modelForPost($id) : Context::current()->modelForPostID($id);
+						}
+
+						$val = $result;
+					} else {
+						$val = ($val instanceof \WP_Post) ? Context::current()->modelForPost($val) : Context::current()->modelForPostID($val);
+					}
 				} else if (($field['type'] == 'date_picker') || ($field['type'] == 'date_time_picker')) {
 					try {
 						$val = Carbon::parse($val, Context::timezone());
@@ -89,8 +98,21 @@ class PropertiesProxy {
 				throw new InvalidPropertiesException("Property {$name} is read-only and cannot be assigned to.");
 			} else {
 				if (in_array($field['type'], ['image', 'file', 'post_object', 'page', 'read_only_post_field'])) {
+					if (empty($field['multiple']) && is_array($value)) {
+						throw new InvalidPropertiesException("Property {$name} does not allow multiple values.");
+					} else if (!empty($field['multiple']) && !is_array($value)) {
+						throw new InvalidPropertiesException("Property {$name} should be assigned an array and not a single model instance.");
+					}
+
 					if ($value instanceof Post) {
 						$value = $value->id;
+					} else if (is_array($value)) {
+						$newVal = [];
+						foreach($value as $model) {
+							$newVal[] = $model->id;
+						}
+
+						$value = $newVal;
 					}
 				} else if (($field['type'] == 'date_picker') || ($field['type'] == 'date_time_picker')) {
 					if ($value instanceof Carbon) {

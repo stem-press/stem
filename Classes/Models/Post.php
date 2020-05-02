@@ -235,6 +235,10 @@ class Post implements \JsonSerializable {
 					'type' => $field['type'],
 					'default_value' => arrayPath($field, 'default_value', null)
 				];
+
+				if ($field['type'] === 'post_object') {
+					$result[$fieldName]['multiple'] = $field['multiple'];
+				}
 			} else {
 				$newPrefix = ($field['type'] == 'repeater') ? $prefix.$field['name'].'_'.'{INDEX}_' : $prefix.$field['name'].'_';
 				$result[$fieldName] = [
