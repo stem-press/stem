@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Stem\Core\Context;
 use Stem\Models\InvalidPropertiesException;
 use Stem\Models\Post;
+use Stem\Models\Term;
 
 class PropertiesProxy {
 	/** @var array */
@@ -62,7 +63,9 @@ class PropertiesProxy {
 						$val = Carbon::createFromFormat('d/m/Y', $val, Context::timezone());
 					}
 				} else if ($field['type'] == 'taxonomy') {
-					$valId = $val;
+					if (isset($field['taxonomy'])) {
+						$val = Term::term(Context::current(), $val, $field['taxonomy']);
+					}
 				} else if ($field['type'] == 'relationship') {
 					$related = [];
 					foreach($val as $valId) {
@@ -70,8 +73,6 @@ class PropertiesProxy {
 					}
 
 					$val = $related;
-				} else {
-					$valId = $val;
 				}
 			}
 
@@ -118,6 +119,10 @@ class PropertiesProxy {
 					if ($value instanceof Carbon) {
 						$value->setTimezone(get_option('timezone_string'));
 						$value = $value->format("Y-m-d H:i:s");
+					}
+				} else if ($field['type'] == 'taxonomy') {
+					if ($value instanceof Term) {
+						$value = $value->id();
 					}
 				}
 

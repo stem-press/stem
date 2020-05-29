@@ -238,6 +238,8 @@ class Post implements \JsonSerializable {
 
 				if ($field['type'] === 'post_object') {
 					$result[$fieldName]['multiple'] = $field['multiple'];
+				} else if ($field['type'] == 'taxonomy') {
+					$result[$fieldName]['taxonomy'] = isset($field['taxonomy']) ? $field['taxonomy'] : 'post-tag';
 				}
 			} else {
 				$newPrefix = ($field['type'] == 'repeater') ? $prefix.$field['name'].'_'.'{INDEX}_' : $prefix.$field['name'].'_';
