@@ -43,10 +43,10 @@ final class Query {
     private $args = [];
 
     /** @var int[] Array of author IDs to query  */
-    private $authors = [];
+    private $_authors = [];
 
     /** @var null|string Author name */
-    private $authorName = null;
+    private $_authorName = null;
 
     /** @var Query[] Metadata Sub-queries  */
     private $metaSubQueries = [];
@@ -462,8 +462,8 @@ final class Query {
             $operator = in_array($operator, ['=', 'in']) ? '=' : '!=';
             $this->processAuthor($operator, $value);
         } else if ($field == 'authorName') {
-            $this->authorName = $value;
-            $this->authors = [];
+            $this->_authorName = $value;
+            $this->_authors = [];
         } else if ($field == 'category') {
             $this->processCategory($operator, $value);
         } else if ($field == 'tag') {
@@ -560,7 +560,7 @@ final class Query {
      */
     private function processAuthor($operator, $value) {
         if ($value == null) {
-            $this->authors = [];
+            $this->_authors = [];
             return;
         }
 
@@ -591,9 +591,9 @@ final class Query {
             $newAuthors[] = $add.$value->id();
         }
 
-        $this->authors = array_merge($this->authors, $newAuthors);
-        if (count($this->authors) > 0) {
-            $this->authorName = null;
+        $this->_authors = array_merge($this->_authors, $newAuthors);
+        if (count($this->_authors) > 0) {
+            $this->_authorName = null;
         }
     }
 
@@ -855,10 +855,10 @@ final class Query {
     public function build() {
         $args = $this->args;
 
-        if (!empty($authors)) {
-            $args['author'] = implode(',', $authors);
-        } else if (!empty($authorName)) {
-            $args['author_name'] = $authorName;
+        if (!empty($this->_authors)) {
+            $args['author'] = implode(',', $this->_authors);
+        } else if (!empty($this->_authorName)) {
+            $args['author_name'] = $this->_authorName;
         }
 
         $meta = $this->buildMetaQuery();
