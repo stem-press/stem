@@ -1469,6 +1469,7 @@ QUERY;
 
     public function jsonSerialize() {
         return [
+        	'id' => $this->id,
             'type'=>static::$postType,
             'title'=>$this->title,
             'slug'=>$this->slug,

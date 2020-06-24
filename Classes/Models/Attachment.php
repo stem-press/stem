@@ -537,24 +537,27 @@ class Attachment extends Post {
 	 */
     public function jsonSerialize()
     {
-        $json = parent::jsonSerialize();
+	    if ($this->attachmentInfo()) {
+	    	$sizeData = [
+			    'sizes' => $this->_attachmentInfo['sizes'],
+  		        'width' => $this->_attachmentInfo['width'],
+		        'height' => $this->_attachmentInfo['height'],
+		        'orientation' => $this->_attachmentInfo['orientation']
+		    ];
+	    }
 
-        unset($json['author']);
-        unset($json['content']);
-        unset($json['excerpt']);
-        unset($json['categories']);
-        unset($json['thumbnail']);
-
-        $json['caption'] = $this->caption;
-        $json['description'] = $this->description;
-
-        if ($this->attachmentInfo()) {
-            $json['sizes'] = $this->_attachmentInfo['sizes'];
-            $json['width'] = $this->_attachmentInfo['width'];
-            $json['height'] = $this->_attachmentInfo['height'];
-            $json['orientation'] = $this->_attachmentInfo['orientation'];
-        }
-
-        return $json;
+	    return array_merge($sizeData, [
+	    	'id' => $this->id,
+		    'type'=>static::$postType,
+		    'title'=>$this->title,
+		    'slug'=>$this->slug,
+		    'date'=>$this->date->toIso8601String(),
+		    'updated'=>$this->updated->toIso8601String(),
+		    'url'=>$this->permalink,
+		    'mime_type'=>$this->post->post_mime_type,
+		    'tags'=>$this->tags,
+		    'caption'=>$this->caption,
+		    'description'=>$this->description,
+	    ]);
     }
 }
