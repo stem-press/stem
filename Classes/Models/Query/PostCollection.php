@@ -95,14 +95,14 @@ class PostCollection implements \ArrayAccess, \Iterator, \Countable, \JsonSerial
      */
     public function currentPage() {
         if (isset($this->args['offset']) && ($this->pages() > 0)) {
-            return (int)floor(floatval($this->args['offset']) / $this->pages());
+            return (int)max(1, floor(floatval($this->args['offset']) / $this->pages()));
         }
 
         if (isset($this->args['paged'])) {
-            return $this->args['paged'];
+            return max(1, $this->args['paged']);
         }
 
-        return 0;
+        return 1;
     }
 
     /**

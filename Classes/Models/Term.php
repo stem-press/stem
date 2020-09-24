@@ -55,6 +55,13 @@ class Term implements \JsonSerializable {
         return $terms;
     }
 
+    public static function findCustomTerm($taxes, $termToFind)
+    {
+        $terms = get_terms($taxes, ['slug'=>sanitize_title($termToFind)]);
+
+        return $terms;
+    }
+
     public static function term($context, $termId, $taxonomy)
     {
         $key = "$taxonomy-$termId";

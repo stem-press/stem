@@ -21,6 +21,7 @@ use Stem\Utilities\Text;
  * @property-read int|null $id
  * @property string|null $title
  * @property string|null $slug
+ * @property string|null $type
  * @property string|null $status
  * @property int|null $menuOrder
  * @property Post|null $parent
@@ -53,7 +54,8 @@ class Post implements \JsonSerializable {
 	/** @var array Properties */
 	protected $postProperties = [
 		'title' => 'post_title',
-		'slug' => 'post_name',
+        'slug' => 'post_name',
+        'type' => 'post_type',
 		'status' => 'post_status',
 		'menuOrder' => 'menu_order'
 	];
@@ -103,7 +105,7 @@ class Post implements \JsonSerializable {
     protected $topCategories = null;
 
     /** @var null|array All terms assigned to this post for a given taxonomy */
-    protected $taxes = null;
+    protected $taxes = [];
 
 	/** @var null|string The permalink for this post  */
 	protected $_permalink = null;
@@ -891,7 +893,7 @@ class Post implements \JsonSerializable {
      * @return Term[]|null
      */
     public function tax($taxonomy) {
-        if ($this->taxes[$taxonomy] != null) {
+        if (isset($this->taxes[$taxonomy]) && ($this->taxes[$taxonomy] != null)) {
             return $this->taxes[$taxonomy];
         }
 
