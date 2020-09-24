@@ -144,8 +144,10 @@ class Blocks {
 		    if ($type == 'repeater') {
 			    $repeaterData = get_field($name);
 			    $value = [];
-			    foreach($repeaterData as $repeaterDatum) {
-			    	$value[] = $this->processFieldsData($field['sub_fields'], $repeaterDatum);
+			    if (!empty($repeaterData)) {
+				    foreach($repeaterData as $repeaterDatum) {
+					    $value[] = $this->processFieldsData($field['sub_fields'], $repeaterDatum);
+				    }
 			    }
 		    } else if (!empty($value)) {
 			    if (in_array($type, ['image', 'file', 'post_object', 'page'])) {
