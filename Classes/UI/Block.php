@@ -194,7 +194,7 @@ class Block {
             throw new \Exception('Block name cannot be empty.');
         }
 
-        return sanitize_title($this->title());
+        return $this->name;
     }
 
     /**
@@ -217,6 +217,35 @@ class Block {
      */
     public function categorySlug() {
         return sanitize_title($this->category());
+    }
+
+    /**
+     * Supports configuration for the block
+     * @return array
+     */
+    public function supports() {
+        return [
+            'align' => $this->supportsAlign(),
+            'mode' => $this->supportsEditToggle(),
+            'multiple' => $this->supportsMultiple(),
+            'jsx' => $this->supportsJSX()
+        ];
+    }
+
+    public function supportsAlign() {
+        return false;
+    }
+
+    public function supportsEditToggle() {
+        return true;
+    }
+
+    public function supportsMultiple() {
+        return true;
+    }
+
+    public function supportsJSX() {
+        return true;
     }
 
     /**

@@ -284,7 +284,7 @@ class Context {
 	    add_action('acf/trash_field_group', function($group) {
 		    $this->lastUpdatedACFGroup = $group;
 	    }, 1, 1);
-	    
+
 	    add_action('acf/untrash_field_group', function($group) {
 		    $this->lastUpdatedACFGroup = $group;
 	    }, 1, 1);
@@ -925,7 +925,7 @@ class Context {
         try {
             $this->dispatcher->dispatch();
         } catch (\Exception $ex) {
-            if (env('WP_ENV') != 'production') {
+            if (getenv('WP_ENV') != 'production') {
                 $res = new \Symfony\Component\HttpFoundation\Response($this->ui->render('stem-system.error', ['ex'=>$ex, 'data' => \Stem\Core\Response::$lastData]), 500);
                 $res->send();
                 die;

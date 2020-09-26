@@ -100,7 +100,8 @@ class Blocks {
                 'category' => $block->categorySlug(),
                 'icon' => $block->icon(),
                 'keywords' => $block->keywords(),
-	            'mode' => $block->mode()
+	            'mode' => $block->mode(),
+                'supports' => $block->supports(),
             ]);
 
             $block->registerFields();
@@ -134,19 +135,28 @@ class Blocks {
         return $block_categories;
     }
 
-    private function processFieldsData($fields, $blockData) {
+    private function processFieldsData($fields, $blockData, $block) {
 	    $data = [];
 	    foreach($fields as $field) {
 		    $name = $field['name'];
 		    $type = $field['type'];
-		    $value = (isset($blockData[$name])) ? $blockData[$name] : null;
+		    if (!isset($blockData[$name])) {
+		        $previewName = "field_".$block->name()."_".$name;
+                $value = (isset($blockData[$previewName])) ? $blockData[$previewName] : null;
+            } else {
+                $value = $blockData[$name];
+            }
+
+		    if (empty($value) && isset($field['default_value'])) {
+		        $value = $field['default_value'];
+            }
 
 		    if ($type == 'repeater') {
 			    $repeaterData = get_field($name);
 			    $value = [];
 			    if (!empty($repeaterData)) {
 				    foreach($repeaterData as $repeaterDatum) {
-					    $value[] = $this->processFieldsData($field['sub_fields'], $repeaterDatum);
+					    $value[] = $this->processFieldsData($field['sub_fields'], $repeaterDatum, $block);
 				    }
 			    }
 		    } else if (!empty($value)) {
@@ -162,10 +172,19 @@ class Blocks {
 				    if (filter_var($value, FILTER_VALIDATE_URL)) {
 					    $value = wp_oembed_get($value);
 				    }
-			    }
+			    } else if ($type == 'gallery') {
+			        $images = [];
+			        foreach($value as $imageId) {
+			            if (is_numeric($imageId)) {
+			                $images[] = Context::current()->modelForPostID($imageId);
+                        }
+                    }
+
+			        $value = $images;
+                }
 		    }
 
-		    $data[$name] = $value;
+		    $data[camelCaseString($name)] = $value;
 	    }
 
 
@@ -181,7 +200,7 @@ class Blocks {
      */
     private function processData($block, $blockData) {
     	$fields = $block->getFields();
-    	return $this->processFieldsData($fields['fields'], $blockData);
+    	return $this->processFieldsData($fields['fields'], $blockData, $block);
     }
 
     /**
