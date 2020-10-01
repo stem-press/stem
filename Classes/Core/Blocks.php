@@ -94,8 +94,8 @@ class Blocks {
                 'name' => $block->name(),
                 'title' => $block->title(),
                 'description' => $block->description(),
-                'render_callback' => function($blockData) use ($block) {
-                    $this->renderBlock($block, $blockData);
+                'render_callback' => function($blockData, $content, $is_preview, $post_id) use ($block) {
+                    $this->renderBlock($block, $blockData, $is_preview, $post_id);
                 },
                 'category' => $block->categorySlug(),
                 'icon' => $block->icon(),
@@ -156,7 +156,12 @@ class Blocks {
 			    $value = [];
 			    if (!empty($repeaterData)) {
 				    foreach($repeaterData as $repeaterDatum) {
-					    $value[] = $this->processFieldsData($field['sub_fields'], $repeaterDatum, $block);
+				        $valueData = $this->processFieldsData($field['sub_fields'], $repeaterDatum, $block);
+				        if (!empty($field['value_class']) && class_exists($field['value_class'])) {
+				            $value[] = new $field['value_class']($valueData);
+                        } else {
+                            $value[] = $valueData;
+                        }
 				    }
 			    }
 		    } else if (!empty($value)) {
@@ -208,14 +213,20 @@ class Blocks {
      *
      * @param $block
      * @param $blockData
+     * @param bool $is_preview
+     * @param null|int $post_id
      */
-    private function renderBlock($block, $blockData) {
+    private function renderBlock($block, $blockData, $is_preview = false, $post_id = null) {
         $data = [];
         if (isset($blockData['data'])) {
             $data = $this->processData($block, $blockData['data']);
         }
 
-        echo $block->render(['block' => $data]);
+        echo $block->render([
+            'is_preview' => $is_preview,
+            'post_id' => $post_id,
+            'block' => $data
+        ]);
     }
 
 }
