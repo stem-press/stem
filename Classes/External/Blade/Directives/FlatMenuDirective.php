@@ -62,6 +62,8 @@ class FlatMenuDirective extends ViewDirective  {
 
 				if (trim($menuItem['url'],"/") == $current_url) {
 				    $menuItem["classes"][] = "current";
+                } else if (strpos($current_url, trim($menuItem['url'], '/')) === 0) {
+                    $menuItem["classes"][] = "current";
                 }
 
 				if (strpos($menuItem['url'],'#') === false) {
