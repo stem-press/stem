@@ -147,8 +147,14 @@ class Blocks {
                 $value = $blockData[$name];
             }
 
-		    if (empty($value) && isset($field['default_value'])) {
-		        $value = $field['default_value'];
+		    if ($field['type'] == 'true_false') {
+		        if (!isset($blockData[$name])) {
+                    $value = $field['default_value'];
+		        }
+            } else {
+                if(empty($value) && isset($field['default_value'])) {
+                    $value = $field['default_value'];
+                }
             }
 
 		    if ($type == 'repeater') {
