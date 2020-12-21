@@ -170,7 +170,9 @@ class Blocks {
                         }
 				    }
 			    }
-		    } else if (!empty($value)) {
+		    } else if ($type == 'group') {
+		    	$value = get_field($name);
+	    	    } else if (!empty($value)) {
 			    if (in_array($type, ['image', 'file', 'post_object', 'page'])) {
 				    $value = ($value instanceof \WP_Post) ? Context::current()->modelForPost($value) : Context::current()->modelForPostID($value);
 			    } else if (($field['type'] == 'date_picker') || ($field['type'] == 'date_time_picker')) {
