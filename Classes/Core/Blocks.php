@@ -171,11 +171,7 @@ class Blocks {
 				    }
 			    }
 		    } else if ($type == 'group') {
-		    	$groupData = get_field($name);
-               		$value = $groupData;
-                	if (!empty($groupData)) {
-                    		$value = $this->processFieldsData($field['sub_fields'], $groupData, $block);
-			}
+		    	$value = get_field($name);
 	    	    } else if (!empty($value)) {
 			    if (in_array($type, ['image', 'file', 'post_object', 'page'])) {
 				    $value = ($value instanceof \WP_Post) ? Context::current()->modelForPost($value) : Context::current()->modelForPostID($value);
