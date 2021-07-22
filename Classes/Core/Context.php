@@ -353,7 +353,7 @@ class Context {
         }
 
         // Enable/disable WordPress emoji crap
-        if ($this->setting('options/disable-wp-json-api', false)) {
+        if ($this->setting('options/disable-emoji', false)) {
             add_action('init', function () {
                 remove_action('admin_print_styles', 'print_emoji_styles');
                 remove_action('wp_head', 'print_emoji_detection_script', 7);
