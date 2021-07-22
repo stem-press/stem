@@ -31,6 +31,7 @@ use Stem\Utilities\Text;
  * @property-read string|null $permalink
  * @property-read null|Term[] $categories
  * @property-read null|Term $topCategory
+ * @property-read null|Term $primaryCategory
  * @property-read null|Term[] $tags
  * @property-read string|null $strippedContent
  * @property string|null $content
@@ -92,8 +93,11 @@ class Post implements \JsonSerializable {
 	/** @var null|Attachment The featured image for the post */
 	protected $_thumbnail = null;
 
-    /** @var null|Term The primary category for the post  */
+	/** @var null|Term The primary category for the post  */
 	protected $_topCategory = null;
+
+	/** @var null|Term The primary category for the post  */
+	protected $_primaryCategory = null;
 
 	/** @var null|Term[] All categories assigned to this post */
 	protected $_categories = null;
@@ -962,6 +966,17 @@ class Post implements \JsonSerializable {
 	    $this->getTopCategory();
     }
 
+    public function getPrimaryCategory() {
+	    if ($this->_primaryCategory != null) {
+		    return $this->_primaryCategory;
+	    }
+
+	    $cats = $this->getCategories();
+	    $this->_primaryCategory = (count($cats) > 0) ? $cats[count($cats) - 1] : null;
+
+	    return $this->_primaryCategory;
+    }
+
     /**
      * Returns the top category
      *
@@ -1057,6 +1072,26 @@ class Post implements \JsonSerializable {
         $this->changes->removeTag($tag);
     }
 
+    public function getBreadcrumbs() {
+    	$result = [];
+
+    	$primary = $this->primaryCategory;
+    	if (!empty($primary)) {
+    		$result[] = $primary;
+    		$parent = $primary;
+    		while(true) {
+    			$parent = $parent->parent();
+    			if (empty($parent)) {
+    				break;
+			    }
+
+    			$result[] = $parent;
+		    }
+	    }
+
+    	$result = array_reverse($result);
+    	return $result;
+    }
     //endregion
 
     //region Update/Save/Delete
