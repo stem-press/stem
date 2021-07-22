@@ -113,11 +113,11 @@ class Blocks {
      * Returns the user defined block categories
      *
      * @param $block_categories
-     * @param $post
+     * @param $editorContext
      * @return array
      * @throws \Exception
      */
-    private function blockCategories($block_categories, $post) {
+    private function blockCategories($block_categories, $editorContext) {
         $slugs = [];
         foreach($block_categories as $existing) {
             $slugs[] = $existing['slug'];
