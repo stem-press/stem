@@ -27,8 +27,9 @@ class Blocks {
                 return;
             }
 
-            add_filter('block_categories', function($block_categories, $post) {
-                return $this->blockCategories($block_categories, $post);
+            /**  */
+            add_filter('block_categories_all', function($block_categories, $editorContext) {
+                return $this->blockCategories($block_categories, $editorContext);
             }, 5, 2 );
 
             $this->loadBlocks();
