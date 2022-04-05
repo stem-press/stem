@@ -23,7 +23,7 @@
     "monolog/monolog": "^1.19",
     "nesbot/carbon": "^2.57.0",
     "symfony/var-dumper": "^4.2",
-    "duncan3dc/blade": "^4.4",
+    "duncan3dc/blade": "^4.11.0",
     "stoutlogic/acf-builder": "^1.8",
     "johnbillion/extended-cpts": "^4.2",
     "samrap/acf-fluent": "^0.4.0",
